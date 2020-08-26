@@ -48,6 +48,7 @@ export type stateType = {
     isOpenEditDialog: boolean;
     isOpenDeleteDialog: boolean;
     isOpenAddDialog: boolean;
+    isOpenActionDialog: boolean;
     isReading: boolean;
     currentBook: BookModel;
     currentEpub: any;
@@ -80,5 +81,6 @@ export type stateType = {
     menuMode: string;
     isOpenMenu: boolean;
     isChangeDirection: boolean;
+    isShowBookmark: boolean;
   };
 };

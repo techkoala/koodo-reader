@@ -4,7 +4,6 @@ import { sideMenu } from "../../utils/readerConfig";
 import ShelfUtil from "../../utils/shelfUtil";
 import { Trans } from "react-i18next";
 import { SidebarProps, SidebarState } from "./interface";
-import UpdateInfo from "../../components/updateInfo";
 
 class Sidebar extends React.Component<SidebarProps, SidebarState> {
   constructor(props: SidebarProps) {
@@ -111,12 +110,18 @@ class Sidebar extends React.Component<SidebarProps, SidebarState> {
                   this.handleShelf();
                 }}
               >
-                <span className="icon-shelf"></span>
-                <Trans>My Shelves</Trans>
+                <span
+                  className="icon-shelf"
+                  style={{ marginLeft: "2px" }}
+                ></span>
+                <span style={{ marginLeft: "12px" }}>
+                  <Trans>My Shelves</Trans>
+                </span>
+
                 <div
-                className="dropdown-icon-container"
+                  className="dropdown-icon-container"
                   style={
-                    this.state.isCollapse ? { transform: "rotate(180deg)" } : {}
+                    this.state.isCollapse ? {} : { transform: "rotate(180deg)" }
                   }
                 >
                   <span className="icon-dropdown"></span>
@@ -131,9 +136,7 @@ class Sidebar extends React.Component<SidebarProps, SidebarState> {
                 </ul>
               </div>
             </li>
-            <li className="side-menu-about">
-              <UpdateInfo />
-            </li>
+            <li className="side-menu-about"></li>
           </ul>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { Trans } from "react-i18next";
 import i18n from "../../i18n";
 import { HeaderProps, HeaderState } from "./interface";
 import OtherUtil from "../../utils/otherUtil";
+import UpdateInfo from "../../components/updateInfo";
 
 class Header extends React.Component<HeaderProps, HeaderState> {
   constructor(props: HeaderProps) {
@@ -62,10 +63,10 @@ class Header extends React.Component<HeaderProps, HeaderState> {
           <span className="icon-sort header-sort-icon"></span>
         </div>
         <div className="change-language">
-          {this.state.language === "zh" ? (
+          {this.state.language === "cht" ? (
             <span
-              className="icon-traditional"
-              onClick={() => this.changeLanguage("cht")}
+              className="icon-english"
+              onClick={() => this.changeLanguage("en")}
             ></span>
           ) : this.state.language === "en" ? (
             <span
@@ -74,8 +75,8 @@ class Header extends React.Component<HeaderProps, HeaderState> {
             ></span>
           ) : (
             <span
-              className="icon-english"
-              onClick={() => this.changeLanguage("en")}
+              className="icon-traditional"
+              onClick={() => this.changeLanguage("cht")}
             ></span>
           )}
         </div>
@@ -96,6 +97,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
           <Trans>Backup and Restore</Trans>
         </div>
         <ImportLocal />
+        <UpdateInfo />
       </div>
     );
   }

@@ -43,20 +43,21 @@ class Book extends React.Component<BookItemProps, BookItemState> {
       : 0;
     return (
       <div className="book-list-item-container">
-        <img
-          className="book-item-list-cover"
-          src={
-            this.props.bookCover
-              ? this.props.bookCover
-              : process.env.NODE_ENV === "production"
-              ? "assets/cover.svg"
-              : "../../assets/cover.svg"
-          }
-          alt=""
-          onClick={() => {
-            this.handleOpenBook();
-          }}
-        />
+        {this.props.bookCover ? (
+          <img
+            className="book-item-list-cover"
+            src={this.props.bookCover}
+            alt=""
+            onClick={() => {
+              this.handleOpenBook();
+            }}
+          />
+        ) : (
+          <div className="book-item-list-cover book-item-list-cover-img">
+            <img src="/assets/cover.svg" alt="" style={{ width: "80%" }} />
+          </div>
+        )}
+
         <p className="book-item-list-title">{this.props.book.name}</p>
         <p className="book-item-list-author">{this.props.book.author}</p>
         <p className="book-item-list-percentage">
@@ -64,14 +65,14 @@ class Book extends React.Component<BookItemProps, BookItemState> {
         </p>
         <div className="book-item-list-config">
           <span
-            className="icon-add1 list-icon"
+            className="icon-shelf list-icon"
             onClick={() => {
               this.handleAddShelf();
             }}
             color="rgba(75,75,75,1)"
           ></span>
           <span
-            className="icon-delete1 list-icon"
+            className="icon-trash list-icon"
             onClick={() => {
               this.handleDeleteBook();
             }}

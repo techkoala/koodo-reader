@@ -60,6 +60,22 @@ export const fontSizeList = [
   { id: 4, size: "Extra Large", value: "23" },
   { id: 5, size: "Ultra Large", value: "26" },
 ];
+export const updateLog = {
+  date: "2020.8.23",
+  new: [
+    "现在您可以给喜爱的图书添加心形标记，并且可以在我的喜爱中找到所有标记过的图书",
+    "添加书签之后，这一页的右上角会出现书签图标",
+    "图书操作的UI优化",
+  ],
+  fix: [
+    "修复笔记，书摘，书签跳转位置不准确的问题",
+    "修复删除书签导致阅读器崩溃的问题",
+    "修复阅读进度为NaN的问题",
+    "修复笔记弹窗超出阅读器范围的问题",
+    "修复导入图书失败后，图书页面闪烁问题",
+  ],
+};
+
 export const dropdownList = [
   {
     id: 1,
@@ -101,6 +117,11 @@ export const sideMenu = [
     name: "All Books",
     icon: "home",
     mode: "home",
+  },
+  {
+    name: "My Favorites",
+    icon: "love",
+    mode: "favorite",
   },
   {
     name: "My Bookmarks",
@@ -171,6 +192,12 @@ export const emptyList = [
     mode: "home",
     main: "Empty Library",
     sub: "Click the top-right button to add books",
+  },
+  {
+    mode: "favorite",
+    main: "No Favorite Books",
+    sub:
+      "Move your mouse on the top of any book, click the heart icon to add it to your favorite books",
   },
   {
     mode: "bookmark",
