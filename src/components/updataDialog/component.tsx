@@ -3,8 +3,6 @@ import React from "react";
 import "./updateDialog.css";
 import { UpdateInfoProps, UpdateInfoState } from "./interface";
 import { Trans } from "react-i18next";
-import packageJson from "../../../package.json";
-
 import { updateLog } from "../../utils/readerConfig";
 
 class UpdateDialog extends React.Component<UpdateInfoProps, UpdateInfoState> {
@@ -15,7 +13,7 @@ class UpdateDialog extends React.Component<UpdateInfoProps, UpdateInfoState> {
   renderList = (arr: any[]) => {
     return arr.map((item, index) => {
       return (
-        <li className="update-dialog-list">
+        <li className="update-dialog-list" key={index}>
           <span style={{ color: "black" }}>{index + 1 + ". "}</span>
           <span>{item}</span>
         </li>
@@ -31,7 +29,7 @@ class UpdateDialog extends React.Component<UpdateInfoProps, UpdateInfoState> {
         </p>
         <p className="update-dialog-subtitle">
           <Trans>Version</Trans>
-          {packageJson.version}
+          {updateLog.version}
         </p>
         <p className="update-dialog-subtitle">
           <Trans>Date</Trans>

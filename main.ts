@@ -1,26 +1,22 @@
-const { app, BrowserWindow, dialog, shell, remote } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  dialog,
+  shell,
+  remote,
+  ipcMain,
+} = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 const fontList = require("font-list");
-fontList
-  .getFonts()
-  .then((fonts: any[]) => {
-    console.log(fonts);
-  })
-  .catch((err: any) => {
-    console.log(err);
-  });
+
 let mainWindow;
 
 app.on("ready", () => {
-  // console.log("before message box");
-
   mainWindow = new BrowserWindow({
     width: 1030,
     height: 660,
-    webPreferences: {
-      nodeIntegration: false,
-    },
+    webPreferences: { webSecurity: false, nodeIntegration: true },
   });
   if (!isDev) {
     const { Menu } = require("electron");
@@ -31,4 +27,15 @@ app.on("ready", () => {
     ? "http://localhost:3000/"
     : `file://${path.join(__dirname, "./build/index.html")}`;
   mainWindow.loadURL(urlLocation);
+
+  ipcMain.on("fonts-ready", (event, arg) => {
+    fontList
+      .getFonts()
+      .then((fonts) => {
+        event.returnValue = fonts;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
 });

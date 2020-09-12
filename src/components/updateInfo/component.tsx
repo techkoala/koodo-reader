@@ -2,7 +2,7 @@
 import React from "react";
 import "./updateInfo.css";
 import { UpdateInfoProps, UpdateInfoState } from "./interface";
-import packageJson from "../../../package.json";
+import { updateLog } from "../../utils/readerConfig";
 import { Trans } from "react-i18next";
 
 import axios from "axios";
@@ -16,10 +16,11 @@ class UpdateInfo extends React.Component<UpdateInfoProps, UpdateInfoState> {
     axios
       .get("https://koodo.960960.xyz/update")
       .then((res) => {
+        console.log(res);
         const download = res.data.download;
         const version = res.data.log.version;
-        console.log(version, "version");
-        if (this.compareVersion(packageJson.version, version)) {
+        // console.log(version, "version");
+        if (this.compareVersion(updateLog.version, version)) {
           navigator.platform === "Win32"
             ? this.setState({ downlownLink: download[0].url })
             : this.setState({ downlownLink: download[1].url });

@@ -8,7 +8,11 @@ import { Trans } from "react-i18next";
 import Dropzone from "react-dropzone";
 import { ImportLocalProps, ImportLocalState } from "./interface";
 import RecordRecent from "../../utils/recordRecent";
-import axios from "axios";
+// import Epub from "epubjs";
+
+declare var window: any;
+
+// window.ePub = Epub;
 
 class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
   constructor(props: ImportLocalProps) {
@@ -22,7 +26,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
     if (bookArr == null) {
       bookArr = [];
     }
-    bookArr.unshift(book);
+    bookArr.push(book);
     RecordRecent.setRecent(book.key);
     localforage.setItem("books", bookArr).then(() => {
       this.props.handleFetchBooks();
@@ -73,54 +77,6 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
       //this.handleOtherFormat(file, file.name);
     }
   };
-  toBase64 = (file: any) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  handleOtherFormat = async (file: any, name: string) => {
-    const option = {
-      apikey: "47f9a3ea69b4f01bc1c54ee2d17b4c2a",
-      input: "base64",
-      outputformat: "epub",
-      filename: "老人与海.txt",
-      file: await this.toBase64(file),
-    };
-    const data = await axios.post("https://api.convertio.co/convert", option);
-    console.log(data, "data1");
-    if (data.data.data.id) {
-      axios
-        .get(`https://api.convertio.co/convert/${data.data.data.id}/dl`)
-        .then((res) => {
-          fetch(
-            "data:" +
-              "application/epub+zip" +
-              ";base64," +
-              res.data.data.content
-          )
-            .then((res: any) => res.blob())
-            .then((blob: any) => {
-              console.log(blob, "blob");
-              const file = new File([blob], "老人与海.epub", {
-                type: "application/epub+zip",
-              });
-              this.doIncrementalTest(file);
-            })
-            .catch((err) => {
-              console.log(err, "err");
-            });
-        })
-        .catch((err) => {
-          console.log(err);
-          return;
-        });
-    } else {
-      this.props.handleMessage("Import Failed");
-      this.props.handleMessageBox(true);
-    }
-  };
   handleBook = (file: any, md5: string) => {
     //md5重复不导入
     if (this.props.books) {
@@ -140,9 +96,8 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
         if (!e.target) {
           throw new Error();
         }
-        const epub = (window as any).ePub({ bookPath: e.target.result });
-        epub
-          .getMetadata()
+        const epub = window.ePub(e.target.result);
+        epub.loaded.metadata
           .then((metadata: any) => {
             if (!e.target) {
               throw new Error();
@@ -153,7 +108,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
               description: string,
               book: BookModel;
             [name, author, description, content] = [
-              metadata.bookTitle,
+              metadata.title,
               metadata.creator,
               metadata.description,
               e.target.result,
@@ -166,6 +121,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
           });
       };
     }
+    this.setState({ isRepeat: false });
   };
 
   render() {
@@ -176,7 +132,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
             this.doIncrementalTest(item);
           });
         }}
-        accept={[".epub", ".mobi", ".txt"]}
+        accept={[".epub"]}
         multiple={true}
       >
         {({ getRootProps, getInputProps }) => (

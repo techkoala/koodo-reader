@@ -1,12 +1,11 @@
-import ReaderConfig from "./readerConfig";
-export const MouseEvent = (epub: any) => {
+export const MouseEvent = (rendition: any) => {
   let isFirefox = navigator.userAgent.indexOf("Firefox") !== -1;
   let lock = false; // 暂时锁住翻页快捷键，避免快速点击产生的Bug
   let arrowKeys = (event: any) => {
-    event.preventDefault();
+    // event.preventDefault();
     if (lock) return;
     if (event.keyCode === 37 || event.keyCode === 38) {
-      epub.prevPage();
+      rendition.prev();
       lock = true;
       setTimeout(function () {
         lock = false;
@@ -14,7 +13,7 @@ export const MouseEvent = (epub: any) => {
       return false;
     }
     if (event.keyCode === 39 || event.keyCode === 40) {
-      epub.nextPage();
+      rendition.next();
       lock = true;
       setTimeout(function () {
         lock = false;
@@ -26,7 +25,7 @@ export const MouseEvent = (epub: any) => {
     event.preventDefault();
     if (lock) return;
     if (event.detail < 0) {
-      epub.prevPage();
+      rendition.prev();
       lock = true;
       setTimeout(function () {
         lock = false;
@@ -34,7 +33,7 @@ export const MouseEvent = (epub: any) => {
       return false;
     }
     if (event.detail > 0) {
-      epub.nextPage();
+      rendition.next();
       lock = true;
       setTimeout(function () {
         lock = false;
@@ -46,7 +45,7 @@ export const MouseEvent = (epub: any) => {
   let mouseChrome = (event: any) => {
     if (lock) return;
     if (event.wheelDelta > 0) {
-      epub.prevPage();
+      rendition.prev();
       lock = true;
       setTimeout(function () {
         lock = false;
@@ -54,7 +53,7 @@ export const MouseEvent = (epub: any) => {
       return false;
     }
     if (event.wheelDelta < 0) {
-      epub.nextPage();
+      rendition.next();
       lock = true;
       setTimeout(function () {
         lock = false;
@@ -62,34 +61,44 @@ export const MouseEvent = (epub: any) => {
       return false;
     }
   };
-  let copyText = (event: any) => {
-    let key = event.keyCode || event.which;
-    if (
-      key === 67 &&
-      event.ctrlKey &&
-      document.getElementsByTagName("iframe")[0].contentDocument
-    ) {
-      let iDoc = document.getElementsByTagName("iframe")[0].contentDocument;
-      let text = iDoc!.execCommand("copy", false);
-      !text
-        ? console.log("failed to copy text to clipboard")
-        : console.log(`copied!`);
+  let rebind = () => {
+    console.log("rebind");
+    let iframe = document.getElementsByTagName("iframe")[0];
+    if (!iframe) return;
+    let doc = iframe.contentDocument;
+    if (!doc) {
+      return;
     }
-  };
-
-  epub.on("renderer:chapterDisplayed", () => {
-    let doc = epub.renderer.doc;
-
-    // doc.addEventListener("click", openMenu); // 为每一章节内容绑定弹出菜单触发程序
     doc.addEventListener("keydown", arrowKeys); // 箭头按键翻页
-    doc.addEventListener("keydown", copyText); // 解决 Ctrl + C 复制的bug
-    window.addEventListener("keypress", () => {}); // 解决 Ctrl + C 复制的bug
-
     // 鼠标滚轮翻页
-    if (isFirefox) doc.addEventListener("DOMMouseScroll", mouseFirefox, false);
-    else {
+    if (isFirefox) {
+      doc.addEventListener("DOMMouseScroll", mouseFirefox, false);
+    } else {
+      console.log("chrome-scroll");
       doc.addEventListener("mousewheel", mouseChrome, false);
     }
-    ReaderConfig.addDefaultCss(); // 切换章节后为当前文档设置默认的样式
+  };
+  let bindEvent = (doc: any) => {
+    doc.addEventListener("keydown", arrowKeys); // 箭头按键翻页
+    // 鼠标滚轮翻页
+    if (isFirefox) {
+      doc.addEventListener("DOMMouseScroll", mouseFirefox, false);
+    } else {
+      doc.addEventListener("mousewheel", mouseChrome, false);
+    }
+  };
+  rendition.on("locationChanged", () => {
+    let iframe = document.getElementsByTagName("iframe")[0];
+    if (!iframe) return;
+    let doc = iframe.contentDocument;
+    if (!doc) {
+      return;
+    }
+    // 鼠标滚轮翻页
+    window.addEventListener("keydown", arrowKeys);
+    window.addEventListener("mousewheel", rebind);
+    window.addEventListener("DOMMouseScroll", rebind);
+    window.onmousewheel = rebind;
+    bindEvent(doc);
   });
 };

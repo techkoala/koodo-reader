@@ -74,7 +74,7 @@
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
-  height: 16px;
+  height: 17px;
   line-height: 16px;
   font-size: 16px;
   max-width: 130px;
@@ -126,6 +126,7 @@
 }
 .card-list-item-title {
   float: left;
+  /* width: 100px; */
 }
 .card-list-container-box {
   margin-top: 35px;

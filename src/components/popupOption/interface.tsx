@@ -6,8 +6,11 @@ export interface PopupOptionProps {
   selection: string;
   digests: NoteModel[];
   notes: NoteModel[];
-  chapters: any;
+  flattenChapters: any;
   color: number;
+  rect: DOMRect;
+  cfiRange: string;
+  contents: any;
   handleMessageBox: (isShow: boolean) => void;
   handleMessage: (message: string) => void;
   handleOpenMenu: (isOpenMenu: boolean) => void;

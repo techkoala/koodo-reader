@@ -41,12 +41,11 @@ class BookList extends React.Component<BookListProps> {
     });
     return itemArr;
   };
+
   //获取书架数据
   handleShelf(items: any, index: number) {
     //获取书架名
-    if (index === -1) {
-      return;
-    }
+    if (index === -1) return;
     let shelfTitle = Object.keys(ShelfUtil.getShelf());
     //获取当前书架名
     let currentShelfTitle = shelfTitle[index + 1];
@@ -69,7 +68,6 @@ class BookList extends React.Component<BookListProps> {
     arr.forEach((item) => {
       items[item] && itemArr.push(items[item]);
     });
-    console.log(items, itemArr, "filter");
     return itemArr;
   };
   renderBookList = () => {
@@ -132,9 +130,14 @@ class BookList extends React.Component<BookListProps> {
       );
     });
   };
+  shouldComponentUpdate(nextProps: BookListProps) {
+    if (nextProps.books.length !== nextProps.covers.length) {
+      return false;
+    }
+    return true;
+  }
   render() {
     OtherUtil.setReaderConfig("totalBooks", this.props.books.length.toString());
-    console.log("object");
     return (
       <div className="book-list-container-parent">
         <div className="book-list-container">

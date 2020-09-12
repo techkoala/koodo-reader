@@ -10,15 +10,26 @@
 </h3>
 <div align="center">
 
-[下载](https://github.com/troyeguo/koodo-reader/releases/tag/v1.1.3) | [官网](https://koodo.960960.xyz)
+[下载](https://koodo.960960.xyz/download) | [官网](https://koodo.960960.xyz)
 
 </div>
 <div align="center">
-  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
+  <a href="https://ci.appveyor.com/project/troyeguo/koodo-reader/branch/master">
     <img src="https://ci.appveyor.com/api/projects/status/602fp409plq8qcwu?svg=true" alt="appveyor">
   </a>
-    <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
+  <a href="https://travis-ci.com/github/troyeguo/koodo-reader">
     <img src="https://travis-ci.com/troyeguo/koodo-reader.svg?branch=master" alt="travis-ci">
+  </a>
+  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
+    <img src="https://img.shields.io/github/release/troyeguo/koodo-reader.svg?style=flat-square" alt="">
+  </a>
+
+  <a href="https://github.com/troyeguo/koodo-reader/blob/master/LICENSE">
+    <img src="https://img.shields.io/github/license/troyeguo/koodo-reader.svg?style=flat-square" alt="">
+  </a>
+
+  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
+    <img alt="GitHub All Releases" src="https://img.shields.io/github/downloads/troyeguo/koodo-reader/total.svg?color=%2312b886&style=flat-square">
   </a>
 </div>
 
@@ -58,9 +69,9 @@
 
 ## 使用方法
 
-桌面端：前往这里下载最新的安装包 [点我前往](https://github.com/troyeguo/koodo-reader/releases/tag/v1.1.3)
+桌面端：前往这里下载最新的安装包 [点我前往](https://koodo.960960.xyz/download)
 
-网页版：代码托管在 Netlify [点我前往](https://reader.960960.xyz)
+网页版：代码托管在 Vercel [点我前往](https://reader.960960.xyz)
 
 ## 运行源码
 

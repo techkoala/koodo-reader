@@ -8,11 +8,11 @@ class ContentList extends React.Component<ContentListProps, ContentListState> {
     this.state = { chapters: [] };
     this.handleJump = this.handleJump.bind(this);
   }
+
   componentWillMount() {
-    this.props.currentEpub
-      .getToc()
+    this.props.currentEpub.loaded.navigation
       .then((chapters: any) => {
-        this.setState({ chapters });
+        this.setState({ chapters: chapters.toc });
       })
       .catch(() => {
         console.log("Error occurs");
@@ -21,7 +21,7 @@ class ContentList extends React.Component<ContentListProps, ContentListState> {
   handleJump(event: any) {
     event.preventDefault();
     let href = event.target.getAttribute("href");
-    this.props.currentEpub.goto(href);
+    this.props.currentEpub.rendition.display(href);
   }
   render() {
     const renderContentList = (items: any) => {
@@ -42,25 +42,11 @@ class ContentList extends React.Component<ContentListProps, ContentListState> {
         );
       });
     };
-    // return (
-    //   <li className="book-content-list" key={index}>
-    //     <a
-    //       href={item.href}
-    //       onClick={this.handleJump}
-    //       className="book-content-name"
-    //     >
-    //       {item.label}
-    //     </a>
-    //     {item.subitems.length > 0 ? (
-    //       <ul>{renderSubContentList(item.subitems)}</ul>
-    //     ) : null}
-    //   </li>
-    // );
 
     return (
       <div className="book-content-container">
         <ul className="book-content">
-          {renderContentList(this.state.chapters)}
+          {this.state.chapters && renderContentList(this.state.chapters)}
         </ul>
       </div>
     );
