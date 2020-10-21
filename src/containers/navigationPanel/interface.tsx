@@ -5,15 +5,15 @@ export interface NavigationPanelProps {
   currentEpub: any;
   currentBook: BookModel;
   bookmarks: BookmarkModel[];
+  time: number;
   handleFetchBookmarks: () => void;
   handleSearch: (isSearch: boolean) => void;
 }
 
 export interface NavigationPanelState {
-  isContentShow: boolean;
+  currentTab: string;
   chapters: any;
   cover: string;
-  time: number;
   startIndex: number;
   currentIndex: number;
   isSearch: boolean;

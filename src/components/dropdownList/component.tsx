@@ -1,6 +1,6 @@
 //图书样式设置的下拉菜单页面
 import React from "react";
-import { dropdownList } from "../../utils/readerConfig";
+import { dropdownList } from "../../constants/readerConfig";
 import "./dropdownList.css";
 import { Trans } from "react-i18next";
 import { DropdownListProps, DropdownListState } from "./interface";
@@ -28,6 +28,7 @@ class DropdownList extends React.Component<
   }
   componentDidMount() {
     //使下拉菜单选中预设的值
+
     document
       .querySelector(".paragraph-character-setting")!
       .children[0].children[1].children[
@@ -51,19 +52,27 @@ class DropdownList extends React.Component<
         this.setState({
           currentFontFamilyIndex: arr[1],
         });
+        this.props.currentEpub.rendition.themes.default({
+          "a, article, cite, code, div, li, p, pre, span, table": {
+            "font-family": `${arr[0] || "Helvetica"} !important`,
+          },
+        });
         break;
 
       case "lineHeight":
         this.setState({
           currentLineHeightIndex: arr[1],
         });
+        this.props.currentEpub.rendition.themes.default({
+          "a, article, cite, code, div, li, p, pre, span, table": {
+            "line-height": `${arr[0] || "1.25"} !important`,
+          },
+        });
         break;
 
       default:
         break;
     }
-    this.props.handleMessage("Try refresh or restart");
-    this.props.handleMessageBox(true);
   }
   render() {
     const renderParagraphCharacter = () => {
@@ -84,6 +93,7 @@ class DropdownList extends React.Component<
                 value={[subItem, index.toString()]}
                 className="general-setting-option"
                 key={index}
+                style={item.id === 1 ? { fontFamily: subItem } : {}}
               >
                 {subItem}
               </option>

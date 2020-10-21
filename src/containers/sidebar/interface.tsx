@@ -1,7 +1,9 @@
-export interface SidebarProps {
+import { RouteComponentProps } from "react-router";
+
+export interface SidebarProps extends RouteComponentProps<any> {
   mode: string;
   handleMode: (mode: string) => void;
-  handleShelfIndex: (index: number) => void;
+  handleSearch: (isSearch: boolean) => void;
 }
 
 export interface SidebarState {

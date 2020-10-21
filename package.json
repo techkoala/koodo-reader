@@ -1,7 +1,7 @@
 {
   "name": "koodo-reader",
-  "main": "main.ts",
-  "version": "1.1.5",
+  "main": "main.js",
+  "version": "1.1.8",
   "description": "A cross-platform open source Epub reader ",
   "author": {
     "name": "App by Troye",
@@ -11,15 +11,26 @@
   "private": true,
   "dependencies": {
     "axios": "^0.19.2",
+    "body-parser": "^1.19.0",
     "copy-text-to-clipboard": "^2.2.0",
+    "cors": "^2.8.5",
     "electron-is-dev": "^1.1.0",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.2.0",
     "font-list": "^1.2.11",
     "i18next": "^19.4.4",
     "i18next-browser-languagedetector": "^4.2.0",
+    "iconv-lite": "^0.6.2",
     "is-electron": "^2.2.0",
     "md5": "^2.3.0",
+    "nodemon": "^2.0.6",
+    "nodepub": "^2.2.0",
+    "react-device-detect": "^1.12.1",
     "react-dropzone": "^11.0.1",
-    "react-i18next": "^9.0.10"
+    "react-i18next": "^9.0.10",
+    "react-router-dom": "^5.2.0",
+    "request": "^2.88.2",
+    "underscore": "^1.11.0"
   },
   "scripts": {
     "analyze": "source-map-explorer 'build/static/js/*.js'",
@@ -28,7 +39,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "ele": "electron .",
-    "dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000/ && electron .\"",
+    "dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000/ && nodemon --watch * --exec electron .\"",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "release": "electron-builder ",
@@ -45,14 +56,14 @@
       "build/**/*",
       "node_modules/**/*",
       "package.json",
-      "main.ts"
+      "main.js"
     ],
     "directories": {
       "buildResources": "assets"
     },
-    "publish": [
-      "github"
-    ],
+    "publish": {
+      "provider": "github"
+    },
     "extends": null,
     "dmg": {
       "contents": [
@@ -70,7 +81,7 @@
       ]
     },
     "mac": {
-      "icon": "build/icons/icon.icns",
+      "icon": "assets/icons/icon.icns",
       "category": "public.app-category.productivity",
       "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
@@ -78,9 +89,12 @@
       "target": [
         "nsis"
       ],
-      "icon": "assets/icon.ico",
+      "icon": "assets/icons/icon.ico",
       "artifactName": "${productName}-Web-Setup-${version}.${ext}",
       "publisherName": "App by Troye"
+    },
+    "linux": {
+      "icon": "assets/icons"
     }
   },
   "eslintConfig": {
@@ -98,6 +112,16 @@
       "last 1 safari version"
     ]
   },
+  "babel": {
+    "presets": [
+      "react-app"
+    ],
+    "plugins": [
+      [
+        "react-hot-loader/babel"
+      ]
+    ]
+  },
   "devDependencies": {
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
@@ -113,7 +137,9 @@
     "@types/react-dropzone": "^5.1.0",
     "@types/react-i18next": "^8.1.0",
     "@types/react-redux": "^7.1.7",
+    "@types/react-router-dom": "^5.1.6",
     "@types/spark-md5": "^3.0.2",
+    "@types/underscore": "^1.10.24",
     "classnames": "^2.2.6",
     "concurrently": "^5.0.1",
     "cross-env": "^6.0.3",
@@ -126,9 +152,9 @@
     "node-sass": "^4.13.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
+    "react-hot-loader": "^4.12.21",
     "react-redux": "^7.2.0",
     "react-scripts": "3.4.0",
-    "react-simplemde-editor": "^4.1.0",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
     "sass-loader": "^8.0.0",

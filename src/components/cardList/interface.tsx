@@ -1,19 +1,19 @@
 import BookModel from "../../model/Book";
 import BookmarkModel from "../../model/Bookmark";
 import NoteModel from "../../model/Note";
+import { RouteComponentProps } from "react-router";
 
-export interface CardListProps {
+export interface CardListProps extends RouteComponentProps<any> {
   currentEpub: any;
   currentBook: BookModel;
   bookmarks: BookmarkModel[];
   chapters: any;
   books: BookModel[];
-  epubs: any;
   cards: NoteModel[];
   mode: string;
-  handleReadingState: (isReading: boolean) => void;
   handleReadingBook: (currentBook: BookModel) => void;
-  handleReadingEpub: (currentEpub: any) => void;
+  handleMessage: (message: string) => void;
+  handleMessageBox: (isShow: boolean) => void;
 }
 export interface CardListStates {
   deleteKey: string;

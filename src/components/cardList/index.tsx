@@ -1,13 +1,10 @@
 //我的书摘页面
 import { connect } from "react-redux";
-import { stateType } from "../../redux/store";
+import { stateType } from "../../store";
 import { withNamespaces } from "react-i18next";
 import CardList from "./component";
-import {
-  handleReadingState,
-  handleReadingBook,
-  handleReadingEpub,
-} from "../../redux/actions/book";
+import { handleReadingBook } from "../../store/actions/book";
+import { handleMessageBox, handleMessage } from "../../store/actions/manager";
 
 const mapStateToProps = (state: stateType) => {
   return {
@@ -17,13 +14,12 @@ const mapStateToProps = (state: stateType) => {
     bookmarks: state.reader.bookmarks,
     chapters: state.reader.chapters,
     books: state.manager.books,
-    epubs: state.manager.epubs,
   };
 };
 const actionCreator = {
-  handleReadingState,
   handleReadingBook,
-  handleReadingEpub,
+  handleMessageBox,
+  handleMessage,
 };
 export default connect(
   mapStateToProps,

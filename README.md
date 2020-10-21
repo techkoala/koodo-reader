@@ -6,7 +6,7 @@
   Koodo Reader
 </h1>
 <h3 align="center">
-  一个基于 React 和 Electron 开发的 Epub 阅读器
+  一个跨平台的电子书阅读器
 </h3>
 <div align="center">
 
@@ -14,12 +14,11 @@
 
 </div>
 <div align="center">
-  <a href="https://ci.appveyor.com/project/troyeguo/koodo-reader/branch/master">
-    <img src="https://ci.appveyor.com/api/projects/status/602fp409plq8qcwu?svg=true" alt="appveyor">
-  </a>
-  <a href="https://travis-ci.com/github/troyeguo/koodo-reader">
-    <img src="https://travis-ci.com/troyeguo/koodo-reader.svg?branch=master" alt="travis-ci">
-  </a>
+
+简体中文 | [English](https://github.com/troyeguo/koodo-reader/blob/master/README_en.md)
+
+</div>
+<div align="center">
   <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
     <img src="https://img.shields.io/github/release/troyeguo/koodo-reader.svg?style=flat-square" alt="">
   </a>
@@ -49,19 +48,29 @@
 
 👏 欢迎使用 **Koodo Reader** ！
 
-✍️ **Koodo Reader** 是一个开源免费的 Epub 阅读器，支持桌面版和网页版
+✍️ **Koodo Reader** 是一个开源免费的电子书阅读器，支持桌面版和网页版
 
 ## 特色 👇
 
-📝 强大笔记和翻译功能，学习事半功倍
+🌈 支持阅读 **epub** , **pdf**, **mobi** 和 **txt** 格式的图书
 
-🚩 使用书架来为你的图书分类
+🌎 支持 **Windows** ， **macOS**， **Linux** 和 **网页版**
 
-🌎 支持 **Windows** ， **MacOS** 和 **网页版**
+💡 备份导出，网盘同步
 
-🖥 绑定 **OneDrive**， **Google Drive**， **Dropbox** 等网盘，实现数据的多端同步
+📝 双页模式，单页模式，滚动模式
 
-💻 您所有的数据都支持导入导出
+🚩 听书功能，翻译功能
+
+💻 目录，书签，笔记，书摘，书架，标签
+
+🎯 自定义字体，字体大小，行间距，阅读背景色
+
+🏝 触控屏手势支持
+
+🚀 文字高亮和下划线标记
+
+⚽ 简体中文，繁体中文，英文，多语言支持
 
 🌱 当然 **Koodo Reader** 仍然很年轻并且有一些缺陷，但有你的支持它一定会越来越好 🏃
 
@@ -103,4 +112,4 @@
 
 ## 帮助
 
-您可以在 issue 区提问，我会在力所能及的范围内提供帮助
+您可以在 issue 区提问，或者通过邮箱 guo362429@gmail.com 与我取得联系

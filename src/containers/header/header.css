@@ -77,10 +77,12 @@
 
 @media screen and (max-width: 950px) {
   .import-from-cloud {
-    display: none;
+    position: absolute;
+    left: 580px;
   }
   .import-from-local {
-    display: none;
+    position: absolute;
+    left: 400px;
   }
 }
 .download-demo-book {
@@ -98,26 +100,23 @@
   }
 }
 
-.change-language {
-  width: 30px;
-  height: 30px;
-  font-size: 30px;
-  position: absolute;
-  left: 340px;
-  margin-top: 28px;
-  color: rgba(75, 75, 75, 1);
-  cursor: pointer;
-}
-.icon-traditional,
-.icon-simplified,
-.icon-english {
-  font-size: 25px;
-  color: rgba(75, 75, 75, 1);
-}
 .header-search-container {
   position: absolute;
   top: 23px;
   left: 20px;
   width: 209px;
   height: 40px;
+}
+.setting-icon {
+  font-size: 25px;
+}
+.setting-icon-container {
+  width: 30px;
+  height: 30px;
+  font-size: 30px;
+  position: absolute;
+  left: 335px;
+  margin-top: 28px;
+  color: rgba(75, 75, 75, 1);
+  cursor: pointer;
 }

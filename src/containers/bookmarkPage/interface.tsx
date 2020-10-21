@@ -1,15 +1,13 @@
 import BookmarkModel from "../../model/Bookmark";
 import BookModel from "../../model/Book";
+import { RouteComponentProps } from "react-router";
 
-export interface BookmarkPageProps {
+export interface BookmarkPageProps extends RouteComponentProps<any> {
   bookmarks: BookmarkModel[];
-  covers: { key: string; url: string }[];
   books: BookModel[];
-  epubs: any;
   handleFetchBookmarks: () => void;
-  handleReadingState: (isReading: boolean) => void;
-  handleReadingBook: (currentBook: BookModel) => void;
-  handleReadingEpub: (currentEpub: any) => void;
+  handleMessage: (message: string) => void;
+  handleMessageBox: (isShow: boolean) => void;
 }
 export interface BookmarkPageState {
   bookmarks: BookmarkModel[];

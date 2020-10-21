@@ -1,12 +1,14 @@
 //我的书签页面
 import React from "react";
 import "./bookmarkPage.css";
-import RecentBooks from "../../utils/recordRecent";
 import RecordLocation from "../../utils/recordLocation";
 import BookmarkModel from "../../model/Bookmark";
 import BookModel from "../../model/Book";
 import { Trans } from "react-i18next";
 import { BookmarkPageProps, BookmarkPageState } from "./interface";
+import { Redirect, withRouter } from "react-router-dom";
+
+declare var window: any;
 
 class BookmarkPage extends React.Component<
   BookmarkPageProps,
@@ -17,26 +19,33 @@ class BookmarkPage extends React.Component<
   }
   //点击跳转后跳转到指定页面
   handleRedirect = (key: string, cfi: string, percentage: number) => {
-    let { books, epubs } = this.props;
-    let book = null;
-    let epub = null;
-    //根据bookKey获取指定的book和epub
+    let { books } = this.props;
+    let book: any;
+    //根据bookKey获取指定的book
     for (let i = 0; i < books.length; i++) {
       if (books[i].key === key) {
         book = books[i];
-        epub = epubs[i];
         break;
       }
     }
-    this.props.handleReadingBook(book!);
-    this.props.handleReadingEpub(epub);
-    this.props.handleReadingState(true);
-    RecentBooks.setRecent(key);
+    if (!cfi || !percentage) {
+      cfi = RecordLocation.getCfi(book!.key).cfi;
+      percentage = RecordLocation.getCfi(book!.key).percentage;
+    }
+    if (!book) {
+      this.props.handleMessage("Book not exsit");
+      this.props.handleMessageBox(true);
+      return;
+    }
     RecordLocation.recordCfi(key, cfi, percentage);
+    window.open(`${window.location.href.split("#")[0]}#/epub/${book.key}`);
   };
   render() {
-    let { bookmarks, books, covers } = this.props;
+    let { bookmarks, books } = this.props;
     let bookKeyArr: string[] = [];
+    if (bookmarks.length === 0) {
+      return <Redirect to="/manager/empty" />;
+    }
     //获取bookmarks中的图书列表
     bookmarks.forEach((item) => {
       if (bookKeyArr.indexOf(item.bookKey) === -1) {
@@ -47,14 +56,6 @@ class BookmarkPage extends React.Component<
     //根据图书列表获取图书数据
     let bookArr = books.filter((item) => {
       return bookKeyArr.indexOf(item.key) > -1;
-    });
-    let coverArr: { key: string; url: string }[] = covers.filter((item) => {
-      return bookKeyArr.indexOf(item.key) > -1;
-    });
-    let coverObj: { [key: string]: string } = {};
-    //根据图书数据获取封面的url
-    coverArr.forEach((item: any) => {
-      coverObj[item.key] = item.url;
     });
     let bookmarkObj: { [key: string]: any } = {};
     bookmarks.forEach((item) => {
@@ -90,26 +91,26 @@ class BookmarkPage extends React.Component<
         </li>
       ));
     };
-    const renderBookmarkPageItem = (item: BookModel, index: number) => {
-      return (
-        <li className="bookmark-page-item" key={item.key}>
-          <img
-            className="bookmark-page-cover"
-            src={coverObj[item.key]}
-            alt=""
-          />
-          <p className="bookmark-page-name">{bookArr[index].name}</p>
-          <div className="bookmark-page-bookmark-container-parent">
-            <ul className="bookmark-page-bookmark-container">
-              {renderBookmarklistItem(item)}
-            </ul>
-          </div>
-        </li>
-      );
-    };
     const renderBookmarkPage = () => {
       return bookArr.map((item, index) => {
-        return <div key={item.key}>{renderBookmarkPageItem(item, index)}</div>;
+        return (
+          <li className="bookmark-page-item" key={item.key}>
+            <img
+              className="bookmark-page-cover"
+              src={item.cover}
+              alt=""
+              onClick={() => {
+                this.handleRedirect(item.key, "", 0);
+              }}
+            />
+            <p className="bookmark-page-name">{bookArr[index].name}</p>
+            <div className="bookmark-page-bookmark-container-parent">
+              <ul className="bookmark-page-bookmark-container">
+                {renderBookmarklistItem(item)}
+              </ul>
+            </div>
+          </li>
+        );
       });
     };
     return (
@@ -120,4 +121,4 @@ class BookmarkPage extends React.Component<
   }
 }
 
-export default BookmarkPage;
+export default withRouter(BookmarkPage);

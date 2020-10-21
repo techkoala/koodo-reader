@@ -20,7 +20,10 @@ class AddDialog extends Component<AddDialogProps, AddDialogState> {
     ) as HTMLInputElement;
     let shelfTitle: string = this.state.shelfTitle;
     let shelfList = ShelfUtil.getShelf();
-
+    let shelfTitles = Object.keys(ShelfUtil.getShelf());
+    let shelfIndex = this.state.isNew
+      ? shelfTitles.length
+      : shelfTitles.indexOf(inputElement.value);
     if (this.state.isNew) {
       shelfTitle = inputElement.value;
       if (shelfList.hasOwnProperty(shelfTitle)) {
@@ -29,6 +32,7 @@ class AddDialog extends Component<AddDialogProps, AddDialogState> {
         return;
       }
     }
+    //未填书架名提醒
     if (!shelfTitle) {
       this.props.handleMessage("Empty Shelf Title");
       this.props.handleMessageBox(true);
@@ -49,6 +53,8 @@ class AddDialog extends Component<AddDialogProps, AddDialogState> {
     this.props.handleMessage("Add Successfully");
     this.props.handleMessageBox(true);
     this.props.handleActionDialog(false);
+    this.props.handleMode("shelf");
+    this.props.handleShelfIndex(shelfIndex);
   };
   //如果是添加到已存在的书架就diable新建图书的input框
   handleChange = (shelfTitle: string) => {

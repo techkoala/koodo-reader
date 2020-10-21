@@ -1,9 +1,9 @@
-//左下角的图标外链
+//更新提示弹窗
 import React from "react";
 import "./updateDialog.css";
 import { UpdateInfoProps, UpdateInfoState } from "./interface";
 import { Trans } from "react-i18next";
-import { updateLog } from "../../utils/readerConfig";
+import { updateLog } from "../../constants/readerConfig";
 
 class UpdateDialog extends React.Component<UpdateInfoProps, UpdateInfoState> {
   constructor(props: UpdateInfoProps) {
@@ -66,7 +66,11 @@ class UpdateDialog extends React.Component<UpdateInfoProps, UpdateInfoState> {
           koodo.960960.xyz
         </p>
         <img
-          src="/assets/empty.svg"
+          src={
+            process.env.NODE_ENV === "production"
+              ? "./assets/empty.svg"
+              : "../../assets/empty.svg"
+          }
           alt=""
           className="update-dialog-illustration"
         />

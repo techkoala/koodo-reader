@@ -1,12 +1,15 @@
-//我的书摘页面
+//我的书摘，笔记的卡片
 import React from "react";
 import "./cardList.css";
 import NoteModel from "../../model/Note";
 import { Trans } from "react-i18next";
 import { CardListProps, CardListStates } from "./interface";
 import DeleteIcon from "../../components/deleteIcon";
-import RecentBooks from "../../utils/recordRecent";
 import RecordLocation from "../../utils/recordLocation";
+import { withRouter } from "react-router-dom";
+import { Redirect } from "react-router-dom";
+
+declare var window: any;
 
 class CardList extends React.Component<CardListProps, CardListStates> {
   constructor(props: CardListProps) {
@@ -29,25 +32,28 @@ class CardList extends React.Component<CardListProps, CardListStates> {
     this.setState({ deleteKey });
   };
   handleJump = (cfi: string, bookKey: string, percentage: number) => {
-    let { books, epubs } = this.props;
-    let book = null;
-    let epub = null;
+    let { books } = this.props;
+    let book: any;
     //根据bookKey获取指定的book和epub
     for (let i = 0; i < books.length; i++) {
       if (books[i].key === bookKey) {
         book = books[i];
-        epub = epubs[i];
         break;
       }
     }
-    this.props.handleReadingBook(book!);
-    this.props.handleReadingEpub(epub);
-    this.props.handleReadingState(true);
-    RecentBooks.setRecent(bookKey);
+    if (!book) {
+      this.props.handleMessage("Book not exsit");
+      this.props.handleMessageBox(true);
+      return;
+    }
     RecordLocation.recordCfi(bookKey, cfi, percentage);
+    window.open(`${window.location.href.split("#")[0]}#/epub/${book.key}`);
   };
   render() {
     let { cards } = this.props;
+    if (cards.length === 0) {
+      return <Redirect to="/manager/empty" />;
+    }
     let cardArr = [];
     //使书摘从晚到早排序
     for (let i = cards.length - 1; i >= 0; i--) {
@@ -158,4 +164,4 @@ class CardList extends React.Component<CardListProps, CardListStates> {
   }
 }
 
-export default CardList;
+export default withRouter(CardList);

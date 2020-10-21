@@ -1,25 +1,25 @@
 //全部图书，最近阅读，搜索结果，排序结果的数据
 import { connect } from "react-redux";
-import { handleFetchList } from "../../redux/actions/manager";
-import { stateType } from "../../redux/store";
+import { handleFetchList } from "../../store/actions/manager";
+import { handleMode, handleShelfIndex } from "../../store/actions/sidebar";
+
+import { stateType } from "../../store";
 import { withNamespaces } from "react-i18next";
 import BookList from "./component";
 
-const mappropsToProps = (props: stateType) => {
+const mappropsToProps = (state: stateType) => {
   return {
-    books: props.manager.books,
-    covers: props.manager.covers,
-    epubs: props.manager.epubs,
-    mode: props.sidebar.mode,
-    shelfIndex: props.sidebar.shelfIndex,
-    searchBooks: props.manager.searchBooks,
-    isSearch: props.manager.isSearch,
-    isSort: props.manager.isSort,
-    isList: props.manager.isList,
-    sortCode: props.manager.sortCode,
+    books: state.manager.books,
+    mode: state.sidebar.mode,
+    shelfIndex: state.sidebar.shelfIndex,
+    searchResults: state.manager.searchResults,
+    isSearch: state.manager.isSearch,
+    isSort: state.manager.isSort,
+    isList: state.manager.isList,
+    sortCode: state.manager.sortCode,
   };
 };
-const actionCreator = { handleFetchList };
+const actionCreator = { handleFetchList, handleMode, handleShelfIndex };
 export default connect(
   mappropsToProps,
   actionCreator

@@ -3,34 +3,62 @@ import React from "react";
 import "./loadingPage.css";
 import { LoadingPageProps } from "./interface";
 import OtherUtil from "../../utils/otherUtil";
+import { Redirect } from "react-router-dom";
 
 class LoadingPage extends React.Component<LoadingPageProps> {
   render() {
-    const renderLoadingPage = () => {
-      let arr = [];
-      for (
-        let i = 0;
-        i < parseInt(OtherUtil.getReaderConfig("totalBooks") || "0");
-        i++
-      ) {
-        arr.push(i);
-      }
-      return arr.map((item, index) => {
-        return (
-          <div className="loading-page-book" key={item}>
-            <div
-              className="loading-page-cover"
-              style={{ opacity: `${(index % 7) * 0.2 + 0.2}` }}
-            ></div>
+    if (this.props.books) {
+      return <Redirect to="/manager/home" />;
+    }
+    let arr: number[] = [];
+    for (
+      let i = 0;
+      i < parseInt(OtherUtil.getReaderConfig("totalBooks") || "0");
+      i++
+    ) {
+      arr.push(i);
+    }
+    if (OtherUtil.getReaderConfig("isList") !== "list") {
+      const renderLoadingCard = () => {
+        return arr.map((item, index) => {
+          return (
+            <div className="loading-page-book" key={item}>
+              <div
+                className="loading-page-cover"
+                style={{ opacity: `${(index % 7) * 0.2}` }}
+              ></div>
+            </div>
+          );
+        });
+      };
+      return (
+        <div className="loading-page-container-parent">
+          <div className="loading-page-container">{renderLoadingCard()}</div>
+        </div>
+      );
+    } else {
+      const renderLoadingList = () => {
+        return arr.map((item, index) => {
+          return (
+            <div className="loading-page-list" key={item}>
+              <div className="loading-page-list-cover"></div>
+              <div className="loading-page-bar">
+                <div className="loading-page-bar1"></div>
+                <div className="loading-page-bar2"></div>
+                <div className="loading-page-bar3"></div>
+              </div>
+            </div>
+          );
+        });
+      };
+      return (
+        <div className="loading-page-container-parent">
+          <div className="loading-page-container" style={{ marginTop: "8px" }}>
+            {renderLoadingList()}
           </div>
-        );
-      });
-    };
-    return (
-      <div className="loading-page-container-parent">
-        <div className="loading-page-container">{renderLoadingPage()}</div>
-      </div>
-    );
+        </div>
+      );
+    }
   }
 }
 

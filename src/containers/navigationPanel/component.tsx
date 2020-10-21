@@ -1,9 +1,8 @@
-//图书导航栏
+//左侧图书导航面板
 import React from "react";
 import "./navigationPanel.css";
 import ContentList from "../../components/contentList";
-import BookmarkList from "../../components/bookmarkList";
-import ReadingTime from "../../utils/readingTime";
+import BookNavList from "../../components/navList";
 import { Trans } from "react-i18next";
 import { NavigationPanelProps, NavigationPanelState } from "./interface";
 import SearchBox from "../../components/searchBox";
@@ -17,16 +16,14 @@ class NavigationPanel extends React.Component<
   constructor(props: NavigationPanelProps) {
     super(props);
     this.state = {
-      isContentShow: true,
+      currentTab: "contents",
       chapters: [],
       cover: "",
-      time: ReadingTime.getTime(this.props.currentBook.key),
       isSearch: false,
       searchList: null,
       startIndex: 0,
       currentIndex: 0,
     };
-    this.timer = null;
   }
   handleSearchState = (isSearch: boolean) => {
     this.setState({ isSearch });
@@ -35,11 +32,6 @@ class NavigationPanel extends React.Component<
     this.setState({ searchList });
   };
   componentDidMount() {
-    this.timer = setInterval(() => {
-      let time = this.state.time;
-      time += 1;
-      this.setState({ time });
-    }, 1000);
     this.props.currentEpub
       .coverUrl()
       .then((url: string) => {
@@ -50,13 +42,9 @@ class NavigationPanel extends React.Component<
       });
     this.props.handleFetchBookmarks();
   }
-  componentWillUnmount() {
-    clearInterval(this.timer);
-    ReadingTime.setTime(this.props.currentBook.key, this.state.time);
-  }
 
-  handleClick = (isContentShow: boolean) => {
-    this.setState({ isContentShow });
+  handleChangeTab = (currentTab: string) => {
+    this.setState({ currentTab });
   };
   renderSearchList = () => {
     if (!this.state.searchList[0]) {
@@ -150,7 +138,9 @@ class NavigationPanel extends React.Component<
       handleSearchState: this.handleSearchState,
       handleSearchList: this.handleSearchList,
     };
-
+    const bookmarkProps = {
+      currentTab: this.state.currentTab,
+    };
     return (
       <div className="navigation-panel">
         {this.state.isSearch ? (
@@ -196,7 +186,7 @@ class NavigationPanel extends React.Component<
                 </Trans>
               </p>
               <span className="reading-duration">
-                <Trans>Reading Time</Trans>: {Math.floor(this.state.time / 60)}
+                <Trans>Reading Time</Trans>: {Math.floor(this.props.time / 60)}
                 &nbsp;
                 <Trans>Minute</Trans>
               </span>
@@ -208,10 +198,10 @@ class NavigationPanel extends React.Component<
                 <span
                   className="book-content-title"
                   onClick={() => {
-                    this.handleClick(true);
+                    this.handleChangeTab("contents");
                   }}
                   style={
-                    this.state.isContentShow
+                    this.state.currentTab === "contents"
                       ? { color: "rgba(112, 112, 112, 1)" }
                       : { color: "rgba(217, 217, 217, 1)" }
                   }
@@ -221,28 +211,50 @@ class NavigationPanel extends React.Component<
                 <span
                   className="book-bookmark-title"
                   style={
-                    this.state.isContentShow
-                      ? { color: "rgba(217, 217, 217, 1)" }
-                      : { color: "rgba(112, 112, 112, 1)" }
+                    this.state.currentTab === "bookmarks"
+                      ? { color: "rgba(112, 112, 112, 1)" }
+                      : { color: "rgba(217, 217, 217, 1)" }
                   }
                   onClick={() => {
-                    this.handleClick(false);
+                    this.handleChangeTab("bookmarks");
                   }}
                 >
                   <Trans>Bookmark</Trans>
+                </span>
+                <span
+                  className="book-bookmark-title"
+                  style={
+                    this.state.currentTab === "notes"
+                      ? { color: "rgba(112, 112, 112, 1)" }
+                      : { color: "rgba(217, 217, 217, 1)" }
+                  }
+                  onClick={() => {
+                    this.handleChangeTab("notes");
+                  }}
+                >
+                  <Trans>Note</Trans>
+                </span>
+                <span
+                  className="book-bookmark-title"
+                  style={
+                    this.state.currentTab === "digests"
+                      ? { color: "rgba(112, 112, 112, 1)" }
+                      : { color: "rgba(217, 217, 217, 1)" }
+                  }
+                  onClick={() => {
+                    this.handleChangeTab("digests");
+                  }}
+                >
+                  <Trans>Digest</Trans>
                 </span>
               </div>
             </div>
             <div className="navigation-body-parent">
               <div className="navigation-body">
-                {this.state.isContentShow ? (
+                {this.state.currentTab === "contents" ? (
                   <ContentList />
-                ) : this.props.bookmarks ? (
-                  <BookmarkList />
                 ) : (
-                  <div className="navigation-panel-empty-bookmark">
-                    <Trans>Empty</Trans>
-                  </div>
+                  <BookNavList {...bookmarkProps} />
                 )}
               </div>
             </div>

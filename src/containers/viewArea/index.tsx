@@ -1,14 +1,12 @@
 import { connect } from "react-redux";
-import { stateType } from "../../redux/store";
+import { stateType } from "../../store";
 import ViewArea from "./component";
-import { handleFetchLocations } from "../../redux/actions/progressPanel";
-import { handlePercentage } from "../../redux/actions/progressPanel";
+import { handlePercentage } from "../../store/actions/progressPanel";
 import {
   handleOpenMenu,
   handleShowBookmark,
-} from "../../redux/actions/viewArea";
-import { handleReadingEpub } from "../../redux/actions/book";
-import { withNamespaces } from "react-i18next";
+} from "../../store/actions/viewArea";
+import { handleReadingEpub } from "../../store/actions/book";
 
 const mapStateToProps = (state: stateType) => {
   return {
@@ -21,14 +19,10 @@ const mapStateToProps = (state: stateType) => {
   };
 };
 const actionCreator = {
-  handleFetchLocations,
   handlePercentage,
   handleOpenMenu,
   handleShowBookmark,
   handleReadingEpub,
 };
 
-export default connect(
-  mapStateToProps,
-  actionCreator
-)(withNamespaces()(ViewArea as any));
+export default connect(mapStateToProps, actionCreator)(ViewArea);

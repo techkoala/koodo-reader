@@ -4,4 +4,7 @@ export interface ContentListProps {
 }
 export interface ContentListState {
   chapters: any;
+  currentIndex: number;
+  isCollapsed: boolean;
+  isExpandContent: boolean;
 }

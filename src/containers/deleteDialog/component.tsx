@@ -8,13 +8,14 @@ import RecordLocation from "../../utils/recordLocation";
 import AddFavorite from "../../utils/addFavorite";
 import { Trans } from "react-i18next";
 import { DeleteDialogProps } from "./interface";
+import { withRouter } from "react-router-dom";
 
 class DeleteDialog extends React.Component<DeleteDialogProps> {
   handleCancel = () => {
     this.props.handleDeleteDialog(false);
   };
   handleDeleteOther = () => {
-    if (this.props.bookmarks) {
+    if (this.props.bookmarks[0]) {
       let bookmarkArr = DeleteUtil.deleteBookmarks(
         this.props.bookmarks,
         this.props.currentBook.key
@@ -58,8 +59,10 @@ class DeleteDialog extends React.Component<DeleteDialogProps> {
             DeleteUtil.deleteBook(this.props.books, this.props.currentBook.key)
           )
           .then(() => {
-            this.props.handleDeleteDialog(false);
-            this.props.handleFetchBooks();
+            localforage.removeItem(this.props.currentBook.key).then(() => {
+              this.props.handleDeleteDialog(false);
+              this.props.handleFetchBooks();
+            });
           });
       //从喜爱的图书中删除
       AddFavorite.clear(this.props.currentBook.key);
@@ -72,6 +75,9 @@ class DeleteDialog extends React.Component<DeleteDialogProps> {
       //删除书签，笔记，书摘，高亮
       this.handleDeleteOther();
       this.props.handleActionDialog(false);
+      if (this.props.books.length === 1) {
+        this.props.history.push("/manager/empty");
+      }
     }
 
     this.props.handleMessage("Delete Successfully");
@@ -128,4 +134,4 @@ class DeleteDialog extends React.Component<DeleteDialogProps> {
   }
 }
 
-export default DeleteDialog;
+export default withRouter(DeleteDialog);

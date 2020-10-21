@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'icomoon';
-  src:  url('fonts/icomoon.eot?sh6zh9');
-  src:  url('fonts/icomoon.eot?sh6zh9#iefix') format('embedded-opentype'),
-    url('fonts/icomoon.ttf?sh6zh9') format('truetype'),
-    url('fonts/icomoon.woff?sh6zh9') format('woff'),
-    url('fonts/icomoon.svg?sh6zh9#icomoon') format('svg');
+  src:  url('fonts/icomoon.eot?k4izix');
+  src:  url('fonts/icomoon.eot?k4izix#iefix') format('embedded-opentype'),
+    url('fonts/icomoon.ttf?k4izix') format('truetype'),
+    url('fonts/icomoon.woff?k4izix') format('woff'),
+    url('fonts/icomoon.svg?k4izix#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -25,6 +25,33 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.icon-zoom-in:before {
+  content: "\e908";
+}
+.icon-save:before {
+  content: "\e909";
+}
+.icon-zoom-out:before {
+  content: "\e90a";
+}
+.icon-clockwise:before {
+  content: "\e90c";
+}
+.icon-counterclockwise:before {
+  content: "\e90e";
+}
+.icon-scroll1:before {
+  content: "\e905";
+}
+.icon-setting:before {
+  content: "\e904";
+}
+.icon-audio:before {
+  content: "\e903";
+}
+.icon-scroll:before {
+  content: "\e902";
+}
 .icon-love:before {
   content: "\e901";
 }

@@ -1,7 +1,10 @@
+import OtherUtil from "./otherUtil";
+let Hammer = (window as any).Hammer;
+
 export const MouseEvent = (rendition: any) => {
   let isFirefox = navigator.userAgent.indexOf("Firefox") !== -1;
   let lock = false; // 暂时锁住翻页快捷键，避免快速点击产生的Bug
-  let arrowKeys = (event: any) => {
+  const arrowKeys = (event: any) => {
     // event.preventDefault();
     if (lock) return;
     if (event.keyCode === 37 || event.keyCode === 38) {
@@ -21,7 +24,7 @@ export const MouseEvent = (rendition: any) => {
       return false;
     }
   };
-  let mouseFirefox = (event: any) => {
+  const mouseFirefox = (event: any) => {
     event.preventDefault();
     if (lock) return;
     if (event.detail < 0) {
@@ -42,7 +45,7 @@ export const MouseEvent = (rendition: any) => {
     }
   };
 
-  let mouseChrome = (event: any) => {
+  const mouseChrome = (event: any) => {
     if (lock) return;
     if (event.wheelDelta > 0) {
       rendition.prev();
@@ -61,44 +64,52 @@ export const MouseEvent = (rendition: any) => {
       return false;
     }
   };
-  let rebind = () => {
-    console.log("rebind");
+
+  const gesture = (event: any) => {
+    if (lock) return;
+    if (event.type === "panleft" || event.type === "panup") {
+      rendition.next();
+      lock = true;
+      setTimeout(function () {
+        lock = false;
+      }, 100);
+      return false;
+    }
+    if (event.type === "panright" || event.type === "pandown") {
+      rendition.prev();
+      lock = true;
+      setTimeout(function () {
+        lock = false;
+      }, 100);
+      return false;
+    }
+  };
+  const bindEvent = (doc: any) => {
+    doc.addEventListener("keydown", arrowKeys); // 箭头按键翻页
+    // 鼠标滚轮翻页
+    if (isFirefox) {
+      doc.addEventListener("DOMMouseScroll", mouseFirefox, false);
+    } else {
+      doc.addEventListener("mousewheel", mouseChrome, false);
+    }
+  };
+
+  rendition.on("rendered", () => {
     let iframe = document.getElementsByTagName("iframe")[0];
     if (!iframe) return;
     let doc = iframe.contentDocument;
     if (!doc) {
       return;
     }
-    doc.addEventListener("keydown", arrowKeys); // 箭头按键翻页
-    // 鼠标滚轮翻页
-    if (isFirefox) {
-      doc.addEventListener("DOMMouseScroll", mouseFirefox, false);
-    } else {
-      console.log("chrome-scroll");
-      doc.addEventListener("mousewheel", mouseChrome, false);
+    if (OtherUtil.getReaderConfig("isTouch") === "yes") {
+      const mc = new Hammer(doc);
+      mc.on("panleft panright panup pandown", (event: any) => {
+        gesture(event);
+      });
     }
-  };
-  let bindEvent = (doc: any) => {
-    doc.addEventListener("keydown", arrowKeys); // 箭头按键翻页
-    // 鼠标滚轮翻页
-    if (isFirefox) {
-      doc.addEventListener("DOMMouseScroll", mouseFirefox, false);
-    } else {
-      doc.addEventListener("mousewheel", mouseChrome, false);
-    }
-  };
-  rendition.on("locationChanged", () => {
-    let iframe = document.getElementsByTagName("iframe")[0];
-    if (!iframe) return;
-    let doc = iframe.contentDocument;
-    if (!doc) {
-      return;
-    }
+
     // 鼠标滚轮翻页
     window.addEventListener("keydown", arrowKeys);
-    window.addEventListener("mousewheel", rebind);
-    window.addEventListener("DOMMouseScroll", rebind);
-    window.onmousewheel = rebind;
     bindEvent(doc);
   });
 };

@@ -1,6 +1,7 @@
+//修改阅读器背景色
 import React from "react";
-import { themeList } from "../../utils/readerConfig";
-import ReaderConfig from "../../utils/readerConfig";
+import { themeList } from "../../constants/readerConfig";
+import StyleUtil from "../../utils/styleUtil";
 import "./themeList.css";
 import { Trans } from "react-i18next";
 import { ThemeListProps, ThemeListState } from "./interface";
@@ -13,7 +14,7 @@ class ThemeList extends React.Component<ThemeListProps, ThemeListState> {
       currentBackgroundIndex: themeList.findIndex((item) => {
         return (
           item.theme ===
-          (OtherUtil.getReaderConfig("theme") || "rgba(255,254,252,1)")
+          (OtherUtil.getReaderConfig("theme") || "rgba(255,255,255,1)")
         );
       }),
     };
@@ -23,7 +24,20 @@ class ThemeList extends React.Component<ThemeListProps, ThemeListState> {
     this.setState({
       currentBackgroundIndex: index,
     });
-    ReaderConfig.addDefaultCss();
+    if (index === 4) {
+      this.props.currentEpub.rendition.themes.default({
+        "a, article, cite, code, div, li, p, pre, span, table": {
+          color: `white !important`,
+        },
+      });
+    } else {
+      this.props.currentEpub.rendition.themes.default({
+        "a, article, cite, code, div, li, p, pre, span, table": {
+          color: `inherit !important`,
+        },
+      });
+    }
+    StyleUtil.addDefaultCss();
   }
   render() {
     const renderBackgroundColorList = () => {

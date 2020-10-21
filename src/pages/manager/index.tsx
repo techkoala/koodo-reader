@@ -5,18 +5,18 @@ import {
   handleFetchList,
   handleMessageBox,
   handleFirst,
-} from "../../redux/actions/manager";
+} from "../../store/actions/manager";
 import {
   handleFetchNotes,
   handleFetchBookmarks,
-} from "../../redux/actions/reader";
+} from "../../store/actions/reader";
 import "./manager.css";
-import { stateType } from "../../redux/store";
+import { stateType } from "../../store";
 import Manager from "./component";
+import { withRouter } from "react-router-dom";
 const mapStateToProps = (state: stateType) => {
   return {
     books: state.manager.books,
-    covers: state.manager.covers,
     notes: state.reader.notes,
     digests: state.reader.digests,
     bookmarks: state.reader.bookmarks,
@@ -26,6 +26,7 @@ const mapStateToProps = (state: stateType) => {
     isOpenEditDialog: state.book.isOpenEditDialog,
     isOpenDeleteDialog: state.book.isOpenDeleteDialog,
     isOpenAddDialog: state.book.isOpenAddDialog,
+    isSettingOpen: state.manager.isSettingOpen,
     isSort: state.manager.isSort,
     isSortDisplay: state.manager.isSortDisplay,
     isMessage: state.manager.isMessage,
@@ -42,4 +43,4 @@ const actionCreator = {
   handleMessageBox,
   handleFirst,
 };
-export default connect(mapStateToProps, actionCreator)(Manager);
+export default connect(mapStateToProps, actionCreator)(withRouter(Manager));

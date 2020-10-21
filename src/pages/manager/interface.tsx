@@ -1,9 +1,9 @@
 import BookModel from "../../model/Book";
 import NoteModel from "../../model/Note";
 import BookmarkModel from "../../model/Bookmark";
-export interface ManagerProps {
+import { RouteComponentProps } from "react-router";
+export interface ManagerProps extends RouteComponentProps<any> {
   books: BookModel[];
-  covers: { key: string; url: string }[];
   notes: NoteModel[];
   digests: NoteModel[];
   bookmarks: BookmarkModel[];
@@ -18,6 +18,7 @@ export interface ManagerProps {
   isSortDisplay: boolean;
   isMessage: boolean;
   isBackup: boolean;
+  isSettingOpen: boolean;
   handleFetchBooks: () => void;
   handleFetchNotes: () => void;
   handleFetchBookmarks: () => void;

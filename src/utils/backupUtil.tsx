@@ -1,35 +1,39 @@
-// import localforage from "localforage";
-// import JSZip from "jszip";
 import FileSaver from "file-saver";
 import BookModel from "../model/Book";
 import NoteModel from "../model/Note";
 import BookmarkModel from "../model/Bookmark";
 import DropboxUtil from "./syncUtils/dropbox";
-import OndriveUtil from "./syncUtils/onedrive";
-// import _ from "lodash";
+import localforage from "localforage";
 
-let _ = (window as any)._;
 let JSZip = (window as any).JSZip;
 class BackupUtil {
-  static backup(
+  static backup = async (
     bookArr: BookModel[],
     notes: NoteModel[],
     bookmarks: BookmarkModel[],
     handleFinish: () => void,
     driveIndex: number,
     showMessage: (message: string) => void
-  ) {
+  ) => {
     let zip = new JSZip();
-    let books: BookModel[] = _.cloneDeep(bookArr);
+    let books = bookArr;
     let epubZip = zip.folder("epub");
+    let data: any = [];
     books &&
       books.forEach((item) => {
-        epubZip.file(`${item.name}.epub`, item.content);
+        data.push(localforage.getItem(item.key));
+        // let result = localforage.getItem(item.key);
+        // console.log(result);
+        // results.forEach((item) => {
+        //   epubZip.file(`${item.name}.epub`, item.content);
+        // });
+        // epubZip.file(`${item.name}.epub`, result);
       });
-    books &&
-      books.forEach((item) => {
-        delete item.content;
-      });
+    let results = await Promise.all(data);
+    console.log(results);
+    for (let i = 0; i < books.length; i++) {
+      epubZip.file(`${books[i].name}.epub`, results[i]);
+    }
     let dataZip = zip.folder("data");
     dataZip
       .file("notes.json", JSON.stringify(notes))
@@ -44,6 +48,7 @@ class BackupUtil {
       .file("recentBooks.json", localStorage.getItem("recentBooks") || [])
       .file("favoriteBooks.json", localStorage.getItem("favoriteBooks") || [])
       .file("shelfList.json", localStorage.getItem("shelfList") || [])
+      .file("noteTags.json", localStorage.getItem("noteTags") || [])
       .file(
         "recordLocation.json",
         localStorage.getItem("recordLocation") || ""
@@ -67,15 +72,11 @@ class BackupUtil {
             );
             break;
           case 1:
-            console.log("backuputil 1", blob);
             DropboxUtil.UploadFile(blob, handleFinish, showMessage);
             break;
           case 2:
-            console.log("backuputil 2");
             break;
           case 3:
-            OndriveUtil.UploadFile(blob, handleFinish, showMessage);
-            console.log("backuputil 2", blob);
             break;
           default:
             break;
@@ -84,7 +85,7 @@ class BackupUtil {
       .catch((err: any) => {
         console.log(err);
       });
-  }
+  };
 }
 
 export default BackupUtil;
