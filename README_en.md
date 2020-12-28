@@ -54,7 +54,7 @@
 
 ## Feature 👇
 
-🌈 Format support: **epub** , **pdf**, **mobi** and **txt**
+🌈 Format support: **epub** , **pdf**, **mobi**, **azw3**, and **txt**
 
 🌎 Platform support: **Windows** , **macOS**, **Linux** and **Web**
 
@@ -66,7 +66,7 @@
 
 💻 Bookmark, Note, Digest, Shelf and Tag
 
-🎯 Adjust font, line-spacing, and margins
+🎯 Adjust font, line-spacing, background color, text color and margins
 
 🏝 Support for Touch Screen
 

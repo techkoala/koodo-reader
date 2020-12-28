@@ -2,7 +2,7 @@
 import React from "react";
 import "./updateInfo.css";
 import { UpdateInfoProps, UpdateInfoState } from "./interface";
-import { updateLog } from "../../constants/readerConfig";
+import { updateLog } from "../../constants/updateLog";
 import { Trans } from "react-i18next";
 import axios from "axios";
 const isElectron = require("is-electron");
@@ -23,9 +23,11 @@ class UpdateInfo extends React.Component<UpdateInfoProps, UpdateInfoState> {
           const download = res.data.download;
           const version = res.data.log.version;
           if (this.compareVersion(updateLog.version, version)) {
-            navigator.platform === "Win32"
-              ? this.setState({ downlownLink: download[0].url })
-              : this.setState({ downlownLink: download[1].url });
+            navigator.platform.indexOf("Linux") > -1
+              ? this.setState({ downlownLink: download[2].url })
+              : navigator.platform.indexOf("Mac") > -1
+              ? this.setState({ downlownLink: download[1].url })
+              : this.setState({ downlownLink: download[0].url });
           }
         })
         .catch((err) => {

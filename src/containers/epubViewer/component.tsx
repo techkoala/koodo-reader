@@ -66,6 +66,8 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
       width: "100%",
       height: "100%",
       snap: true,
+      spread:
+        OtherUtil.getReaderConfig("readerMode") === "single" ? "none" : "",
     });
     this.setState({ rendition: this.rendition });
     this.state.readerMode !== "scroll" &&
@@ -81,9 +83,7 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
   componentWillUnmount() {
     //清除上面的计时器
     clearTimeout(this.messageTimer);
-    setTimeout(() => {}, 5000);
     clearInterval(this.tickTimer);
-    ReadingTime.setTime(this.props.currentBook.key, this.state.time);
   }
   //进入阅读器
   handleEnterReader = (position: string) => {
@@ -133,7 +133,12 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
         break;
     }
   };
-
+  nextPage = () => {
+    this.state.rendition.next();
+  };
+  prevPage = () => {
+    this.state.rendition.prev();
+  };
   render() {
     const renditionProps = {
       rendition: this.state.rendition,
@@ -147,6 +152,22 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
     };
     return (
       <div className="viewer">
+        <div
+          className="previous-chapter-single-container"
+          onClick={() => {
+            this.prevPage();
+          }}
+        >
+          <span className="icon-dropdown previous-chapter-single"></span>
+        </div>
+        <div
+          className="next-chapter-single-container"
+          onClick={() => {
+            this.nextPage();
+          }}
+        >
+          <span className="icon-dropdown next-chapter-single"></span>
+        </div>
         {this.state.isMessage ? <MessageBox /> : null}
         <div
           className="left-panel"
@@ -210,8 +231,8 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
               ? {}
               : {
                   transform: "translateX(309px)",
-                  // transition: "transform 1s ease",
-                  // display: "none",
+                  transition: "transform 1s ease",
+                  display: "none",
                 }
           }
         >
@@ -227,8 +248,8 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
               ? {}
               : {
                   transform: "translateX(-309px)",
-                  // transition: "transform 1s ease",
-                  // display: "none",
+                  transition: "transform 1s ease",
+                  display: "none",
                 }
           }
         >
@@ -244,8 +265,8 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
               ? {}
               : {
                   transform: "translateY(110px)",
-                  // transition: "transform 0.5s ease",
-                  // display: "none",
+                  transition: "transform 0.5s ease",
+                  display: "none",
                 }
           }
         >
@@ -261,8 +282,8 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
               ? {}
               : {
                   transform: "translateY(-110px)",
-                  // transition: "transform 0.5s ease",
-                  // display: "none",
+                  transition: "transform 0.5s ease",
+                  display: "none",
                 }
           }
         >

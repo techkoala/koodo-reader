@@ -1,87 +1,95 @@
-const { app, BrowserWindow, ipcMain, screen } = require("electron");
+const { app, BrowserWindow, ipcMain, screen, dialog } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 const fontList = require("font-list");
-
+const chardet = require("chardet");
+const detect = require("detect-port");
 let mainWin;
 let splash;
 
 app.disableHardwareAcceleration();
-app.on("ready", () => {
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  mainWin = new BrowserWindow({
-    titleBarStyle: "hidden",
-    width: 1030,
-    height: 660,
-    webPreferences: {
-      webSecurity: false,
-      nodeIntegration: true,
-      nativeWindowOpen: true,
-      nodeIntegrationInSubFrames: true,
-      allowRunningInsecureContent: true,
-    },
-    show: false,
-    // transparent: true,
-  });
-  splash = new BrowserWindow({
-    width: 530,
-    height: 343,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: isDev ? false : true,
-  });
-  splash.loadURL(
-    isDev
-      ? path.join(__dirname, "/public/assets/launch-page.html")
-      : `file://${path.join(__dirname, "./build/assets/launch-page.html")}`
-  );
-  if (!isDev) {
-    const { Menu } = require("electron");
-    Menu.setApplicationMenu(null);
-  }
+const port = 3366;
 
-  const urlLocation = isDev
-    ? "http://localhost:3000"
-    : `file://${path.join(__dirname, "./build/index.html")}`;
-  mainWin.loadURL(urlLocation);
-  mainWin.webContents.on("did-finish-load", () => {
-    splash.destroy();
-    // mainWin.maximize();
-    // mainWin.webContents.setZoomFactor(1);
-    mainWin.show();
-  });
-  mainWin.on("close", () => {
-    mainWin = null;
-  });
-  mainWin.webContents.on(
-    "new-window",
-    (event, url, frameName, disposition, options, additionalFeatures) => {
-      event.preventDefault();
-      Object.assign(options, {
-        parent: mainWin,
-        width: width,
-        height: height,
-        frame: url.indexOf("epub") > -1 ? false : true,
+app.on("ready", () => {
+  detect(port, (err, _port) => {
+    if (port == _port) {
+      console.log("port is availible");
+      mainWin = new BrowserWindow({
+        titleBarStyle: "hidden",
+        width: 1030,
+        height: 660,
+        webPreferences: {
+          webSecurity: false,
+          nodeIntegration: true,
+          nativeWindowOpen: true,
+          nodeIntegrationInSubFrames: true,
+          allowRunningInsecureContent: true,
+        },
+        show: false,
+        // transparent: true,
       });
-      event.newGuest = new BrowserWindow(options);
-      event.newGuest.maximize();
+      splash = new BrowserWindow({
+        width: 530,
+        height: 343,
+        frame: false,
+        transparent: true,
+        alwaysOnTop: isDev ? false : true,
+      });
+      splash.loadURL(
+        isDev
+          ? path.join(__dirname, "/public/assets/launch-page.html")
+          : `file://${path.join(__dirname, "./build/assets/launch-page.html")}`
+      );
+      if (!isDev) {
+        const { Menu } = require("electron");
+        Menu.setApplicationMenu(null);
+      }
+
+      const urlLocation = isDev
+        ? "http://localhost:3000"
+        : `file://${path.join(__dirname, "./build/index.html")}`;
+      mainWin.loadURL(urlLocation);
+      mainWin.webContents.on("did-finish-load", () => {
+        splash.destroy();
+        // mainWin.maximize();
+        // mainWin.webContents.setZoomFactor(1);
+        mainWin.show();
+      });
+      mainWin.on("close", () => {
+        mainWin = null;
+      });
+      ipcMain.on("fonts-ready", (event, arg) => {
+        fontList
+          .getFonts()
+          .then((fonts) => {
+            event.returnValue = fonts;
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      });
+      ipcMain.on("start-server", (event, arg) => {
+        startExpress();
+        event.returnValue = "pong";
+      });
+      ipcMain.on("get-file-data", function (event) {
+        var data = null;
+        if (process.platform == "win32" && process.argv.length >= 2) {
+          var openFilePath = process.argv[1];
+          data = openFilePath;
+        }
+        event.returnValue = data;
+      });
+    } else {
+      dialog.showMessageBox({
+        type: "warning",
+        title: "Port is in use",
+        message: "Please don't open multiple software at the same time",
+      });
     }
-  );
-  ipcMain.on("fonts-ready", (event, arg) => {
-    fontList
-      .getFonts()
-      .then((fonts) => {
-        event.returnValue = fonts;
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  });
-  ipcMain.on("start-server", (event, arg) => {
-    startExpress();
-    event.returnValue = "pong";
   });
 });
+
 app.on("window-all-closed", () => {
   app.quit();
 });
@@ -99,13 +107,40 @@ function startExpress() {
   const request = require("request");
   const configDir = (electron.app || electron.remote.app).getPath("userData");
   var dirPath = path.join(configDir, "uploads\\");
+
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath);
     console.log("文件夹创建成功");
   } else {
     console.log("文件夹已存在");
   }
+  var escapeChars = {
+    "¢": "cent",
+    "£": "pound",
+    "¥": "yen",
+    "€": "euro",
+    "©": "copy",
+    "®": "reg",
+    "<": "lt",
+    ">": "gt",
+    '"': "quot",
+    "&": "amp",
+    "'": "#39",
+  };
 
+  var regexString = "[";
+  for (var key in escapeChars) {
+    regexString += key;
+  }
+  regexString += "]";
+
+  var regex = new RegExp(regexString, "g");
+
+  function escapeHTML(str) {
+    return str.replace(regex, function (m) {
+      return "&" + escapeChars[m] + ";";
+    });
+  }
   const server = express();
   server.use(
     fileUpload({
@@ -138,7 +173,7 @@ function startExpress() {
       var metadata = {
         id: new Date().getTime(),
         title: bookTitle,
-        author: "unknown",
+        author: "Unknown Authur",
         fileAs: "Anonymous",
         genre: "Non-Fiction",
         tags: "Sample,Example,Test",
@@ -158,12 +193,19 @@ function startExpress() {
         encoding: "binary",
       });
       const buf = new Buffer(data, "binary");
-      const lines = iconv.decode(buf, "GBK").split("\n");
+      const lines = iconv.decode(buf, chardet.detect(buf)).split("\n");
       const content = [];
       for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
+        const line = escapeHTML(lines[i]);
         if (
           line.length < 30 &&
+          line.indexOf("。") === -1 &&
+          line.indexOf(".") === -1 &&
+          line.indexOf("！") === -1 &&
+          line.indexOf("：") === -1 &&
+          line.indexOf("，") === -1 &&
+          line.indexOf("第一天") === -1 &&
+          line.indexOf("第二天") === -1 &&
           (line.startsWith("CHAPTER ") ||
             line.startsWith("Chapter ") ||
             line.startsWith("第") ||
@@ -173,7 +215,11 @@ function startExpress() {
             line.startsWith("后记") ||
             line.startsWith("楔子") ||
             line.startsWith("后记") ||
-            line.startsWith("后序"))
+            line.startsWith("后序") ||
+            /^[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u767e\u5343\u4e07]+$/.test(
+              line
+            ) ||
+            /^\d+$/.test(line))
         ) {
           content.push({
             title: line,
@@ -192,10 +238,12 @@ function startExpress() {
         }
       }
       for (let i = 0; i < content.length; i++) {
-        epub.addSection(
-          content[i].title,
-          `<h1>${content[i].title}</h1>` + content[i].data
-        );
+        content[i].data.trim() &&
+          content[i].data.trim().length > 50 &&
+          epub.addSection(
+            content[i].title,
+            `<h1>${content[i].title}</h1>` + content[i].data
+          );
       }
 
       // Generate the result.
@@ -230,6 +278,7 @@ function startExpress() {
   async function start() {
     try {
       const port = 3366;
+
       expressServer = await server.listen(port);
       console.log("started");
       const address = expressServer.address();
@@ -254,6 +303,7 @@ function startExpress() {
       console.info(`启动成功，本地访问 http://${local}:${port}`);
     }
   }
+  const port = 3366;
 
   startServer();
 }

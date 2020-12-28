@@ -8,10 +8,12 @@ export interface BookListProps extends RouteComponentProps<any> {
   isSearch: boolean;
   isSort: boolean;
   isList: string;
-  sortCode: { sort: number; order: number };
+  bookSortCode: { sort: number; order: number };
   handleFetchList: () => void;
   handleMode: (mode: string) => void;
   handleShelfIndex: (index: number) => void;
+  handleDeleteDialog: (isShow: boolean) => void;
+  handleFetchBooks: (isTrash: boolean) => void;
 }
 export interface BookListState {
   shelfIndex: number;

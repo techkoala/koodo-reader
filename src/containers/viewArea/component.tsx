@@ -40,10 +40,18 @@ class ViewArea extends React.Component<ViewAreaProps, ViewAreaStates> {
           ? true
           : false
       );
+
       if (!this.isFirst && this.props.locations) {
         let percentage = this.props.locations.percentageFromCfi(cfi);
         RecordLocation.recordCfi(this.props.currentBook.key, cfi, percentage);
         this.props.handlePercentage(percentage);
+      } else if (!this.isFirst) {
+        //如果过暂时没有解析出locations，就直接记录cfi
+        RecordLocation.recordCfi(
+          this.props.currentBook.key,
+          cfi,
+          RecordLocation.getCfi(this.props.currentBook.key).percentage
+        );
       }
       this.isFirst = false;
     });
@@ -59,23 +67,17 @@ class ViewArea extends React.Component<ViewAreaProps, ViewAreaStates> {
       this.props.rendition.themes.default({
         "a, article, cite, code, div, li, p, pre, span, table": {
           "font-size": `${
-            OtherUtil.getReaderConfig("isUseFont") === "yes"
-              ? ""
-              : OtherUtil.getReaderConfig("fontSize") || 17
+            OtherUtil.getReaderConfig("fontSize") || 17
           }px !important`,
           "line-height": `${
-            OtherUtil.getReaderConfig("isUseFont") === "yes"
-              ? ""
-              : OtherUtil.getReaderConfig("lineHeight") || "1.25"
+            OtherUtil.getReaderConfig("lineHeight") || "1.25"
           } !important`,
           "font-family": `${
-            OtherUtil.getReaderConfig("isUseFont") === "yes"
-              ? ""
-              : OtherUtil.getReaderConfig("fontFamily") || "Helvetica"
+            OtherUtil.getReaderConfig("fontFamily") || "Helvetica"
           } !important`,
           color: `${
-            OtherUtil.getReaderConfig("theme") === "rgba(44,47,49,1)"
-              ? "white"
+            OtherUtil.getReaderConfig("textColor")
+              ? OtherUtil.getReaderConfig("textColor")
               : ""
           } !important`,
         },
@@ -89,22 +91,16 @@ class ViewArea extends React.Component<ViewAreaProps, ViewAreaStates> {
     this.props.rendition.themes.default({
       "a, article, cite, code, div, li, p, pre, span, table": {
         "font-size": `${
-          OtherUtil.getReaderConfig("isUseFont") === "yes"
-            ? ""
-            : OtherUtil.getReaderConfig("fontSize") || 17
+          OtherUtil.getReaderConfig("fontSize") || 17
         }px !important`,
         "line-height": `${
-          OtherUtil.getReaderConfig("isUseFont") === "yes"
-            ? ""
-            : OtherUtil.getReaderConfig("lineHeight") || "1.25"
+          OtherUtil.getReaderConfig("lineHeight") || "1.25"
         } !important`,
         "font-family": `${
-          OtherUtil.getReaderConfig("isUseFont") === "yes"
-            ? ""
-            : OtherUtil.getReaderConfig("fontFamily") || "Helvetica"
+          OtherUtil.getReaderConfig("fontFamily") || "内嵌字体"
         } !important`,
         color: `${
-          OtherUtil.getReaderConfig("theme") === "rgba(44,47,49,1)"
+          OtherUtil.getReaderConfig("backgroundColor") === "rgba(44,47,49,1)"
             ? "white"
             : ""
         } !important`,
@@ -117,24 +113,6 @@ class ViewArea extends React.Component<ViewAreaProps, ViewAreaStates> {
     );
   }
 
-  previourChapter = () => {
-    const currentLocation = this.props.rendition.currentLocation();
-    if (!currentLocation.start) return;
-    let chapterIndex = currentLocation.start.index;
-    const section = this.props.currentEpub.section(chapterIndex - 1);
-    if (section && section.href) {
-      this.props.currentEpub.rendition.display(section.href);
-    }
-  };
-  nextChapter = () => {
-    const currentLocation = this.props.rendition.currentLocation();
-    if (!currentLocation.start) return;
-    let chapterIndex = currentLocation.start.index;
-    const section = this.props.currentEpub.section(chapterIndex + 1);
-    if (section && section.href) {
-      this.props.currentEpub.rendition.display(section.href);
-    }
-  };
   render() {
     const popupMenuProps = {
       rendition: this.props.rendition,
@@ -144,28 +122,6 @@ class ViewArea extends React.Component<ViewAreaProps, ViewAreaStates> {
     };
     return (
       <div className="view-area">
-        {OtherUtil.getReaderConfig("readerMode") &&
-          OtherUtil.getReaderConfig("readerMode") !== "double" &&
-          this.props.locations && (
-            <>
-              <div
-                className="previous-chapter-single-container"
-                onClick={() => {
-                  this.previourChapter();
-                }}
-              >
-                <span className="icon-dropdown previous-chapter-single"></span>
-              </div>
-              <div
-                className="next-chapter-single-container"
-                onClick={() => {
-                  this.nextChapter();
-                }}
-              >
-                <span className="icon-dropdown next-chapter-single"></span>
-              </div>
-            </>
-          )}
         <ImageViewer
           {...{
             isShow: this.props.isShow,

@@ -366,20 +366,25 @@ class MobiFile {
     // TODO
     return {};
   }
-
+  extractContent(s) {
+    var span = document.createElement("span");
+    span.innerHTML = s;
+    return span.textContent || span.innerText;
+  }
   render() {
     this.load();
     var content = this.read_text();
     var bookDoc = domParser.parseFromString(content, "text/html")
       .documentElement;
     const pages = Array.from(bookDoc.getElementsByTagName("mbp:pagebreak"));
+    console.log(pages, "doc");
+
+    const lines = Array.from(bookDoc.getElementsByTagName("p"));
     let parseContent = [];
-    for (let i = 0, len = pages.length; i < len - 1; i++) {
-      pages[i].childNodes &&
-        pages[i].childNodes.forEach((item) => {
-          item.innerText.length < 1000 && parseContent.push(item.innerText);
-        });
+    for (let i = 0, len = lines.length; i < len - 1; i++) {
+      parseContent.push(lines[i].innerText);
     }
+
     return parseContent.join("\n    \n");
   }
   render_image(imgDoms, i) {

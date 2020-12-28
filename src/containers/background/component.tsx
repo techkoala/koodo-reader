@@ -24,14 +24,15 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
   }
   componentWillReceiveProps(nextProps: BackgroundProps) {
     if (
-      nextProps.currentEpub.rendition&&nextProps.currentEpub.rendition.location &&
-      this.isFirst
+      nextProps.currentEpub.rendition &&
+      nextProps.currentEpub.rendition.location &&
+      this.props.currentEpub.rendition
     ) {
       const currentLocation = this.props.currentEpub.rendition.currentLocation();
       if (!currentLocation.start) {
         return;
       }
-      this.props.handleFetchLocations(this.props.currentEpub);
+      this.isFirst && this.props.handleFetchLocations(this.props.currentEpub);
       this.isFirst = false;
       this.setState({
         prevPage: currentLocation.start.displayed.page,
@@ -48,6 +49,7 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
       this.setState({ currentChapter: chapter });
     }
   }
+
   render() {
     if (this.state.isUseBackground) {
       return (
@@ -218,7 +220,10 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
             className="spine-shadow-left"
             style={
               this.state.isSingle ||
-              OtherUtil.getReaderConfig("theme") === "rgba(44,47,49,1)"
+              (OtherUtil.getReaderConfig("backgroundColor") &&
+                (OtherUtil.getReaderConfig("backgroundColor") ===
+                  "rgba(44,47,49,1)" ||
+                  OtherUtil.getReaderConfig("backgroundColor").startsWith("#")))
                 ? { display: "none" }
                 : {}
             }
@@ -230,7 +235,10 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
           <div
             className="spine-shadow-right"
             style={
-              OtherUtil.getReaderConfig("theme") === "rgba(44,47,49,1)"
+              OtherUtil.getReaderConfig("backgroundColor") &&
+              (OtherUtil.getReaderConfig("backgroundColor") ===
+                "rgba(44,47,49,1)" ||
+                OtherUtil.getReaderConfig("backgroundColor").startsWith("#"))
                 ? { display: "none" }
                 : this.state.isSingle
                 ? {

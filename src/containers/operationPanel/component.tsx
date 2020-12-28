@@ -36,7 +36,8 @@ class OperationPanel extends React.Component<
   componentWillReceiveProps(nextProps: OperationPanelProps) {
     if (
       nextProps.currentEpub.rendition &&
-      nextProps.currentEpub.rendition.location
+      nextProps.currentEpub.rendition.location &&
+      this.props.currentEpub.rendition
     ) {
       const currentLocation = this.props.currentEpub.rendition.currentLocation();
       if (!currentLocation.start) {
@@ -155,6 +156,7 @@ class OperationPanel extends React.Component<
     }
     this.props.handleSearch(false);
     this.props.handleOpenMenu(false);
+    ReadingTime.setTime(this.props.currentBook.key, this.props.time);
     window.close();
     // this.props.history.push("/manager/home");
   }

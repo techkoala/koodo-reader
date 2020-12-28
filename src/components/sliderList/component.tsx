@@ -30,8 +30,7 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
       const scale = event.target.value;
       this.setState({ value: scale });
       OtherUtil.setReaderConfig("scale", scale);
-      this.props.handleMessage("Try refresh or restart");
-      this.props.handleMessageBox(true);
+      window.location.reload();
     }
   };
   //使进度百分比随拖动实时变化
@@ -65,7 +64,7 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
               : { position: "relative", right: 7 }
           }
         >
-          {this.props.mode === "fontSize" ? "A" : `0.5`}
+          {this.props.mode === "fontSize" ? "A" : "1"}
         </span>
         <div className="font-size-selector">
           <input
@@ -90,7 +89,7 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
             className="ultra-large-size"
             style={{ fontSize: "16px", left: 5 }}
           >
-            1.5
+            2
           </span>
         )}
       </div>
