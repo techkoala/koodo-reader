@@ -1,14 +1,16 @@
 //控制列表模式下的图书显示
 import React from "react";
 import "./bookListItem.css";
-import RecordLocation from "../../utils/recordLocation";
+import RecordLocation from "../../utils/readUtils/recordLocation";
 import { BookItemProps, BookItemState } from "./interface";
 import { Trans } from "react-i18next";
-import AddFavorite from "../../utils/addFavorite";
+import AddFavorite from "../../utils/readUtils/addFavorite";
 import { withRouter } from "react-router-dom";
-import RecentBooks from "../../utils/recordRecent";
+import RecentBooks from "../../utils/readUtils/recordRecent";
 import OtherUtil from "../../utils/otherUtil";
-import AddTrash from "../../utils/addTrash";
+import AddTrash from "../../utils/readUtils/addTrash";
+import EmptyCover from "../emptyCover";
+import BookUtil from "../../utils/bookUtil";
 
 class BookListItem extends React.Component<BookItemProps, BookItemState> {
   epub: any;
@@ -16,8 +18,7 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
     super(props);
     this.state = {
       isDeleteDialog: false,
-      isFavorite:
-        AddFavorite.getAllFavorite().indexOf(this.props.book.key) > -1,
+      isFavorite: AddFavorite.getAllFavorite().indexOf(this.props.book.key) > 1,
     };
   }
   componentDidMount() {
@@ -27,11 +28,7 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
       RecentBooks.getAllRecent()[0] === this.props.book.key &&
       !this.props.currentBook.key
     ) {
-      this.props.book.description === "pdf"
-        ? window.open(`./lib/pdf/viewer.html?file=${this.props.book.key}`)
-        : window.open(
-            `${window.location.href.split("#")[0]}#/epub/${this.props.book.key}`
-          );
+      BookUtil.RedirectBook(this.props.book);
     }
     this.props.handleReadingBook(this.props.book);
   }
@@ -87,12 +84,7 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
   };
   handleJump = () => {
     RecentBooks.setRecent(this.props.book.key);
-
-    this.props.book.description === "pdf"
-      ? window.open(`./lib/pdf/viewer.html?file=${this.props.book.key}`)
-      : window.open(
-          `${window.location.href.split("#")[0]}#/epub/${this.props.book.key}`
-        );
+    BookUtil.RedirectBook(this.props.book);
   };
   render() {
     let percentage = RecordLocation.getCfi(this.props.book.key)
@@ -101,7 +93,11 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
 
     return (
       <div className="book-list-item-container">
-        {this.props.book.cover && this.props.book.cover !== "noCover" ? (
+        {this.props.book.cover &&
+        this.props.book.cover !== "noCover" &&
+        this.props.book.publisher !== "mobi" &&
+        this.props.book.publisher !== "azw3" &&
+        this.props.book.publisher !== "txt" ? (
           <img
             className="book-item-list-cover"
             src={this.props.book.cover}
@@ -118,7 +114,7 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
           />
         ) : (
           <div
-            className="book-item-list-cover book-item-list-cover-img"
+            className="book-item-list-cover"
             onClick={() => {
               this.handleJump();
             }}
@@ -129,14 +125,12 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
               this.props.handleDragItem("");
             }}
           >
-            <img
-              src={
-                process.env.NODE_ENV === "production"
-                  ? "./assets/cover.jpg"
-                  : "../../assets/cover.jpg"
-              }
-              alt=""
-              style={{ width: "100%" }}
+            <EmptyCover
+              {...{
+                format: this.props.book.format,
+                title: this.props.book.name,
+                scale: 0.54,
+              }}
             />
           </div>
         )}

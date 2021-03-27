@@ -5,6 +5,8 @@ import {
   handleMessageBox,
   handleMessage,
   handleFetchBooks,
+  handleLoadingDialog,
+  handleDownloadDesk,
 } from "../../store/actions/manager";
 import { handleReadingBook } from "../../store/actions/book";
 import { stateType } from "../../store";
@@ -14,6 +16,9 @@ import ImportLocal from "./component";
 const mapStateToProps = (state: stateType) => {
   return {
     books: state.manager.books,
+    notes: state.reader.notes,
+    bookmarks: state.reader.bookmarks,
+    isCollapsed: state.sidebar.isCollapsed,
     deletedBooks: state.manager.deletedBooks,
   };
 };
@@ -22,6 +27,8 @@ const actionCreator = {
   handleMessage,
   handleFetchBooks,
   handleReadingBook,
+  handleLoadingDialog,
+  handleDownloadDesk,
 };
 export default connect(
   mapStateToProps,

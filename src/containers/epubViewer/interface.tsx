@@ -4,6 +4,7 @@ export interface ReaderProps {
   currentBook: BookModel;
   isMessage: boolean;
   handleFetchNotes: () => void;
+  handleFetchBooks: () => void;
   handleFetchBookmarks: () => void;
   handleMessageBox: (isShow: boolean) => void;
   handleFetchPercentage: (currentBook: BookModel) => void;
@@ -21,4 +22,5 @@ export interface ReaderState {
   rendition: any;
   time: number;
   scale: string;
+  margin: number;
 }

@@ -1,9 +1,14 @@
 import BookModel from "../../model/Book";
-
+import NoteModel from "../../model/Note";
+import BookmarkModel from "../../model/Bookmark";
 export interface HeaderProps {
-  books: BookModel[];
   isSearch: boolean;
   isSortDisplay: boolean;
+  isCollapsed: boolean;
+
+  bookmarks: BookmarkModel[];
+  notes: NoteModel[];
+  books: BookModel[];
   handleSortDisplay: (isSortDisplay: boolean) => void;
   handleSetting: (isSettingOpen: boolean) => void;
   handleMessageBox: (isShow: boolean) => void;
@@ -14,7 +19,7 @@ export interface HeaderProps {
 
 export interface HeaderState {
   isOnlyLocal: boolean;
-  isBookImported: boolean;
   language: string;
+  width: number;
   isNewVersion: boolean;
 }

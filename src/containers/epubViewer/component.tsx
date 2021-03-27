@@ -1,15 +1,16 @@
 import React from "react";
 import ViewArea from "../viewArea";
 import Background from "../background";
-import SettingPanel from "../settingPanel";
-import NavigationPanel from "../navigationPanel";
-import OperationPanel from "../operationPanel";
+import SettingPanel from "../panels/settingPanel";
+import NavigationPanel from "../panels/navigationPanel";
+import OperationPanel from "../panels/operationPanel";
 import MessageBox from "../messageBox";
-import ProgressPanel from "../progressPanel";
+import ProgressPanel from "../panels/progressPanel";
 import { ReaderProps, ReaderState } from "./interface";
 import { MouseEvent } from "../../utils/mouseEvent";
 import OtherUtil from "../../utils/otherUtil";
-import ReadingTime from "../../utils/readingTime";
+import ReadingTime from "../../utils/readUtils/readingTime";
+import { isMobile } from "react-device-detect";
 
 class Reader extends React.Component<ReaderProps, ReaderState> {
   messageTimer!: NodeJS.Timeout;
@@ -19,13 +20,16 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
   constructor(props: ReaderProps) {
     super(props);
     this.state = {
-      isOpenSettingPanel: false,
+      isOpenSettingPanel:
+        OtherUtil.getReaderConfig("isSettingLocked") === "yes" ? true : false,
       isOpenOperationPanel: false,
       isOpenProgressPanel: false,
-      isOpenNavPanel: false,
+      isOpenNavPanel:
+        OtherUtil.getReaderConfig("isNavLocked") === "yes" ? true : false,
       isMessage: false,
       rendition: null,
       scale: OtherUtil.getReaderConfig("scale") || 1,
+      margin: parseInt(OtherUtil.getReaderConfig("margin")) || 30,
       time: ReadingTime.getTime(this.props.currentBook.key),
       isTouch: OtherUtil.getReaderConfig("isTouch") === "yes",
       readerMode: OtherUtil.getReaderConfig("readerMode") || "double",
@@ -35,6 +39,7 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
     this.props.handleFetchBookmarks();
     this.props.handleFetchPercentage(this.props.currentBook);
     this.props.handleFetchNotes();
+    this.props.handleFetchBooks();
     this.props.handleFetchChapters(this.props.currentEpub);
   }
   UNSAFE_componentWillReceiveProps(nextProps: ReaderProps) {
@@ -56,11 +61,11 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
     (window as any).rangy.init(); // 初始化
     this.rendition = epub.renderTo(page, {
       manager:
-        this.state.readerMode === "continuous" ? "continuous" : "default",
+        this.state.readerMode === "continuous" || isMobile
+          ? "continuous"
+          : "default",
       flow:
-        this.state.readerMode === "scroll"
-          ? "scrolled-doc"
-          : this.state.readerMode === "continuous"
+        this.state.readerMode === "continuous" || isMobile
           ? "scrolled"
           : "auto",
       width: "100%",
@@ -70,14 +75,19 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
         OtherUtil.getReaderConfig("readerMode") === "single" ? "none" : "",
     });
     this.setState({ rendition: this.rendition });
-    this.state.readerMode !== "scroll" &&
-      this.state.readerMode !== "continuous" &&
-      MouseEvent(this.rendition); // 绑定事件
+    this.state.readerMode !== "continuous" && MouseEvent(this.rendition); // 绑定事件
     this.tickTimer = setInterval(() => {
       let time = this.state.time;
       time += 1;
       this.setState({ time });
     }, 1000);
+    if (OtherUtil.getReaderConfig("isFirst") !== "no") {
+      this.handleEnterReader("left");
+      this.handleEnterReader("right");
+      this.handleEnterReader("bottom");
+      this.handleEnterReader("top");
+      OtherUtil.setReaderConfig("isFirst", "no");
+    }
   }
 
   componentWillUnmount() {
@@ -87,6 +97,20 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
   }
   //进入阅读器
   handleEnterReader = (position: string) => {
+    if (
+      isMobile &&
+      (this.state.isOpenNavPanel ||
+        this.state.isOpenOperationPanel ||
+        this.state.isOpenProgressPanel ||
+        this.state.isOpenSettingPanel)
+    ) {
+      this.handleLeaveReader("left");
+      this.handleLeaveReader("right");
+      this.handleLeaveReader("bottom");
+      this.handleLeaveReader("top");
+      return;
+    }
+
     //控制上下左右的菜单的显示
     switch (position) {
       case "right":
@@ -118,11 +142,20 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
     //控制上下左右的菜单的显示
     switch (position) {
       case "right":
-        this.setState({ isOpenSettingPanel: false });
-        break;
+        if (OtherUtil.getReaderConfig("isSettingLocked") === "yes") {
+          break;
+        } else {
+          this.setState({ isOpenSettingPanel: false });
+          break;
+        }
+
       case "left":
-        this.setState({ isOpenNavPanel: false });
-        break;
+        if (OtherUtil.getReaderConfig("isNavLocked") === "yes") {
+          break;
+        } else {
+          this.setState({ isOpenNavPanel: false });
+          break;
+        }
       case "top":
         this.setState({ isOpenOperationPanel: false });
         break;
@@ -157,6 +190,7 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
           onClick={() => {
             this.prevPage();
           }}
+          style={isMobile ? { display: "none" } : {}}
         >
           <span className="icon-dropdown previous-chapter-single"></span>
         </div>
@@ -165,14 +199,27 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
           onClick={() => {
             this.nextPage();
           }}
+          style={isMobile ? { display: "none" } : {}}
         >
           <span className="icon-dropdown next-chapter-single"></span>
+        </div>
+        <div
+          className="reader-setting-icon-container"
+          onClick={() => {
+            this.handleEnterReader("left");
+            this.handleEnterReader("right");
+            this.handleEnterReader("bottom");
+            this.handleEnterReader("top");
+          }}
+          style={isMobile ? { display: "none" } : {}}
+        >
+          <span className="icon-grid reader-setting-icon"></span>
         </div>
         {this.state.isMessage ? <MessageBox /> : null}
         <div
           className="left-panel"
           onMouseEnter={() => {
-            if (this.state.isTouch || this.state.isOpenNavPanel) {
+            if (this.state.isTouch || this.state.isOpenNavPanel || isMobile) {
               return;
             }
             this.handleEnterReader("left");
@@ -184,7 +231,11 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
         <div
           className="right-panel"
           onMouseEnter={() => {
-            if (this.state.isTouch || this.state.isOpenSettingPanel) {
+            if (
+              this.state.isTouch ||
+              this.state.isOpenSettingPanel ||
+              isMobile
+            ) {
               return;
             }
             this.handleEnterReader("right");
@@ -196,7 +247,11 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
         <div
           className="top-panel"
           onMouseEnter={() => {
-            if (this.state.isTouch || this.state.isOpenOperationPanel) {
+            if (
+              this.state.isTouch ||
+              this.state.isOpenOperationPanel ||
+              isMobile
+            ) {
               return;
             }
             this.handleEnterReader("top");
@@ -208,7 +263,11 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
         <div
           className="bottom-panel"
           onMouseEnter={() => {
-            if (this.state.isTouch || this.state.isOpenProgressPanel) {
+            if (
+              this.state.isTouch ||
+              this.state.isOpenProgressPanel ||
+              isMobile
+            ) {
               return;
             }
             this.handleEnterReader("bottom");
@@ -294,8 +353,9 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
           className="view-area-page"
           id="page-area"
           style={
-            this.state.readerMode === "scroll" ||
-            this.state.readerMode === "continuous"
+            document.body.clientWidth < 570
+              ? { left: 0, right: 0 }
+              : this.state.readerMode === "continuous"
               ? {
                   left: `calc(50vw - ${270 * parseFloat(this.state.scale)}px)`,
                   right: `calc(50vw - ${270 * parseFloat(this.state.scale)}px)`,
@@ -306,6 +366,11 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
               ? {
                   left: `calc(50vw - ${270 * parseFloat(this.state.scale)}px)`,
                   right: `calc(50vw - ${270 * parseFloat(this.state.scale)}px)`,
+                }
+              : this.state.readerMode === "double"
+              ? {
+                  left: this.state.margin - 40 + "px",
+                  right: this.state.margin - 40 + "px",
                 }
               : {}
           }

@@ -1,14 +1,24 @@
 //阅读器图书内容区域
 import React from "react";
 import "./viewArea.css";
-import PopupMenu from "../popupMenu";
+import PopupMenu from "../../components/popups/popupMenu";
 import { ViewAreaProps, ViewAreaStates } from "./interface";
-import RecordLocation from "../../utils/recordLocation";
+import RecordLocation from "../../utils/readUtils/recordLocation";
 import OtherUtil from "../../utils/otherUtil";
 import BookmarkModel from "../../model/Bookmark";
-import StyleUtil from "../../utils/styleUtil";
+import StyleUtil from "../../utils/readUtils/styleUtil";
 import ImageViewer from "../../components/imageViewer";
+import Lottie from "react-lottie";
+import animationSiri from "../../assets/lotties/siri.json";
 
+const siriOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: animationSiri,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice",
+  },
+};
 declare var window: any;
 
 class ViewArea extends React.Component<ViewAreaProps, ViewAreaStates> {
@@ -26,7 +36,7 @@ class ViewArea extends React.Component<ViewAreaProps, ViewAreaStates> {
 
   componentDidMount() {
     let epub = this.props.currentEpub;
-    (window as any).rangy.init(); // 初始化
+    window.rangy.init(); // 初始化
     this.props.rendition.on("locationChanged", () => {
       this.props.handleReadingEpub(epub);
       this.props.handleOpenMenu(false);
@@ -80,6 +90,16 @@ class ViewArea extends React.Component<ViewAreaProps, ViewAreaStates> {
               ? OtherUtil.getReaderConfig("textColor")
               : ""
           } !important`,
+          "letter-spacing": `${
+            OtherUtil.getReaderConfig("letterSpacing")
+              ? `${OtherUtil.getReaderConfig("letterSpacing")}px`
+              : ""
+          } !important`,
+          "font-weight": `${
+            OtherUtil.getReaderConfig("isBold") === "yes"
+              ? "bold !important"
+              : ""
+          }`,
         },
       });
     });
@@ -96,14 +116,20 @@ class ViewArea extends React.Component<ViewAreaProps, ViewAreaStates> {
         "line-height": `${
           OtherUtil.getReaderConfig("lineHeight") || "1.25"
         } !important`,
+        "letter-spacing": `${
+          OtherUtil.getReaderConfig("letterSpacing") || "0"
+        }px !important`,
         "font-family": `${
-          OtherUtil.getReaderConfig("fontFamily") || "内嵌字体"
+          OtherUtil.getReaderConfig("fontFamily") || "Built-in font"
         } !important`,
         color: `${
           OtherUtil.getReaderConfig("backgroundColor") === "rgba(44,47,49,1)"
             ? "white"
             : ""
         } !important`,
+        "font-weight": `${
+          OtherUtil.getReaderConfig("isBold") === "yes" ? "bold !important" : ""
+        }`,
       },
     });
     this.props.rendition.display(
@@ -133,14 +159,7 @@ class ViewArea extends React.Component<ViewAreaProps, ViewAreaStates> {
         <PopupMenu {...popupMenuProps} />
         {this.state.loading ? (
           <div className="spinner">
-            <div className="sk-chase">
-              <div className="sk-chase-dot"></div>
-              <div className="sk-chase-dot"></div>
-              <div className="sk-chase-dot"></div>
-              <div className="sk-chase-dot"></div>
-              <div className="sk-chase-dot"></div>
-              <div className="sk-chase-dot"></div>
-            </div>
+            <Lottie options={siriOptions} height={100} width={300} />
           </div>
         ) : null}
         <>

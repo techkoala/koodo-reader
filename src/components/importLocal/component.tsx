@@ -7,15 +7,15 @@ import SparkMD5 from "spark-md5";
 import { Trans } from "react-i18next";
 import Dropzone from "react-dropzone";
 import { ImportLocalProps, ImportLocalState } from "./interface";
-import RecordRecent from "../../utils/recordRecent";
-import axios from "axios";
-import { config } from "../../constants/driveList";
+import RecordRecent from "../../utils/readUtils/recordRecent";
 import MobiFile from "../../utils/mobiUtil";
 import iconv from "iconv-lite";
-import isElectron from "is-electron";
+import { isElectron } from "react-device-detect";
 import { withRouter } from "react-router-dom";
-import RecentBooks from "../../utils/recordRecent";
+import RecentBooks from "../../utils/readUtils/recordRecent";
 import OtherUtil from "../../utils/otherUtil";
+import BookUtil from "../../utils/bookUtil";
+import BackupUtil from "../../utils/syncUtils/backupUtil";
 
 declare var window: any;
 var pdfjsLib = window["pdfjs-dist/build/pdf"];
@@ -25,63 +25,77 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
     super(props);
     this.state = {
       isOpenFile: false,
+      width: document.body.clientWidth,
     };
   }
   componentDidMount() {
-    if (isElectron()) {
+    if (isElectron) {
       const { ipcRenderer } = window.require("electron");
-      ipcRenderer.sendSync("start-server", "ping");
+      if (!OtherUtil.getReaderConfig("storageLocation"))
+        OtherUtil.setReaderConfig(
+          "storageLocation",
+          ipcRenderer.sendSync("storage-location", "ping")
+        );
+      ipcRenderer.on("open-book", (event: any, result: string) => {
+        if (result && result !== ".") {
+          this.handleFilePath(result);
+        }
+      });
       var filePath = ipcRenderer.sendSync("get-file-data");
-      if (filePath === null || filePath === ".") {
-        console.log("There is no file");
-      } else {
-        // Do something with the file.
-        fetch(filePath)
-          .then((response) => response.body)
-          .then((body) => {
-            const reader = body!.getReader();
-            return new ReadableStream({
-              start(controller) {
-                return pump();
-                function pump(): any {
-                  return reader.read().then(({ done, value }) => {
-                    // When no more data needs to be consumed, close the stream
-                    if (done) {
-                      controller.close();
-                      return;
-                    }
-                    // Enqueue the next data chunk into our target stream
-                    controller.enqueue(value);
-                    return pump();
-                  });
-                }
-              },
-            });
-          })
-          .then((stream) => new Response(stream))
-          .then((response) => response.blob())
-          .then((blob) => {
-            let fileTemp = new File([blob], filePath.split("\\").reverse()[0], {
-              lastModified: new Date().getTime(),
-              type: blob.type,
-            });
-            this.setState({ isOpenFile: true }, () => {
-              this.doIncrementalTest(fileTemp);
-            });
-          })
-          .catch((err) => console.error(err));
+      if (filePath && filePath !== ".") {
+        this.handleFilePath(filePath);
       }
     }
+    window.addEventListener("resize", () => {
+      this.setState({ width: document.body.clientWidth });
+    });
   }
-
+  handleFilePath = (filePath: string) => {
+    fetch(filePath)
+      .then((response) => response.body)
+      .then((body) => {
+        const reader = body!.getReader();
+        return new ReadableStream({
+          start(controller) {
+            return pump();
+            function pump(): any {
+              return reader.read().then(({ done, value }) => {
+                // When no more data needs to be consumed, close the stream
+                if (done) {
+                  controller.close();
+                  return;
+                }
+                // Enqueue the next data chunk into our target stream
+                controller.enqueue(value);
+                return pump();
+              });
+            }
+          },
+        });
+      })
+      .then((stream) => new Response(stream))
+      .then((response) => response.blob())
+      .then((blob) => {
+        let fileTemp = new File(
+          [blob],
+          "file." + filePath.split(".").reverse()[0],
+          {
+            lastModified: new Date().getTime(),
+            type: blob.type,
+          }
+        );
+        this.setState({ isOpenFile: true }, () => {
+          this.doIncrementalTest(fileTemp);
+        });
+      })
+      .catch((err) => console.error(err));
+  };
   handleJump = (book: BookModel) => {
     RecentBooks.setRecent(book.key);
-    book.description === "pdf"
-      ? window.open(`./lib/pdf/viewer.html?file=${book.key}`)
-      : window.open(`${window.location.href.split("#")[0]}#/epub/${book.key}`);
+    BookUtil.RedirectBook(book);
   };
   handleAddBook = (book: BookModel) => {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       let bookArr = [...this.props.books, ...this.props.deletedBooks];
       if (bookArr == null) {
         bookArr = [];
@@ -99,18 +113,49 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
             this.state.isOpenFile && this.handleJump(book);
             this.setState({ isOpenFile: false });
             this.props.history.push("/manager/home");
-          }, 1000);
-
+          }, 100);
+          setTimeout(
+            () => {
+              this.props.handleLoadingDialog(false);
+            },
+            this.state.isOpenFile ? 0 : 1000
+          );
+          if (isElectron) {
+            BackupUtil.backup(
+              bookArr,
+              this.props.notes,
+              this.props.bookmarks,
+              () => {},
+              5,
+              () => {}
+            );
+          }
           resolve();
         })
         .catch(() => {
+          setTimeout(() => {
+            this.props.handleLoadingDialog(false);
+          }, 1000);
           reject();
         });
     });
   };
   //获取书籍md5
   doIncrementalTest = (file: any) => {
-    return new Promise((resolve, reject) => {
+    let extension = file.name.split(".").reverse()[0];
+    this.props.handleLoadingDialog(true);
+    if (
+      !isElectron &&
+      (extension === "txt" || extension === "mobi" || extension === "azw3")
+    ) {
+      this.props.handleLoadingDialog(false);
+      console.log("Error occurs");
+      this.props.handleDownloadDesk(true);
+      return new Promise<void>((resolve, reject) => {
+        reject();
+      });
+    }
+    return new Promise<void>((resolve, reject) => {
       //这里假设直接将文件选择框的dom引用传入
       //这里需要用到File的slice( )方法，以下是兼容写法
 
@@ -127,6 +172,9 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
       fileReader.onload = async (e) => {
         if (!e.target) {
           reject();
+          setTimeout(() => {
+            this.props.handleLoadingDialog(false);
+          }, 1000);
           throw new Error();
         }
         spark.appendBinary(e.target.result as any); // append array buffer
@@ -151,8 +199,9 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
     });
   };
   handleBook = (file: any, md5: string) => {
-    let extension = file.name.split(".")[file.name.split(".").length - 1];
-    return new Promise((resolve, reject) => {
+    let extension = file.name.split(".").reverse()[0];
+    let bookName = file.name.substr(0, file.name.length - extension.length - 1);
+    return new Promise<void>((resolve, reject) => {
       //md5重复不导入
       let isRepeat = false;
       if ([...this.props.books, ...this.props.deletedBooks].length > 0) {
@@ -173,11 +222,17 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
           if (!e.target) {
             this.props.handleMessage("Import Failed");
             this.props.handleMessageBox(true);
+            setTimeout(() => {
+              this.props.handleLoadingDialog(false);
+            }, 1000);
             reject();
             throw new Error();
           }
           if (extension === "pdf") {
             if (!e.target) {
+              setTimeout(() => {
+                this.props.handleLoadingDialog(false);
+              }, 1000);
               reject();
               throw new Error();
             }
@@ -208,12 +263,15 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                       let key: string,
                         name: string,
                         author: string,
+                        publisher: string,
                         description: string;
-                      [name, author, description] = [
-                        metadata.info.Title || file.name.split(".")[0],
+                      [name, author, description, publisher] = [
+                        metadata.info.Title || bookName,
                         metadata.info.Author || "Unknown Authur",
                         "pdf",
+                        metadata.info.publisher,
                       ];
+                      let format = "PDF";
                       key = new Date().getTime() + "";
                       let book = new BookModel(
                         key,
@@ -221,10 +279,12 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                         author,
                         description,
                         md5,
-                        cover
+                        cover,
+                        format,
+                        publisher
                       );
                       await this.handleAddBook(book);
-                      localforage.setItem(key, e.target!.result);
+                      BookUtil.addBook(key, e.target!.result as ArrayBuffer);
                       resolve();
                     });
                   });
@@ -234,81 +294,51 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                 this.props.handleMessage("Import Failed");
                 this.props.handleMessageBox(true);
                 console.log("Error occurs");
+                setTimeout(() => {
+                  this.props.handleLoadingDialog(false);
+                }, 1000);
                 reject();
               });
           } else if (extension === "mobi" || extension === "azw3") {
-            if (!isElectron()) {
-              this.props.handleMessage("Only Desktop support this format");
-              this.props.handleMessageBox(true);
-              console.log("Error occurs");
-              reject();
-              return;
-            }
             var reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = async (event) => {
               const file_content = (event.target as any).result;
               let mobiFile = new MobiFile(file_content);
-
-              let content = mobiFile.render();
-              console.log(content, "lcon");
+              let content: any = await mobiFile.render(
+                this.props.handleMessage,
+                this.props.handleMessageBox
+              );
               let buf = iconv.encode(content, "UTF-8");
               let blobTemp: any = new Blob([buf], { type: "text/plain" });
-              let fileTemp = new File(
-                [blobTemp],
-                file.name.split(".")[0] + ".txt",
-                {
-                  lastModified: new Date().getTime(),
-                  type: blobTemp.type,
-                }
-              );
-
+              let fileTemp = new File([blobTemp], file.name + ".txt", {
+                lastModified: new Date().getTime(),
+                type: blobTemp.type,
+              });
               this.doIncrementalTest(fileTemp);
             };
             reader.readAsArrayBuffer(file);
           } else if (extension === "txt") {
-            if (!isElectron()) {
-              this.props.handleMessage("Only Desktop support this format");
+            console.log(file, "import");
+            let result = await BookUtil.parseBook(file);
+            if (result) {
+              this.doIncrementalTest(result);
+            } else {
+              this.props.handleMessage("Import Failed");
               this.props.handleMessageBox(true);
-              console.log("Error occurs");
+              setTimeout(() => {
+                this.props.handleLoadingDialog(false);
+              }, 1000);
               reject();
-              return;
             }
-            let formData = new FormData();
-            formData.append("file", file);
-            axios
-              .post(`${config.token_url}/ebook_parser`, formData, {
-                headers: {
-                  "Content-Type": "multipart/form-data",
-                },
-                responseType: "blob",
-              })
-              .then((res) => {
-                let type = "application/octet-stream";
-                console.log(res, "res");
-                let blobTemp: any = new Blob([res.data], { type: type });
-                let fileTemp = new File(
-                  [blobTemp],
-                  file.name.split(".")[0] + ".epub",
-                  {
-                    lastModified: new Date().getTime(),
-                    type: blobTemp.type,
-                  }
-                );
-
-                this.doIncrementalTest(fileTemp);
-              })
-              .catch((err) => {
-                this.props.handleMessage("Import Failed");
-                this.props.handleMessageBox(true);
-                console.log(err, "Error occurs");
-                reject();
-              });
           } else {
             let cover: any = "";
             const epub = window.ePub(e.target.result);
             epub.loaded.metadata
               .then((metadata: any) => {
                 if (!e.target) {
+                  setTimeout(() => {
+                    this.props.handleLoadingDialog(false);
+                  }, 1000);
                   reject();
                   throw new Error();
                 }
@@ -324,12 +354,22 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                         let key: string,
                           name: string,
                           author: string,
-                          description: string;
-                        [name, author, description] = [
+                          description: string,
+                          publisher: string;
+                        [name, author, description, publisher] = [
                           metadata.title,
                           metadata.creator,
                           metadata.description,
+                          metadata.publisher,
                         ];
+                        let format =
+                          publisher === "mobi"
+                            ? "MOBI"
+                            : publisher === "azw3"
+                            ? "AZW3"
+                            : publisher === "txt"
+                            ? "TXT"
+                            : "EPUB";
                         key = new Date().getTime() + "";
                         let book = new BookModel(
                           key,
@@ -337,10 +377,12 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                           author,
                           description,
                           md5,
-                          cover
+                          cover,
+                          format,
+                          publisher
                         );
                         await this.handleAddBook(book);
-                        localforage.setItem(key, e.target!.result);
+                        BookUtil.addBook(key, e.target!.result as ArrayBuffer);
                         resolve();
                       };
                     } else {
@@ -348,12 +390,22 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                       let key: string,
                         name: string,
                         author: string,
+                        publisher: string,
                         description: string;
-                      [name, author, description] = [
+                      [name, author, description, publisher] = [
                         metadata.title,
                         metadata.creator,
                         metadata.description,
+                        metadata.publisher,
                       ];
+                      let format =
+                        publisher === "mobi"
+                          ? "MOBI"
+                          : publisher === "azw3"
+                          ? "AZW3"
+                          : publisher === "txt"
+                          ? "TXT"
+                          : "EPUB";
                       key = new Date().getTime() + "";
                       let book = new BookModel(
                         key,
@@ -361,15 +413,20 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                         author,
                         description,
                         md5,
-                        cover
+                        cover,
+                        format,
+                        publisher
                       );
                       await this.handleAddBook(book);
-                      localforage.setItem(key, e.target!.result);
+                      BookUtil.addBook(key, e.target!.result as ArrayBuffer);
                       resolve();
                     }
                   })
                   .catch((err: any) => {
                     console.log(err, "err");
+                    setTimeout(() => {
+                      this.props.handleLoadingDialog(false);
+                    }, 1000);
                     reject();
                   });
               })
@@ -377,6 +434,9 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                 this.props.handleMessage("Import Failed");
                 this.props.handleMessageBox(true);
                 console.log("Error occurs");
+                setTimeout(() => {
+                  this.props.handleLoadingDialog(false);
+                }, 1000);
                 reject();
               });
           }
@@ -390,11 +450,6 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
       <Dropzone
         onDrop={async (acceptedFiles) => {
           this.props.handleDrag(false);
-          if (acceptedFiles.length > 9) {
-            this.props.handleMessage("Please import less than 10 books");
-            this.props.handleMessageBox(true);
-            return;
-          }
           for (let i = 0; i < acceptedFiles.length; i++) {
             let extension = acceptedFiles[i].name.split(".")[
               acceptedFiles[i].name.split(".").length - 1
@@ -411,9 +466,13 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
               this.props.handleMessageBox(true);
               return;
             }
+
             //异步解析文件
             await this.doIncrementalTest(acceptedFiles[i]);
           }
+          setTimeout(() => {
+            this.props.handleLoadingDialog(false);
+          }, 1000);
         }}
         accept={[".epub", ".pdf", ".txt", ".mobi", ".azw3"]}
         multiple={true}
@@ -423,10 +482,20 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
             className="import-from-local"
             {...getRootProps()}
             style={
-              OtherUtil.getReaderConfig("lang") === "en" ? { right: 390 } : {}
+              this.props.isCollapsed && document.body.clientWidth < 950
+                ? { width: "42px" }
+                : {}
             }
           >
-            <Trans>Import from Local</Trans>
+            <div className="animation-mask-local"></div>
+            {this.props.isCollapsed && this.state.width < 950 ? (
+              <span className="icon-export"></span>
+            ) : (
+              <span>
+                <Trans>Import from Local</Trans>
+              </span>
+            )}
+
             <input
               type="file"
               id="import-book-box"

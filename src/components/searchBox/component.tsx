@@ -2,7 +2,6 @@
 import React from "react";
 import "./searchBox.css";
 import OtherUtil from "../../utils/otherUtil";
-import { Trans } from "react-i18next";
 import { SearchBoxProps } from "./interface";
 class SearchBox extends React.Component<SearchBoxProps> {
   componentDidMount() {
@@ -36,7 +35,7 @@ class SearchBox extends React.Component<SearchBoxProps> {
     if (event.keyCode !== 13) {
       return;
     }
-    let value = (this.refs.searchBox as any).value;
+    let value = (this.refs.searchBox as any).value.toLowerCase();
     if (this.props.isNavSearch) {
       value && this.search(value);
     }
@@ -100,12 +99,12 @@ class SearchBox extends React.Component<SearchBoxProps> {
           }}
           placeholder={
             this.props.isNavSearch || this.props.mode === "nav"
-              ? "搜索全书"
+              ? this.props.t("Search the book")
               : this.props.tabMode === "note"
-              ? "搜索我的笔记"
+              ? this.props.t("Search my notes")
               : this.props.tabMode === "digest"
-              ? "搜索我的书摘"
-              : "搜索我的书库"
+              ? this.props.t("Search my digests")
+              : this.props.t("Search my library")
           }
           style={
             this.props.mode === "nav"
@@ -121,7 +120,7 @@ class SearchBox extends React.Component<SearchBoxProps> {
             }}
             style={this.props.mode === "nav" ? { right: "-9px" } : {}}
           >
-            <Trans>Cancel</Trans>
+            <span className="icon-close"></span>
           </span>
         ) : (
           <span

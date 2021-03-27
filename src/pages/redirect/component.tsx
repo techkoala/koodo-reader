@@ -5,6 +5,23 @@ import { Trans } from "react-i18next";
 import { getParamsFromUrl } from "../../utils/syncUtils/common";
 import copy from "copy-text-to-clipboard";
 import { withRouter } from "react-router-dom";
+import { isMobile } from "react-device-detect";
+import OtherUtil from "../../utils/otherUtil";
+import DropboxUtil from "../../utils/syncUtils/dropbox";
+import Lottie from "react-lottie";
+import animationSuccess from "../../assets/lotties/success.json";
+
+const successOptions = {
+  loop: false,
+  autoplay: true,
+  animationData: animationSuccess,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice",
+  },
+};
+
+declare var window: any;
+
 class Redirect extends React.Component<RedirectProps, RedirectState> {
   timer!: NodeJS.Timeout;
   constructor(props: RedirectProps) {
@@ -16,7 +33,14 @@ class Redirect extends React.Component<RedirectProps, RedirectState> {
       token: "",
     };
   }
-
+  handleFinish = () => {
+    this.props.handleLoadingDialog(false);
+    alert("数据恢复成功");
+  };
+  showMessage = (message: string) => {
+    this.props.handleMessage(message);
+    this.props.handleMessageBox(true);
+  };
   componentDidMount() {
     //判断是否是获取token后的回调页面
     let url = document.location.href;
@@ -29,17 +53,41 @@ class Redirect extends React.Component<RedirectProps, RedirectState> {
     }
     if (url.indexOf("code") > -1) {
       let params: any = getParamsFromUrl();
-      console.log(params, "params");
       this.setState({ token: params.code });
       this.setState({ isAuthed: true });
       return false;
     }
     if (url.indexOf("access_token") > -1) {
       let params: any = getParamsFromUrl();
-      console.log(params, "params");
       this.setState({ token: params.access_token });
       this.setState({ isAuthed: true });
+      if (isMobile) {
+        OtherUtil.setReaderConfig(`dropbox_token`, params.access_token);
+        DropboxUtil.DownloadFile(
+          (mobileData) => {
+            window.ReactNativeWebView.postMessage(mobileData);
+          },
+          () => {}
+        );
+      }
       return false;
+    }
+    if (url.indexOf("mobile_first_open") > -1) {
+      DropboxUtil.DownloadFile(
+        (mobileData) => {
+          window.ReactNativeWebView.postMessage(mobileData);
+        },
+        () => {}
+      );
+    }
+    if (url.indexOf("mobile_sync") > -1) {
+      DropboxUtil.DownloadFile(
+        (mobileData) => {
+          window.ReactNativeWebView.postMessage(mobileData);
+        },
+        () => {},
+        true
+      );
     }
   }
 
@@ -49,7 +97,7 @@ class Redirect extends React.Component<RedirectProps, RedirectState> {
         <div className="backup-page-finish-container">
           <div className="backup-page-finish">
             {this.state.isAuthed ? (
-              <span className="icon-message backup-page-finish-icon"></span>
+              <Lottie options={successOptions} height={80} width={80} />
             ) : (
               <span className="icon-close auth-page-close-icon"></span>
             )}

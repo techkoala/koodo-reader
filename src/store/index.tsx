@@ -35,11 +35,13 @@ export type stateType = {
     deletedBooks: BookModel[];
     searchResults: number[];
     isSearch: boolean;
-    isSort: boolean;
+    isBookSort: boolean;
     isSettingOpen: boolean;
-    isFirst: string;
-    isList: string;
+    viewMode: string;
     isSortDisplay: boolean;
+    isShowLoading: boolean;
+    isShowNew: boolean;
+    isDownloadDesk: boolean;
     bookSortCode: { sort: number; order: number };
     noteSortCode: { sort: number; order: number };
     isMessage: boolean;
@@ -77,6 +79,7 @@ export type stateType = {
     mode: string;
     shelfIndex: number;
     isDragToLove: boolean;
+    isCollapsed: boolean;
     isDragToDelete: boolean;
   };
   viewArea: {

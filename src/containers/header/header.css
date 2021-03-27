@@ -1,25 +1,36 @@
 .header {
-  position: absolute;
-  top: 0;
-  left: 190px;
   width: 100%;
+  height: 80px;
+  overflow: hidden;
+  margin-left: 190px;
 }
 
 .header-sort-container {
   position: absolute;
-  left: 265px;
+  left: 465px;
   top: 29px;
   cursor: pointer;
+  transition: 0.1s;
+  width: 150px;
+  height: 27px;
+  transition: all 0.1s ease;
+  z-index: 1;
+  text-align: center;
+  display: flex;
+  justify-content: center;
 }
-.header-sort-text,
-.download-demo-book {
+.setting-icon-container:hover {
+  background-color: rgba(75, 75, 75, 0.035);
+  border-radius: 50%;
+}
+.header-sort-text {
   float: left;
-  width: 32px;
   height: 16px;
   font-size: 16px;
   line-height: 27px;
   color: rgba(75, 75, 75, 1);
   opacity: 1;
+  font-weight: 500;
 }
 .header-sort-icon {
   float: left;
@@ -28,7 +39,7 @@
 }
 .only-local-container {
   position: absolute;
-  left: 350px;
+  left: 520px;
   margin-top: 29px;
 }
 .only-local-text {
@@ -58,54 +69,80 @@
   background-color: white;
 }
 .import-from-cloud {
-  float: right;
-  margin-right: 220px;
+  margin-right: 20px;
   margin-top: 20px;
-  min-width: 138px;
+  width: 138px;
+  max-width: 158px;
   height: 42px;
   border: 2px solid #4b4b4b;
   background: white;
-  padding: 0px 10px;
   opacity: 1;
+  padding: 0 !important;
   border-radius: 25px;
   line-height: 38px;
   text-align: center;
   color: #4b4b4b;
   box-sizing: border-box;
   cursor: pointer;
+  transition: 0.2s;
+  position: fixed;
+  right: 0px;
+  top: 0px;
+  font-weight: 500;
 }
-.import-from-cloud:hover {
-  background-color: rgba(75, 75, 75, 0.035);
+.import-from-cloud:hover .animation-mask {
+  transform: scaleX(1);
+}
+.import-from-local:hover .animation-mask-local {
+  transform: scaleX(1);
 }
 @media screen and (max-width: 950px) {
   .import-from-cloud {
-    position: absolute;
-    left: 580px;
+    position: fixed;
+    left: 15px;
+    top: calc(100vh - 110px);
+    width: 138px;
   }
   .import-from-local {
-    position: absolute;
-    left: 400px;
+    position: fixed !important;
+    left: 15px;
+    top: calc(100vh - 170px) !important;
+    width: 138px;
+    padding: 0px !important;
   }
 }
 .download-demo-book {
   text-decoration: underline;
   width: 200px;
   position: absolute;
-  left: 530px;
+  left: 690px;
   top: 29px;
   cursor: pointer;
-  color: blue;
+  color: #0078d4;
 }
 @media screen and (max-width: 1250px) {
   .download-demo-book {
     display: none;
   }
 }
+.animation-mask,
+.animation-mask-local {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-color: rgba(75, 75, 75, 0.05);
+  transition: 0.1s;
+  transform: scaleX(0);
+  transform-origin: left;
+  border-radius: 19px;
+}
 
 .header-search-container {
   position: absolute;
   top: 23px;
-  left: 20px;
+  left: 250px;
   width: 209px;
   height: 40px;
 }
@@ -113,12 +150,17 @@
   font-size: 25px;
 }
 .setting-icon-container {
-  width: 25px;
-  height: 25px;
+  width: 50px;
+  height: 50px;
   font-size: 25px;
+  line-height: 37px;
   position: absolute;
-  left: 335px;
-  top: 33px;
+  left: 595px;
+  top: 20px;
   color: rgba(75, 75, 75, 1);
   cursor: pointer;
+  transition: 0.1s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

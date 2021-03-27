@@ -2,9 +2,9 @@
 import React from "react";
 import "./imageViewer.css";
 import { ImageViewerProps, ImageViewerStates } from "./interface";
-import StyleUtil from "../../utils/styleUtil";
+import StyleUtil from "../../utils/readUtils/styleUtil";
 import FileSaver from "file-saver";
-const isElectron = require("is-electron");
+import { isElectron } from "react-device-detect";
 
 declare var window: any;
 
@@ -28,7 +28,7 @@ class ImageViewer extends React.Component<ImageViewerProps, ImageViewerStates> {
         return;
       }
       StyleUtil.addDefaultCss();
-      doc.addEventListener("click", this.showImage, true);
+      doc.addEventListener("click", this.showImage, false);
     });
   }
 
@@ -39,19 +39,53 @@ class ImageViewer extends React.Component<ImageViewerProps, ImageViewerStates> {
       this.props.handleLeaveReader("top");
       this.props.handleLeaveReader("bottom");
     }
-    let href =
-      event.target.href ||
-      event.target.parentNode.href ||
-      event.target.parentNode.parentNode.href;
-    if (isElectron() && href && href.indexOf("OEBPF") === -1) {
+    let href;
+    if (
+      event.target &&
+      event.target.parentNode &&
+      event.target.parentNode.parentNode
+    ) {
+      href =
+        event.target.src ||
+        event.target.href ||
+        event.target.parentNode.href ||
+        event.target.parentNode.parentNode.href ||
+        "";
+    }
+
+    if (
+      isElectron &&
+      href &&
+      href.indexOf("OEBPF") === -1 &&
+      href.indexOf("OEBPS") === -1 &&
+      href.indexOf("footnote") === -1 &&
+      href.indexOf("blob") === -1 &&
+      href.indexOf(".htm") === -1
+    ) {
       event.preventDefault();
-      window.require("electron").shell.openExternal(href);
+      const { shell } = window.require("electron");
+      const { dialog } = window.require("electron").remote;
+      dialog
+        .showMessageBox({
+          type: "question",
+          title: this.props.t("Open link in browser"),
+          message: this.props.t("Do you want to open this link in browser"),
+          buttons: [this.props.t("Confirm"), this.props.t("Cancel")],
+        })
+        .then((result) => {
+          result.response === 0 && shell.openExternal(href);
+        });
     }
     if (!event.target.src) {
       return;
     }
     if (this.state.isShowImage) {
-      this.setState({ isShowImage: false });
+      this.setState({
+        isShowImage: false,
+        zoomIndex: 0,
+        rotateIndex: 0,
+        imageRatio: "horizontal",
+      });
     }
     event.preventDefault();
     const handleDirection = (direction: string) => {
@@ -80,7 +114,7 @@ class ImageViewer extends React.Component<ImageViewerProps, ImageViewerStates> {
   };
   handleZoomIn = () => {
     let image: any = document.querySelector(".image");
-    if (image.style.width === "100vw" || image.style.height === "100vh") return;
+    if (image.style.width === "200vw" || image.style.height === "200vh") return;
     this.setState({ zoomIndex: this.state.zoomIndex + 1 }, () => {
       if (this.state.imageRatio === "horizontal") {
         image.style.width = `${60 + this.state.zoomIndex * 10}vw`;
@@ -91,7 +125,7 @@ class ImageViewer extends React.Component<ImageViewerProps, ImageViewerStates> {
   };
   handleZoomOut = () => {
     let image: any = document.querySelector(".image");
-    if (image.style.width === "50vw" || image.style.height === "50vh") return;
+    if (image.style.width === "10vw" || image.style.height === "10vh") return;
     this.setState({ zoomIndex: this.state.zoomIndex - 1 }, () => {
       if (this.state.imageRatio === "horizontal") {
         image.style.width = `${60 + this.state.zoomIndex * 10}vw`;

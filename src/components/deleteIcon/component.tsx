@@ -3,8 +3,8 @@ import React from "react";
 import "./deleteIcon.css";
 import { DeleteIconProps, DeleteIconStates } from "./interface";
 import localforage from "localforage";
-import TagUtil from "../../utils/tagUtil";
-import DeletePopup from "../deletePopup";
+import TagUtil from "../../utils/readUtils/tagUtil";
+import DeletePopup from "../dialogs/deletePopup";
 
 class DeleteIcon extends React.Component<DeleteIconProps, DeleteIconStates> {
   constructor(props: DeleteIconProps) {

@@ -4,6 +4,7 @@ import "./background.css";
 import { BackgroundProps, BackgroundState } from "./interface";
 import OtherUtil from "../../utils/otherUtil";
 import { Trans } from "react-i18next";
+import { isMobile } from "react-device-detect";
 
 class Background extends React.Component<BackgroundProps, BackgroundState> {
   isFirst: Boolean;
@@ -18,9 +19,15 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
       nextPage: 0,
       scale: OtherUtil.getReaderConfig("scale") || 1,
       isShowFooter: OtherUtil.getReaderConfig("isShowFooter") !== "no",
+      isShowHeader: OtherUtil.getReaderConfig("isShowHeader") !== "no",
       isUseBackground: OtherUtil.getReaderConfig("isUseBackground") === "yes",
     };
     this.isFirst = true;
+  }
+  componentDidMount() {
+    if (isMobile) {
+      OtherUtil.setReaderConfig("readerMode", "continuous");
+    }
   }
   componentWillReceiveProps(nextProps: BackgroundProps) {
     if (
@@ -53,31 +60,42 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
   render() {
     if (this.state.isUseBackground) {
       return (
-        <div className="background">
-          {this.state.isShowFooter && this.state.currentChapter && (
+        <div
+          className="background"
+          style={{
+            color: OtherUtil.getReaderConfig("textColor")
+              ? OtherUtil.getReaderConfig("textColor")
+              : "",
+          }}
+        >
+          {this.state.isShowHeader && this.state.currentChapter && (
             <p
               className="progress-chapter-name"
               style={
-                this.state.isSingle
+                this.state.isSingle && !isMobile
                   ? {
                       left: `calc(50vw - 
                       270px)`,
                     }
+                  : isMobile
+                  ? { left: "auto", width: "100vw" }
                   : {}
               }
             >
               <Trans>{this.state.currentChapter}</Trans>
             </p>
           )}
-          {this.state.isShowFooter && !this.state.isSingle && (
+          {this.state.isShowHeader && !this.state.isSingle && (
             <p
               className="progress-book-name"
               style={
-                this.state.isSingle
+                this.state.isSingle && !isMobile
                   ? {
                       right: `calc(50vw - 
                       270px)`,
                     }
+                  : isMobile
+                  ? { right: "auto", width: "100vw" }
                   : {}
               }
             >
@@ -88,11 +106,13 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
             <p
               className="background-page-left"
               style={
-                this.state.isSingle
+                this.state.isSingle && !isMobile
                   ? {
                       left: `calc(50vw - 
                       270px)`,
                     }
+                  : isMobile
+                  ? { left: "auto", width: "100vw" }
                   : {}
               }
             >
@@ -120,16 +140,25 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
       );
     }
     return (
-      <div className="background">
-        {this.state.isShowFooter && this.state.currentChapter && (
+      <div
+        className="background"
+        style={{
+          color: OtherUtil.getReaderConfig("textColor")
+            ? OtherUtil.getReaderConfig("textColor")
+            : "",
+        }}
+      >
+        {this.state.isShowHeader && this.state.currentChapter && (
           <p
             className="progress-chapter-name"
             style={
-              this.state.isSingle
+              this.state.isSingle && !isMobile
                 ? {
                     left: `calc(50vw - 
                       270px)`,
                   }
+                : isMobile
+                ? { left: "auto", width: "100vw" }
                 : {}
             }
           >
@@ -137,15 +166,17 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
           </p>
         )}
 
-        {this.state.isShowFooter && !this.state.isSingle && (
+        {this.state.isShowHeader && !this.state.isSingle && (
           <p
             className="progress-book-name"
             style={
-              this.state.isSingle
+              this.state.isSingle && !isMobile
                 ? {
                     right: `calc(50vw - 
                       270px)`,
                   }
+                : isMobile
+                ? { right: "auto", width: "100vw" }
                 : {}
             }
           >
@@ -157,11 +188,13 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
           <p
             className="background-page-left"
             style={
-              this.state.isSingle
+              this.state.isSingle && !isMobile
                 ? {
                     left: `calc(50vw - 
                       270px)`,
                   }
+                : isMobile
+                ? { left: "auto", width: "100vw" }
                 : {}
             }
           >
@@ -188,7 +221,9 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
         <div
           className="background-box2"
           style={
-            this.state.isSingle
+            document.body.clientWidth < 570
+              ? { left: 5, right: 8 }
+              : this.state.isSingle
               ? {
                   left: `calc(50vw - ${
                     270 * parseFloat(this.state.scale)
@@ -204,7 +239,9 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
         <div
           className="background-box3"
           style={
-            this.state.isSingle
+            document.body.clientWidth < 570
+              ? { left: 5, right: 10 }
+              : this.state.isSingle
               ? {
                   left: `calc(50vw - ${
                     270 * parseFloat(this.state.scale)
@@ -253,7 +290,9 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
         <div
           className="background-box1"
           style={
-            this.state.isSingle
+            document.body.clientWidth < 570
+              ? { left: 5, right: 6 }
+              : this.state.isSingle
               ? {
                   left: `calc(50vw - ${
                     270 * parseFloat(this.state.scale)

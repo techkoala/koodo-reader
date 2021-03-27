@@ -1,19 +1,21 @@
 //卡片模式下的图书显示
 import React from "react";
-import RecentBooks from "../../utils/recordRecent";
+import RecentBooks from "../../utils/readUtils/recordRecent";
 import "./bookCardItem.css";
-import { BookProps, BookState } from "./interface";
-import AddFavorite from "../../utils/addFavorite";
-import ActionDialog from "../../containers/actionDialog";
+import { BookCardProps, BookCardState } from "./interface";
+import AddFavorite from "../../utils/readUtils/addFavorite";
+import ActionDialog from "../dialogs/actionDialog";
 import OtherUtil from "../../utils/otherUtil";
 import { withRouter } from "react-router-dom";
-import RecordLocation from "../../utils/recordLocation";
-import isElectron from "is-electron";
+import RecordLocation from "../../utils/readUtils/recordLocation";
+import { isElectron } from "react-device-detect";
+import EmptyCover from "../emptyCover";
+import BookUtil from "../../utils/bookUtil";
 declare var window: any;
 
-class BookCardItem extends React.Component<BookProps, BookState> {
+class BookCardItem extends React.Component<BookCardProps, BookCardState> {
   epub: any;
-  constructor(props: BookProps) {
+  constructor(props: BookCardProps) {
     super(props);
     this.state = {
       isOpenConfig: false,
@@ -27,7 +29,7 @@ class BookCardItem extends React.Component<BookProps, BookState> {
   componentDidMount() {
     let filePath = "";
     //控制是否自动打开本书
-    if (isElectron()) {
+    if (isElectron) {
       const { ipcRenderer } = window.require("electron");
       filePath = ipcRenderer.sendSync("get-file-data");
     }
@@ -38,15 +40,11 @@ class BookCardItem extends React.Component<BookProps, BookState> {
       !this.props.currentBook.key &&
       !filePath
     ) {
-      this.props.book.description === "pdf"
-        ? window.open(`./lib/pdf/viewer.html?file=${this.props.book.key}`)
-        : window.open(
-            `${window.location.href.split("#")[0]}#/epub/${this.props.book.key}`
-          );
+      BookUtil.RedirectBook(this.props.book);
     }
     this.props.handleReadingBook(this.props.book);
   }
-  componentWillReceiveProps(nextProps: BookProps) {
+  componentWillReceiveProps(nextProps: BookCardProps) {
     if (nextProps.isDragToLove !== this.props.isDragToLove) {
       if (
         nextProps.isDragToLove &&
@@ -69,13 +67,22 @@ class BookCardItem extends React.Component<BookProps, BookState> {
   handleMoreAction = (event: any) => {
     const e = event || window.event;
     let x = e.clientX;
-    if (x > document.body.clientWidth - 100) {
-      x = x - 80;
+    if (x > document.body.clientWidth - 300) {
+      x = x - 180;
     }
-    this.setState({ left: x - 210, top: e.clientY - 120 }, () => {
-      this.props.handleActionDialog(true);
-      this.props.handleReadingBook(this.props.book);
-    });
+    this.setState(
+      {
+        left: x - 200,
+        top:
+          document.body.clientHeight - e.clientY > 400
+            ? document.body.clientHeight - 310 - e.clientY
+            : 200,
+      },
+      () => {
+        this.props.handleActionDialog(true);
+        this.props.handleReadingBook(this.props.book);
+      }
+    );
   };
   handleDeleteBook = () => {
     this.props.handleReadingBook(this.props.book);
@@ -91,6 +98,9 @@ class BookCardItem extends React.Component<BookProps, BookState> {
   handleCancelLoveBook = () => {
     AddFavorite.clear(this.props.book.key);
     this.setState({ isFavorite: false });
+    if (Object.keys(AddFavorite.getAllFavorite()).length === 0) {
+      this.props.history.push("/manager/empty");
+    }
     this.props.handleMessage("Cancel Successfully");
     this.props.handleMessageBox(true);
   };
@@ -101,11 +111,7 @@ class BookCardItem extends React.Component<BookProps, BookState> {
   handleJump = () => {
     RecentBooks.setRecent(this.props.book.key);
 
-    this.props.book.description === "pdf"
-      ? window.open(`./lib/pdf/viewer.html?file=${this.props.book.key}`)
-      : window.open(
-          `${window.location.href.split("#")[0]}#/epub/${this.props.book.key}`
-        );
+    BookUtil.RedirectBook(this.props.book);
   };
   render() {
     let percentage = RecordLocation.getCfi(this.props.book.key)
@@ -123,7 +129,11 @@ class BookCardItem extends React.Component<BookProps, BookState> {
             this.handleConfig(false);
           }}
         >
-          {this.props.book.cover && this.props.book.cover !== "noCover" ? (
+          {this.props.book.cover &&
+          this.props.book.cover !== "noCover" &&
+          this.props.book.publisher !== "mobi" &&
+          this.props.book.publisher !== "azw3" &&
+          this.props.book.publisher !== "txt" ? (
             <img
               className="book-item-cover"
               src={this.props.book.cover}
@@ -151,14 +161,12 @@ class BookCardItem extends React.Component<BookProps, BookState> {
                 this.props.handleDragItem("");
               }}
             >
-              <img
-                src={
-                  process.env.NODE_ENV === "production"
-                    ? "./assets/cover.jpg"
-                    : "../../assets/cover.jpg"
-                }
-                alt=""
-                style={{ width: "100%" }}
+              <EmptyCover
+                {...{
+                  format: this.props.book.format,
+                  title: this.props.book.name,
+                  scale: 1,
+                }}
               />
             </div>
           )}
@@ -176,18 +184,20 @@ class BookCardItem extends React.Component<BookProps, BookState> {
 
           {this.state.isOpenConfig ? (
             <>
-              <div className="reading-progress-icon">
-                <div style={{ position: "relative", left: "4px" }}>
-                  {percentage
-                    ? Math.floor(percentage * 100) < 10
-                      ? "0" + Math.floor(percentage * 100)
-                      : Math.floor(percentage * 100) === 100
-                      ? "完"
-                      : Math.floor(percentage * 100)
-                    : "00"}
-                  <span className="reading-percentage-char">%</span>
+              {this.props.book.format !== "PDF" && (
+                <div className="reading-progress-icon">
+                  <div style={{ position: "relative", left: "4px" }}>
+                    {percentage
+                      ? Math.floor(percentage * 100) < 10
+                        ? "0" + Math.floor(percentage * 100)
+                        : Math.floor(percentage * 100) === 100
+                        ? "完"
+                        : Math.floor(percentage * 100)
+                      : "00"}
+                    <span className="reading-percentage-char">%</span>
+                  </div>
                 </div>
-              </div>
+              )}
               <span
                 className="icon-more book-more-action"
                 onClick={(event) => {
@@ -203,9 +213,12 @@ class BookCardItem extends React.Component<BookProps, BookState> {
             </>
           ) : null}
         </div>
+
         {this.props.isOpenActionDialog &&
         this.props.book.key === this.props.currentBook.key ? (
-          <ActionDialog {...actionProps} />
+          <div className="action-dialog-parent">
+            <ActionDialog {...actionProps} />
+          </div>
         ) : null}
       </>
     );

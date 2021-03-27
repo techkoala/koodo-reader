@@ -1,15 +1,20 @@
 {
   "name": "koodo-reader",
   "main": "main.js",
-  "version": "1.1.9",
-  "description": "A cross-platform open source Epub reader ",
+  "version": "1.2.4",
+  "description": "An open-source eBook reader ",
   "author": {
     "name": "App by Troye",
     "email": "guo362429@gmail.com"
   },
-  "repository": "https://github.com/troyeguo/koodo-desktop",
+  "engines": {
+    "node": ">=10.0.0",
+    "npm": ">=6.0.0"
+  },
+  "repository": "https://github.com/troyeguo/koodo-reader",
   "private": true,
   "dependencies": {
+    "adm-zip": "^0.5.2",
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
     "chardet": "^1.3.0",
@@ -18,21 +23,25 @@
     "detect-port": "^1.3.0",
     "electron-is-dev": "^1.1.0",
     "express": "^4.17.1",
-    "express-fileupload": "^1.2.0",
+    "express-fileupload": "^1.2.1",
     "font-list": "^1.2.11",
+    "fs-extra": "^9.1.0",
     "i18next": "^19.4.4",
+    "i18next-browser-languagedetector": "^6.0.1",
     "iconv-lite": "^0.6.2",
-    "is-electron": "^2.2.0",
     "md5": "^2.3.0",
     "nodemon": "^2.0.6",
     "nodepub": "^2.2.0",
     "rc-color-picker": "^1.2.6",
     "react-device-detect": "^1.12.1",
-    "react-dropzone": "^11.0.1",
-    "react-i18next": "^9.0.10",
+    "react-dropzone": "^11.3.0",
+    "react-i18next": "9.0.10",
+    "react-lottie": "^1.2.3",
     "react-router-dom": "^5.2.0",
     "request": "^2.88.2",
-    "underscore": "^1.11.0"
+    "underscore": "^1.11.0",
+    "webdav": "^3.6.2",
+    "zip-a-folder": "^0.0.12"
   },
   "scripts": {
     "analyze": "source-map-explorer 'build/static/js/*.js'",
@@ -41,18 +50,18 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "ele": "electron .",
-    "dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000/ && nodemon --watch * --exec electron .\"",
+    "dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000/ && nodemon --watch ./main.js --exec electron .\"",
     "pack": "electron-builder --dir",
     "release": "electron-builder ",
     "prerelease": "npm run build",
     "prepack": "npm run build",
-    "predist": "npm run build"
+    "dist": "electron-builder"
   },
   "homepage": "./",
   "build": {
-    "appId": "koodo.960960.xyz",
+    "appId": "xyz.960960.koodo",
     "productName": "Koodo Reader",
-    "copyright": "Copyright © 2020 ${author}",
+    "copyright": "Copyright (c) 2020-2021 ${author}",
     "files": [
       "build/**/*",
       "node_modules/**/*",
@@ -65,6 +74,38 @@
     "publish": {
       "provider": "github"
     },
+    "fileAssociations": [
+      {
+        "ext": "epub",
+        "role": "Viewer",
+        "icon": "assets/icons/epub",
+        "mimeType": "application/epub+zip"
+      },
+      {
+        "ext": "pdf",
+        "role": "Viewer",
+        "icon": "assets/icons/pdf",
+        "mimeType": "application/pdf"
+      },
+      {
+        "ext": "mobi",
+        "role": "Viewer",
+        "icon": "assets/icons/mobi",
+        "mimeType": "application/x-mobipocket-ebook"
+      },
+      {
+        "ext": "azw3",
+        "role": "Viewer",
+        "icon": "assets/icons/azw3",
+        "mimeType": "application/vnd.amazon.ebook"
+      },
+      {
+        "ext": "txt",
+        "role": "Viewer",
+        "icon": "assets/icons/txt",
+        "mimeType": "text/plain"
+      }
+    ],
     "extends": null,
     "dmg": {
       "contents": [
@@ -82,30 +123,66 @@
       ]
     },
     "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "icon": "assets/icons/icon.icns",
       "category": "public.app-category.productivity",
-      "artifactName": "${productName}-${version}.${ext}"
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
     "win": {
       "target": [
-        "nsis",
-        "portable"
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
       ],
       "icon": "assets/icons/icon.ico",
-      "artifactName": "${productName}-${version}.${ext}",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
       "publisherName": "App by Troye"
     },
     "linux": {
       "icon": "assets/icons",
       "category": "Office",
-      "target": "AppImage"
+      "target": [
+        {
+          "target": "AppImage"
+        },
+        {
+          "target": "deb"
+        }
+      ]
     },
     "portable": {
-      "artifactName": "${productName}-${version}-Portable.${ext}"
+      "artifactName": "${productName}-${version}-Portable-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true
     }
   },
   "eslintConfig": {
@@ -134,19 +211,17 @@
     ]
   },
   "devDependencies": {
+    "@types/i18next": "^13.0.0",
+    "@types/react-i18next": "^8.1.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
     "@types/file-saver": "^2.0.1",
-    "@types/i18next": "^13.0.0",
-    "@types/i18next-browser-languagedetector": "^3.0.0",
     "@types/jest": "^25.2.1",
     "@types/md5": "^2.2.0",
     "@types/node": "^13.13.2",
     "@types/react": "^16.9.34",
     "@types/react-dom": "^16.9.6",
-    "@types/react-dropzone": "^5.1.0",
-    "@types/react-i18next": "^8.1.0",
     "@types/react-redux": "^7.1.7",
     "@types/react-router-dom": "^5.1.6",
     "@types/spark-md5": "^3.0.2",
@@ -154,8 +229,8 @@
     "classnames": "^2.2.6",
     "concurrently": "^5.0.1",
     "cross-env": "^6.0.3",
-    "electron": "^7.1.4",
-    "electron-builder": "^22.3.6",
+    "electron": "11.3.0",
+    "electron-builder": "^22.10.5",
     "electron-is-dev": "^1.1.0",
     "file-saver": "^2.0.2",
     "html-react-parser": "^0.13.0",

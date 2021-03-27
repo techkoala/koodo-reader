@@ -4,11 +4,14 @@ const initState = {
   deletedBooks: [],
   searchResults: [],
   isSearch: false,
-  isSort: false,
-  isFirst: "no",
+  isBookSort: false,
+  isNoteSort: false,
   isSettingOpen: false,
-  isList: "card",
+  viewMode: "card",
   isSortDisplay: false,
+  isShowLoading: false,
+  isDownloadDesk: false,
+  isShowNew: false,
   bookSortCode: { sort: 0, order: 1 },
   noteSortCode: OtherUtil.getNoteSortCode(),
   isMessage: false,
@@ -34,35 +37,52 @@ export function manager(
         ...state,
         searchResults: action.payload,
       };
+    case "HANDLE_DOWNLOAD_DESK":
+      return {
+        ...state,
+        isDownloadDesk: action.payload,
+      };
     case "HANDLE_SEARCH":
       return {
         ...state,
         isSearch: action.payload,
       };
+
     case "HANDLE_SETTING":
       return {
         ...state,
         isSettingOpen: action.payload,
       };
-    case "HANDLE_SORT":
+    case "HANDLE_BOOK_SORT":
       return {
         ...state,
-        isSort: action.payload,
+        isBookSort: action.payload,
       };
-    case "HANDLE_FIRST":
+    case "HANDLE_NOTE_SORT":
       return {
         ...state,
-        isFirst: action.payload,
+        isNoteSort: action.payload,
       };
-    case "HANDLE_LIST":
+
+    case "HANDLE_VIEW_MODE":
       return {
         ...state,
-        isList: action.payload,
+        viewMode: action.payload,
       };
     case "HANDLE_SORT_DISPLAY":
       return {
         ...state,
         isSortDisplay: action.payload,
+      };
+    case "HANDLE_SHOW_LOADING":
+      return {
+        ...state,
+        isShowLoading: action.payload,
+      };
+    case "HANDLE_SHOW_NEW":
+      return {
+        ...state,
+        isShowNew: action.payload,
       };
     case "HANDLE_MESSAGE":
       return {

@@ -1,26 +1,25 @@
 import React from "react";
 import Sidebar from "../../containers/sidebar";
 import Header from "../../containers/header";
-import DeleteDialog from "../../containers/deleteDialog";
-import EditDialog from "../../containers/editDialog";
-import AddDialog from "../../containers/addDialog";
-import SortDialog from "../../containers/sortDialog";
+import DeleteDialog from "../../components/dialogs/deleteDialog";
+import EditDialog from "../../components/dialogs/editDialog";
+import AddDialog from "../../components/dialogs/addDialog";
+import SortDialog from "../../components/dialogs/sortDialog";
 import MessageBox from "../../containers/messageBox";
-import BackupDialog from "../../containers/backupDialog";
-import WelcomeDialog from "../../containers/welcomeDialog";
+import BackupDialog from "../../components/dialogs/backupDialog";
 import "./manager.css";
 import { ManagerProps, ManagerState } from "./interface";
 import { Trans } from "react-i18next";
 import OtherUtil from "../../utils/otherUtil";
-import AddFavorite from "../../utils/addFavorite";
-import { updateLog } from "../../constants/updateLog";
-import UpdateDialog from "../../components/updataDialog";
-import SettingDialog from "../../components/settingDialog";
+import AddFavorite from "../../utils/readUtils/addFavorite";
+import SettingDialog from "../../components/dialogs/settingDialog";
 import { isMobileOnly } from "react-device-detect";
 import { Route, Switch, Redirect } from "react-router-dom";
 import { routes } from "../../router/routes";
 import Arrow from "../../components/arrow";
-
+import LoadingDialog from "../../components/dialogs/loadingDialog";
+import DownloadDesk from "../../components/dialogs/downloadDesk";
+import { isElectron } from "react-device-detect";
 // declare var window: any;
 
 //判断是否为触控设备
@@ -81,20 +80,11 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
     }
   }
   componentDidMount() {
-    setTimeout(() => {
-      this.setState({
-        isUpdated: OtherUtil.getReaderConfig("version") !== updateLog.version,
-      });
-      this.props.handleFirst(OtherUtil.getReaderConfig("isFirst") || "yes");
-    }, 1000);
     if (is_touch_device() && !OtherUtil.getReaderConfig("isTouch")) {
       OtherUtil.setReaderConfig("isTouch", "yes");
     }
   }
-  handleUpdateDialog = () => {
-    this.setState({ isUpdated: false });
-    OtherUtil.setReaderConfig("version", updateLog.version);
-  };
+
   handleDrag = (isDrag: boolean) => {
     this.setState({ isDrag });
   };
@@ -104,9 +94,6 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
 
   render() {
     let { books } = this.props;
-    const updateDialogProps = {
-      handleUpdateDialog: this.handleUpdateDialog,
-    };
     if (isMobileOnly) {
       return (
         <>
@@ -134,12 +121,14 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
         </>
       );
     }
-    console.log(this.state.isDrag, !this.props.dragItem);
     return (
       <div
         className="manager"
         onDragEnter={() => {
           !this.props.dragItem && this.handleDrag(true);
+          (document.getElementsByClassName(
+            "import-from-local"
+          )[0] as any).style.zIndex = "50";
         }}
       >
         {this.state.isDrag && !this.props.dragItem && (
@@ -154,23 +143,35 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
         )}
         <Sidebar />
         <Header {...{ handleDrag: this.handleDrag }} />
-        <div className="manager-dialog-container">
-          {this.props.isOpenDeleteDialog ? (
-            <DeleteDialog />
-          ) : this.props.isOpenEditDialog ? (
-            <EditDialog />
-          ) : this.props.isOpenAddDialog ? (
-            <AddDialog />
-          ) : null}
-        </div>
-        {this.props.isMessage ? <MessageBox /> : null}
-        {this.props.isSortDisplay ? <SortDialog /> : null}
-        {this.props.isBackup ? <BackupDialog /> : null}
-        {this.props.isFirst === "yes" ? <WelcomeDialog /> : null}
-        {this.state.isUpdated && this.props.isFirst === "no" ? (
-          <UpdateDialog {...updateDialogProps} />
-        ) : null}
-        {this.props.isSettingOpen ? <SettingDialog /> : null}
+        {this.props.isOpenDeleteDialog && <DeleteDialog />}
+        {this.props.isOpenEditDialog && <EditDialog />}
+        {this.props.isOpenAddDialog && <AddDialog />}
+        {this.props.isShowLoading && <LoadingDialog />}
+        {
+          <div
+            className="drag-background"
+            style={
+              this.props.isSettingOpen ||
+              this.props.isBackup ||
+              this.props.isShowNew ||
+              this.props.isOpenDeleteDialog ||
+              this.props.isOpenEditDialog ||
+              this.props.isOpenAddDialog ||
+              this.props.isDownloadDesk ||
+              this.props.isShowLoading
+                ? {}
+                : {
+                    display: "none",
+                  }
+            }
+          ></div>
+        }
+
+        {this.props.isMessage && <MessageBox />}
+        {this.props.isSortDisplay && <SortDialog />}
+        {this.props.isBackup && <BackupDialog />}
+        {this.props.isSettingOpen && <SettingDialog />}
+        {this.props.isDownloadDesk && !isElectron && <DownloadDesk />}
         {(!books || books.length === 0) && this.state.totalBooks ? (
           <Redirect to="/manager/loading" />
         ) : (

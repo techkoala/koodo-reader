@@ -4,7 +4,6 @@ import {
   handleFetchBookSortCode,
   handleFetchList,
   handleMessageBox,
-  handleFirst,
 } from "../../store/actions/manager";
 import {
   handleFetchNotes,
@@ -28,11 +27,13 @@ const mapStateToProps = (state: stateType) => {
     isOpenDeleteDialog: state.book.isOpenDeleteDialog,
     isOpenAddDialog: state.book.isOpenAddDialog,
     isSettingOpen: state.manager.isSettingOpen,
-    isSort: state.manager.isSort,
+    isBookSort: state.manager.isBookSort,
     isSortDisplay: state.manager.isSortDisplay,
+    isShowLoading: state.manager.isShowLoading,
+    isShowNew: state.manager.isShowNew,
+    isDownloadDesk: state.manager.isDownloadDesk,
     isMessage: state.manager.isMessage,
     isBackup: state.backupPage.isBackup,
-    isFirst: state.manager.isFirst,
   };
 };
 const actionCreator = {
@@ -42,6 +43,5 @@ const actionCreator = {
   handleFetchBookSortCode,
   handleFetchList,
   handleMessageBox,
-  handleFirst,
 };
 export default connect(mapStateToProps, actionCreator)(withRouter(Manager));

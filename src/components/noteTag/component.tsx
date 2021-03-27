@@ -2,7 +2,7 @@
 import React from "react";
 import "./noteTag.css";
 import { NoteTagProps, NoteTagState } from "./interface";
-import TagUtil from "../../utils/tagUtil";
+import TagUtil from "../../utils/readUtils/tagUtil";
 import DeleteIcon from "../deleteIcon";
 import { Trans } from "react-i18next";
 
@@ -71,7 +71,9 @@ class NoteTag extends React.Component<NoteTagProps, NoteTagState> {
     this.props.handleTag(this.indextoTag([]));
   };
   handleInput = () => {
-    this.setState({ isInput: true });
+    this.setState({ isInput: true }, () => {
+      document.getElementById("newTag")?.focus();
+    });
   };
   render() {
     const renderTag = () => {
