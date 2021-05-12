@@ -1,9 +1,9 @@
 //添加图书到书架的对话框
 import React, { Component } from "react";
-import "./addDialog.css";
 import ShelfUtil from "../../../utils/readUtils/shelfUtil";
 import { Trans, NamespacesConsumer } from "react-i18next";
 import { AddDialogProps, AddDialogState } from "./interface";
+import "./addDialog.css";
 
 class AddDialog extends Component<AddDialogProps, AddDialogState> {
   constructor(props: AddDialogProps) {
@@ -71,13 +71,9 @@ class AddDialog extends Component<AddDialogProps, AddDialogState> {
       let shelfTitle = Object.keys(shelfList);
       return shelfTitle.map((item) => {
         return (
-          <NamespacesConsumer>
+          <NamespacesConsumer key={item}>
             {(t) => (
-              <option
-                value={item}
-                key={item}
-                className="add-dialog-shelf-list-option"
-              >
+              <option value={item} className="add-dialog-shelf-list-option">
                 {t(item)}
               </option>
             )}

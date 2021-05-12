@@ -88,13 +88,18 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
       this.handleEnterReader("top");
       OtherUtil.setReaderConfig("isFirst", "no");
     }
+    window.addEventListener("resize", () => {
+      if (
+        document.body.clientWidth < 780 &&
+        (!OtherUtil.getReaderConfig("readerMode") ||
+          OtherUtil.getReaderConfig("readerMode") === "double")
+      ) {
+        OtherUtil.setReaderConfig("readerMode", "single");
+        window.location.reload();
+      }
+    });
   }
 
-  componentWillUnmount() {
-    //清除上面的计时器
-    clearTimeout(this.messageTimer);
-    clearInterval(this.tickTimer);
-  }
   //进入阅读器
   handleEnterReader = (position: string) => {
     if (
@@ -290,8 +295,6 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
               ? {}
               : {
                   transform: "translateX(309px)",
-                  transition: "transform 1s ease",
-                  display: "none",
                 }
           }
         >
@@ -307,8 +310,6 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
               ? {}
               : {
                   transform: "translateX(-309px)",
-                  transition: "transform 1s ease",
-                  display: "none",
                 }
           }
         >
@@ -324,8 +325,6 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
               ? {}
               : {
                   transform: "translateY(110px)",
-                  transition: "transform 0.5s ease",
-                  display: "none",
                 }
           }
         >
@@ -341,8 +340,6 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
               ? {}
               : {
                   transform: "translateY(-110px)",
-                  transition: "transform 0.5s ease",
-                  display: "none",
                 }
           }
         >

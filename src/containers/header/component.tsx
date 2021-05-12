@@ -3,18 +3,18 @@ import React from "react";
 import "./header.css";
 import SearchBox from "../../components/searchBox";
 import ImportLocal from "../../components/importLocal";
-import { Trans } from "react-i18next";
+import { Trans, NamespacesConsumer } from "react-i18next";
 import { HeaderProps, HeaderState } from "./interface";
 import OtherUtil from "../../utils/otherUtil";
 import UpdateInfo from "../../components/dialogs/updateInfo";
 import RestoreUtil from "../../utils/syncUtils/restoreUtil";
 import BackupUtil from "../../utils/syncUtils/backupUtil";
-
+import { Tooltip } from "react-tippy";
 import { isElectron } from "react-device-detect";
-
 class Header extends React.Component<HeaderProps, HeaderState> {
   constructor(props: HeaderProps) {
     super(props);
+
     this.state = {
       isOnlyLocal: false,
       language: OtherUtil.getReaderConfig("lang"),
@@ -22,13 +22,6 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       width: document.body.clientWidth,
     };
   }
-  handleSortBooks = () => {
-    if (this.props.isSortDisplay) {
-      this.props.handleSortDisplay(false);
-    } else {
-      this.props.handleSortDisplay(true);
-    }
-  };
   async componentDidMount() {
     if (isElectron) {
       const fs = window.require("fs");
@@ -45,6 +38,16 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       } else {
         console.log("文件夹已存在");
       }
+
+      if (
+        OtherUtil.getReaderConfig("storageLocation") &&
+        !localStorage.getItem("storageLocation")
+      ) {
+        localStorage.setItem(
+          "storageLocation",
+          OtherUtil.getReaderConfig("storageLocation")
+        );
+      }
       if (!fs.existsSync(path.join(dirPath, `cover.png`))) {
         let stream = fs.createWriteStream(path.join(dirPath, `cover.png`));
         request(`https://koodo.960960.xyz/images/splash.png`)
@@ -57,69 +60,155 @@ class Header extends React.Component<HeaderProps, HeaderState> {
             }
           });
       }
-      const { zip } = window.require("zip-a-folder");
-      let storageLocation = OtherUtil.getReaderConfig("storageLocation")
-        ? OtherUtil.getReaderConfig("storageLocation")
-        : window
-            .require("electron")
-            .ipcRenderer.sendSync("storage-location", "ping");
-      let sourcePath = path.join(storageLocation, "config");
-      let outPath = path.join(storageLocation, "config.zip");
-      await zip(sourcePath, outPath);
-      var data = fs.readFileSync(outPath);
-      let blobTemp = new Blob([data], { type: "application/epub+zip" });
-      let fileTemp = new File([blobTemp], "config.zip", {
-        lastModified: new Date().getTime(),
-        type: blobTemp.type,
-      });
-
-      OtherUtil.getReaderConfig("isAutoSync") === "yes" &&
-        RestoreUtil.restore(
-          fileTemp,
-          () => {
-            isElectron &&
-              BackupUtil.backup(
-                this.props.books,
-                this.props.notes,
-                this.props.bookmarks,
-                () => {},
-                5,
-                () => {}
-              );
-          },
-          true
-        );
     }
+
     window.addEventListener("resize", () => {
       this.setState({ width: document.body.clientWidth });
     });
   }
+
+  syncFromLocation = async () => {
+    const fs = window.require("fs");
+    const path = window.require("path");
+    const { zip } = window.require("zip-a-folder");
+    let storageLocation = localStorage.getItem("storageLocation")
+      ? localStorage.getItem("storageLocation")
+      : window
+          .require("electron")
+          .ipcRenderer.sendSync("storage-location", "ping");
+    let sourcePath = path.join(storageLocation, "config");
+    let outPath = path.join(storageLocation, "config.zip");
+    await zip(sourcePath, outPath);
+
+    var data = fs.readFileSync(outPath);
+
+    let blobTemp = new Blob([data], { type: "application/epub+zip" });
+    let fileTemp = new File([blobTemp], "config.zip", {
+      lastModified: new Date().getTime(),
+      type: blobTemp.type,
+    });
+
+    RestoreUtil.restore(
+      fileTemp,
+      () => {
+        BackupUtil.backup(
+          this.props.books,
+          this.props.notes,
+          this.props.bookmarks,
+          () => {
+            this.props.handleMessage("Sync Successfully");
+            this.props.handleMessageBox(true);
+          },
+          5,
+          () => {}
+        );
+      },
+      true
+    );
+  };
+  syncToLocation = () => {
+    const fs = window.require("fs");
+    const path = window.require("path");
+    let storageLocation = localStorage.getItem("storageLocation")
+      ? localStorage.getItem("storageLocation")
+      : window
+          .require("electron")
+          .ipcRenderer.sendSync("storage-location", "ping");
+    let sourcePath = path.join(storageLocation, "config", "readerConfig.json");
+    try {
+      const readerConfig = JSON.parse(
+        fs.readFileSync(sourcePath, { encoding: "utf8", flag: "r" })
+      );
+      //如果同步文件夹的记录较新，就从同步文件夹同步数据到Koodo
+      if (
+        localStorage.getItem("lastSyncTime") &&
+        parseInt(readerConfig.lastSyncTime) >
+          parseInt(localStorage.getItem("lastSyncTime")!)
+      ) {
+        this.syncFromLocation();
+      } else {
+        //否则就把Koodo中数据同步到同步文件夹
+        BackupUtil.backup(
+          this.props.books,
+          this.props.notes,
+          this.props.bookmarks,
+          () => {
+            this.props.handleMessage("Sync Successfully");
+            this.props.handleMessageBox(true);
+          },
+          5,
+          () => {}
+        );
+      }
+    } catch (error) {
+      BackupUtil.backup(
+        this.props.books,
+        this.props.notes,
+        this.props.bookmarks,
+        () => {
+          this.props.handleMessage("Sync Successfully");
+          this.props.handleMessageBox(true);
+        },
+        5,
+        () => {}
+      );
+    }
+  };
+
   render() {
     return (
       <div className="header">
         <div className="header-search-container">
           <SearchBox />
         </div>
-
-        <div
-          className="header-sort-container"
-          onClick={() => {
-            this.handleSortBooks();
-          }}
-        >
-          <span className="header-sort-text">
-            <Trans>Sort</Trans>
-          </span>
-          <span className="icon-sort header-sort-icon"></span>
-        </div>
-        <div
-          className="setting-icon-container"
-          onClick={() => {
-            this.props.handleSetting(true);
-          }}
-        >
-          <span className="icon-setting setting-icon"></span>
-        </div>
+        <NamespacesConsumer>
+          {(t) => (
+            <>
+              <div
+                className="setting-icon-container"
+                onClick={() => {
+                  this.props.handleSortDisplay(!this.props.isSortDisplay);
+                }}
+                style={{ left: "490px", top: "18px" }}
+              >
+                <Tooltip title={t("Sort")} position="top" trigger="mouseenter">
+                  <span className="icon-sort-desc header-sort-icon"></span>
+                </Tooltip>
+              </div>
+              <div
+                className="setting-icon-container"
+                onClick={() => {
+                  this.props.handleAbout(!this.props.isAboutOpen);
+                }}
+              >
+                <Tooltip
+                  title={t("Setting")}
+                  position="top"
+                  trigger="mouseenter"
+                >
+                  <span className="icon-setting setting-icon"></span>
+                </Tooltip>
+              </div>
+              {isElectron && (
+                <div
+                  className="setting-icon-container"
+                  onClick={() => {
+                    this.syncToLocation();
+                  }}
+                  style={{ left: "635px" }}
+                >
+                  <Tooltip
+                    title={t("Sync")}
+                    position="top"
+                    trigger="mouseenter"
+                  >
+                    <span className="icon-sync setting-icon"></span>
+                  </Tooltip>
+                </div>
+              )}
+            </>
+          )}
+        </NamespacesConsumer>
 
         <div
           className="import-from-cloud"
@@ -134,10 +223,20 @@ class Header extends React.Component<HeaderProps, HeaderState> {
         >
           <div className="animation-mask"></div>
           {this.props.isCollapsed && this.state.width < 950 ? (
-            <span
-              className="icon-clockwise"
-              style={{ fontSize: "20px" }}
-            ></span>
+            <NamespacesConsumer>
+              {(t) => (
+                <Tooltip
+                  title={t("Backup and Restore")}
+                  position="top"
+                  trigger="mouseenter"
+                >
+                  <span
+                    className="icon-share"
+                    style={{ fontSize: "15px", fontWeight: 600 }}
+                  ></span>
+                </Tooltip>
+              )}
+            </NamespacesConsumer>
           ) : (
             <Trans>Backup and Restore</Trans>
           )}
@@ -147,7 +246,10 @@ class Header extends React.Component<HeaderProps, HeaderState> {
             handleDrag: this.props.handleDrag,
           }}
         />
-        {isElectron && <UpdateInfo />}
+        {isElectron &&
+          OtherUtil.getReaderConfig("isDisableUpdate") !== "yes" && (
+            <UpdateInfo />
+          )}
       </div>
     );
   }

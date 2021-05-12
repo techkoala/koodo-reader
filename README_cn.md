@@ -20,16 +20,6 @@
 
 </div>
 
-<div align="center">
-  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
-    <img src="https://img.shields.io/github/release/troyeguo/koodo-reader.svg?style=flat-square" alt="">
-  </a>
-
-  <a href="https://github.com/troyeguo/koodo-reader/blob/master/LICENSE">
-    <img src="https://img.shields.io/github/license/troyeguo/koodo-reader.svg?style=flat-square" alt="">
-  </a>
-</div>
-
 ## 预览
 
 <div align="center">
@@ -62,11 +52,13 @@
 
 触控屏手势支持
 
+黑夜模式和主题色
+
 文字高亮和下划线标记
 
 ## 使用方法
 
-桌面端：[Github](https://github.com/troyeguo/koodo-reader/releases/latest) | [蓝奏云](https://wwa.lanzous.com/b0c90cieb) 密码：1234
+桌面端：[Github](https://github.com/troyeguo/koodo-reader/releases/latest) | [蓝奏云](https://wwa.lanzous.com/b0c90cieb) 密码：1234 | [历史版本](https://wwa.lanzous.com/b0c97tupi) 密码：1234
 
 网页版：[前往](https://reader.960960.xyz) (可能需要科学上网)
 

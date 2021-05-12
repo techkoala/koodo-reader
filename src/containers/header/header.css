@@ -5,37 +5,14 @@
   margin-left: 190px;
 }
 
-.header-sort-container {
-  position: absolute;
-  left: 465px;
-  top: 29px;
-  cursor: pointer;
-  transition: 0.1s;
-  width: 150px;
-  height: 27px;
-  transition: all 0.1s ease;
-  z-index: 1;
-  text-align: center;
-  display: flex;
-  justify-content: center;
-}
 .setting-icon-container:hover {
-  background-color: rgba(75, 75, 75, 0.035);
   border-radius: 50%;
 }
-.header-sort-text {
-  float: left;
-  height: 16px;
-  font-size: 16px;
-  line-height: 27px;
-  color: rgba(75, 75, 75, 1);
-  opacity: 1;
-  font-weight: 500;
-}
+
 .header-sort-icon {
   float: left;
-  margin-top: 8px;
-  font-size: 12px;
+  margin-top: 3px;
+  font-size: 26px;
 }
 .only-local-container {
   position: absolute;
@@ -44,9 +21,8 @@
 }
 .only-local-text {
   float: left;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 27px;
-  color: rgba(75, 75, 75, 1);
   opacity: 1;
 }
 .only-local-icon {
@@ -56,7 +32,6 @@
   width: 30px;
   height: 16px;
   border-radius: 10px;
-  background-color: black;
   cursor: pointer;
 }
 .only-local-slider {
@@ -66,7 +41,6 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: white;
 }
 .import-from-cloud {
   margin-right: 20px;
@@ -74,14 +48,12 @@
   width: 138px;
   max-width: 158px;
   height: 42px;
-  border: 2px solid #4b4b4b;
-  background: white;
   opacity: 1;
   padding: 0 !important;
   border-radius: 25px;
-  line-height: 38px;
+  font-size: 15px;
+  line-height: 18px;
   text-align: center;
-  color: #4b4b4b;
   box-sizing: border-box;
   cursor: pointer;
   transition: 0.2s;
@@ -89,6 +61,9 @@
   right: 0px;
   top: 0px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .import-from-cloud:hover .animation-mask {
   transform: scaleX(1);
@@ -132,7 +107,6 @@
   position: absolute;
   top: 0px;
   left: 0px;
-  background-color: rgba(75, 75, 75, 0.05);
   transition: 0.1s;
   transform: scaleX(0);
   transform-origin: left;
@@ -142,22 +116,22 @@
 .header-search-container {
   position: absolute;
   top: 23px;
-  left: 250px;
+  left: 235px;
   width: 209px;
   height: 40px;
 }
 .setting-icon {
   font-size: 25px;
 }
+
 .setting-icon-container {
   width: 50px;
   height: 50px;
   font-size: 25px;
-  line-height: 37px;
+  line-height: 50px;
   position: absolute;
-  left: 595px;
+  left: 560px;
   top: 20px;
-  color: rgba(75, 75, 75, 1);
   cursor: pointer;
   transition: 0.1s;
   display: flex;

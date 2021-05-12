@@ -6,6 +6,7 @@ import PopupOption from "../popupOption";
 import PopupTrans from "../popupTrans";
 import { PopupMenuProps, PopupMenuStates } from "./interface";
 import { isMobile } from "react-device-detect";
+import OtherUtil from "../../../utils/otherUtil";
 
 declare var window: any;
 
@@ -128,15 +129,19 @@ class PopupMenu extends React.Component<PopupMenuProps, PopupMenuStates> {
     this.props.handleChangeDirection(false);
     // const rect = this.rect;
     let height = 200;
-    let x = rect.x % this.props.currentEpub.rendition._layout.width;
+    let x =
+      OtherUtil.getReaderConfig("readerMode") === "single"
+        ? rect.x
+        : OtherUtil.getReaderConfig("readerMode") === "continuous"
+        ? rect.right
+        : rect.x % this.props.currentEpub.rendition._layout.width;
     let y = rect.y % this.props.currentEpub.rendition._layout.height;
-
     let posX = x + rect.width / 2 - 20;
     //防止menu超出图书
     let rightEdge =
       this.props.menuMode === "note"
-        ? this.props.currentEpub.rendition._layout.width - 240
-        : this.props.currentEpub.rendition._layout.width - 150;
+        ? this.props.currentEpub.rendition._layout.width - 310
+        : this.props.currentEpub.rendition._layout.width - 200;
     let posY;
     //控制menu方向
     if (y < height) {
@@ -145,9 +150,7 @@ class PopupMenu extends React.Component<PopupMenuProps, PopupMenuStates> {
     } else {
       posY = y - height / 2 - 57;
     }
-
     posX = posX > rightEdge ? rightEdge : posX;
-
     this.props.handleOpenMenu(true);
     let popupMenu = document.querySelector(".popup-menu-container");
 
@@ -250,6 +253,7 @@ class PopupMenu extends React.Component<PopupMenuProps, PopupMenuStates> {
       "line-2",
       "line-3",
     ];
+    if (!this.highlighter) return;
     this.highlighter.highlightSelection(classes[color]);
     this.props.handleMenuMode("menu");
     this.props.handleOpenMenu(false);
@@ -286,6 +290,13 @@ class PopupMenu extends React.Component<PopupMenuProps, PopupMenuStates> {
             ) : this.props.menuMode === "trans" ? (
               <PopupTrans {...PopupProps} />
             ) : null}
+            <span
+              className="icon-close popup-close"
+              onClick={() => {
+                this.props.handleOpenMenu(false);
+              }}
+              style={this.props.isChangeDirection ? { top: "170px" } : {}}
+            ></span>
           </div>
           {this.props.isChangeDirection ? (
             <span

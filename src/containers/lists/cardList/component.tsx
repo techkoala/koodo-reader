@@ -9,9 +9,8 @@ import RecordLocation from "../../../utils/readUtils/recordLocation";
 import { withRouter } from "react-router-dom";
 import SortUtil from "../../../utils/readUtils/sortUtil";
 import { Redirect } from "react-router-dom";
-import OtherUtil from "../../../utils/otherUtil";
-
-declare var window: any;
+import NoteTag from "../../../components/noteTag";
+import BookUtil from "../../../utils/bookUtil";
 
 class CardList extends React.Component<CardListProps, CardListStates> {
   constructor(props: CardListProps) {
@@ -44,28 +43,12 @@ class CardList extends React.Component<CardListProps, CardListStates> {
       }
     }
     if (!book) {
-      this.props.handleMessage("Book not exsit");
+      this.props.handleMessage("Book not exist");
       this.props.handleMessageBox(true);
       return;
     }
     RecordLocation.recordCfi(bookKey, cfi, percentage);
-    if (OtherUtil.getReaderConfig("isRememberSize") === "yes") {
-      window.open(
-        `${window.location.href.split("#")[0]}#/epub/${
-          book.key
-        }?width=${OtherUtil.getReaderConfig(
-          "windowWidth"
-        )}&height=${OtherUtil.getReaderConfig(
-          "windowHeight"
-        )}&x=${OtherUtil.getReaderConfig(
-          "windowX"
-        )}&y=${OtherUtil.getReaderConfig("windowY")}`
-      );
-    } else {
-      window.open(
-        `${window.location.href.split("#")[0]}#/epub/${book.key}?width=full`
-      );
-    }
+    BookUtil.RedirectBook(book);
   };
   render() {
     let { cards } = this.props;
@@ -111,7 +94,7 @@ class CardList extends React.Component<CardListProps, CardListStates> {
                 ) : null}
               </div>
               <div className="card-list-item-text-parent">
-                <div className="card-list-item-text">
+                <div className="card-list-item-note">
                   {this.props.mode === "note" ? item.notes : item.text}
                 </div>
               </div>
@@ -133,13 +116,29 @@ class CardList extends React.Component<CardListProps, CardListStates> {
                 </div>
               </div>
               <div
+                className="note-tags"
+                style={{
+                  position: "absolute",
+                  bottom: "20px",
+                  height: "70px",
+                }}
+              >
+                <NoteTag
+                  {...{
+                    handleTag: () => {},
+                    tag: item.tag || [],
+                    isCard: true,
+                  }}
+                />
+              </div>
+              <div
                 onClick={() => {
                   this.handleJump(item.cfi, item.bookKey, item.percentage);
                 }}
               >
                 <div
                   className="card-list-item-show-more"
-                  style={{ color: "rgba(75,75,75,0.8)", bottom: "10px" }}
+                  style={{ bottom: "10px" }}
                 >
                   {this.props.mode === "note" ? (
                     <Trans>{"More Notes"}</Trans>

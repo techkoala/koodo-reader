@@ -4,7 +4,6 @@ import { Trans } from "react-i18next";
 import { SliderListProps, SliderListState } from "./interface";
 import "./sliderList.css";
 import OtherUtil from "../../../utils/otherUtil";
-
 class SliderList extends React.Component<SliderListProps, SliderListState> {
   constructor(props: SliderListProps) {
     super(props);
@@ -16,7 +15,9 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
           ? OtherUtil.getReaderConfig("scale") || "1"
           : this.props.mode === "letterSpacing"
           ? OtherUtil.getReaderConfig("letterSpacing") || "0"
-          : OtherUtil.getReaderConfig("margin") || "50",
+          : this.props.mode === "paraSpacing"
+          ? OtherUtil.getReaderConfig("paraSpacing") || "0"
+          : OtherUtil.getReaderConfig("margin") || "60",
     };
   }
 
@@ -38,6 +39,10 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
       const letterSpacing = event.target.value;
       this.setState({ value: letterSpacing });
       OtherUtil.setReaderConfig("letterSpacing", letterSpacing);
+    } else if (this.props.mode === "paraSpacing") {
+      const paraSpacing = event.target.value;
+      this.setState({ value: paraSpacing });
+      OtherUtil.setReaderConfig("paraSpacing", paraSpacing);
     } else {
       const margin = event.target.value;
       this.setState({ value: margin });
@@ -64,77 +69,19 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
     return (
       <div className="font-size-setting">
         <div className="font-size-title">
-          {this.props.mode === "fontSize" ? (
-            <>
-              <Trans>Font Size</Trans>&nbsp;
-              <span
-                className="icon-minus slide-icon"
-                onClick={() => {
-                  this.handleMinus(1);
-                }}
-              ></span>
-              <span>{this.state.value}px</span>
-              <span
-                className="icon-add slide-icon"
-                onClick={() => {
-                  this.handleAdd(1);
-                }}
-              ></span>
-            </>
-          ) : this.props.mode === "scale" ? (
-            <>
-              <Trans>Scale</Trans>&nbsp;
-              <span
-                className="icon-minus slide-icon"
-                onClick={() => {
-                  this.handleMinus(0.01);
-                }}
-              ></span>
-              <span>
-                {parseInt((parseFloat(this.state.value) * 100).toString())}%
-              </span>
-              <span
-                className="icon-add slide-icon"
-                onClick={() => {
-                  this.handleAdd(0.01);
-                }}
-              ></span>
-            </>
-          ) : this.props.mode === "letterSpacing" ? (
-            <>
-              <Trans>Letter Spacing</Trans>&nbsp;
-              <span
-                className="icon-minus slide-icon"
-                onClick={() => {
-                  this.handleMinus(1);
-                }}
-              ></span>
-              <span>{this.state.value}px</span>
-              <span
-                className="icon-add slide-icon"
-                onClick={() => {
-                  this.handleAdd(1);
-                }}
-              ></span>
-            </>
-          ) : (
-            <>
-              <Trans>Margin</Trans>&nbsp;
-              <span
-                className="icon-minus slide-icon"
-                onClick={() => {
-                  this.handleMinus(1);
-                }}
-              ></span>
-              <span>{this.state.value}px</span>
-              <span
-                className="icon-add slide-icon"
-                onClick={() => {
-                  this.handleAdd(1);
-                }}
-              ></span>
-            </>
-          )}
+          <Trans>{this.props.title}</Trans>
+          <input
+            className="input-value"
+            defaultValue={this.state.value}
+            type="number"
+            step={this.props.title === "Scale" ? "0.1" : "1"}
+            onBlur={(event) => {
+              this.onValueChange(event);
+
+              window.location.reload();
+            }}
+          />
+          <span style={{ marginLeft: "10px" }}>{this.state.value}</span>
         </div>
 
         <span className="ultra-small-size">{this.props.minLabel}</span>
@@ -153,7 +100,7 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
               this.onValueInput(event);
             }}
             onMouseUp={() => {
-              this.props.mode !== "fontSize" && window.location.reload();
+              window.location.reload();
             }}
           />
         </div>

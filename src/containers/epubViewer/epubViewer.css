@@ -34,7 +34,6 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: white;
   box-sizing: border-box;
   z-index: -10;
   display: flex;
@@ -109,6 +108,9 @@
   position: absolute;
   top: 0px;
   left: calc(50% - 206px);
+  z-index: 15;
+
+  transition: transform 0.5s ease;
 }
 .progress-panel-container {
   width: 412px;
@@ -116,6 +118,8 @@
   position: absolute;
   bottom: 0px;
   left: calc(50% - 206px);
+  z-index: 15;
+  transition: transform 0.5s ease;
 }
 .setting-panel-container {
   width: 299px;
@@ -123,6 +127,8 @@
   position: absolute;
   bottom: 0px;
   right: 0px;
+  transition: transform 0.5s ease;
+  z-index: 15;
 }
 .navigation-panel-container {
   width: 299px;
@@ -130,6 +136,8 @@
   position: absolute;
   bottom: 0px;
   left: 0px;
+  transition: transform 0.5s ease;
+  z-index: 15;
 }
 .view-area-page {
   position: absolute;
@@ -145,10 +153,8 @@
 .previous-chapter-single-container {
   width: 50px !important;
   height: 50px !important;
-  background-color: rgba(112, 112, 112, 1);
   border-radius: 50%;
   opacity: 1;
-  color: white;
   position: absolute;
   bottom: 20px;
   left: 20px;
@@ -164,10 +170,8 @@
 .next-chapter-single-container {
   width: 50px;
   height: 50px;
-  background-color: rgba(112, 112, 112, 1);
   border-radius: 50%;
   opacity: 1;
-  color: white;
   position: absolute;
   bottom: 20px;
   right: 20px;
@@ -193,11 +197,14 @@
   font-size: 20px;
   height: 20px;
 }
+.reader-setting-icon {
+  margin: 8px;
+}
 .reader-setting-icon-container {
-  width: 28px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   position: absolute;
-  top: 15px;
+  top: 12px;
   right: 20px;
   font-size: 22px;
   opacity: 0.2;
@@ -205,10 +212,11 @@
   z-index: 10;
   transition: 0.1s;
   line-height: 30px;
-  padding-left: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .reader-setting-icon-container:hover {
-  background-color: rgba(75, 75, 75, 0.07);
-  border-radius: 8px;
+  border-radius: 50%;
   opacity: 0.5;
 }

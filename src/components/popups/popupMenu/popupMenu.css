@@ -1,6 +1,4 @@
 .popup-menu-box {
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 0px 0px 16px rgba(0, 0, 0, 0.37);
   opacity: 1;
   border-radius: 19px;
   position: relative;
@@ -25,7 +23,18 @@
 .delete-highlighter-container {
   position: relative;
 }
-.popup-menu-triangle-up,
-.icon-popup {
-  color: white;
+
+.popup-close {
+  position: absolute;
+  top: -35px;
+  right: 60px;
+  cursor: pointer;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

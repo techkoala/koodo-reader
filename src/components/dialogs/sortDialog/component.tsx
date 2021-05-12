@@ -60,11 +60,7 @@ class SortDialog extends React.Component<SortDialogProps, SortDialogState> {
         onMouseLeave={() => {
           this.handleSortBooks();
         }}
-        style={
-          this.state.isNote
-            ? { boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.18)", height: "120px" }
-            : { boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.18)" }
-        }
+        style={this.state.isNote ? { height: "120px" } : {}}
         // style={this.state.isNote ? { height: "120px" } : {}}
       >
         {this.state.isNote ? (
@@ -76,13 +72,12 @@ class SortDialog extends React.Component<SortDialogProps, SortDialogState> {
                   onClick={() => {
                     this.handleSort(index + 1);
                   }}
-                  style={
-                    sortCode.sort === index + 1
-                      ? { color: "rgba(75, 75, 75, 1)" }
-                      : {}
-                  }
+                  style={sortCode.sort === index + 1 ? {} : { opacity: 0.34 }}
                 >
                   <Trans>{item}</Trans>
+                  {sortCode.sort === index + 1 && (
+                    <span className="icon-check"></span>
+                  )}
                 </li>
               );
             })}
@@ -103,13 +98,13 @@ class SortDialog extends React.Component<SortDialogProps, SortDialogState> {
                   onClick={() => {
                     this.handleSort(index);
                   }}
-                  style={
-                    sortCode.sort === index
-                      ? { color: "rgba(75, 75, 75, 1)" }
-                      : {}
-                  }
+                  style={sortCode.sort === index ? {} : { opacity: 0.34 }}
+                  key={index}
                 >
                   <Trans>{item}</Trans>
+                  {sortCode.sort === index && (
+                    <span className="icon-check"></span>
+                  )}
                 </li>
               );
             })}
@@ -122,18 +117,20 @@ class SortDialog extends React.Component<SortDialogProps, SortDialogState> {
             onClick={() => {
               this.handleOrder(1);
             }}
-            style={sortCode.order === 1 ? { color: "rgba(75, 75, 75, 1)" } : {}}
+            style={sortCode.order === 1 ? {} : { opacity: 0.34 }}
           >
             <Trans>Ascending Order</Trans>
+            {sortCode.order === 1 && <span className="icon-check"></span>}
           </li>
           <li
             className="sort-by-order-list"
             onClick={() => {
               this.handleOrder(2);
             }}
-            style={sortCode.order === 2 ? { color: "rgba(75, 75, 75, 1)" } : {}}
+            style={sortCode.order === 2 ? {} : { opacity: 0.34 }}
           >
             <Trans>Descending Order</Trans>
+            {sortCode.order === 2 && <span className="icon-check"></span>}
           </li>
         </ul>
       </div>

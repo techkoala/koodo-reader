@@ -5,15 +5,12 @@
   left: calc(50% - 225px);
   top: calc(50% - 150px);
   overflow: hidden;
-  box-shadow: 0px 0px 16px rgba(0, 0, 0, 0.34);
   z-index: 20;
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 0px 0px 16px rgba(0, 0, 0, 0.34);
   opacity: 1;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  border-radius: 10px;
+  border-radius: 5px;
   z-index: 10;
   animation: popup 0.1s ease-in-out 0s 1;
 }
@@ -21,6 +18,10 @@
   0% {
     opacity: 0;
     transform: scale(0.95);
+  }
+  80% {
+    opacity: 0.95;
+    transform: scale(1.005);
   }
   100% {
     opacity: 1;
@@ -40,9 +41,8 @@
 
 .backup-page-title {
   width: 100%;
-  font-size: 20px;
+  font-size: 18px;
   line-height: 60px;
-  color: rgba(75, 75, 75, 1);
   opacity: 1;
   text-align: center;
 }
@@ -73,7 +73,6 @@
   width: 150px !important;
   font-size: 15px;
   line-height: 30px;
-  color: rgba(75, 75, 75, 1);
   opacity: 1;
   width: 100%;
   text-align: center;
@@ -103,7 +102,6 @@
   height: 38px;
 }
 .backup-page-close-icon:hover {
-  background-color: rgba(75, 75, 75, 0.035);
   border-radius: 50%;
 }
 .backup-page-option {
@@ -117,15 +115,15 @@
 .backup-page-backup {
   width: 152px;
   height: 152px;
-  background: rgba(75, 75, 75, 0);
   font-size: 18px;
   line-height: 40px;
-  color: rgba(75, 75, 75, 1);
   opacity: 1;
   text-align: center;
+  cursor: pointer;
 }
 .active {
   color: white;
+  cursor: pointer;
 }
 .icon-backup,
 .icon-restore {
@@ -136,7 +134,6 @@
 .backup-page-next {
   font-size: 18px;
   line-height: 20px;
-  color: rgba(75, 75, 75, 1);
   opacity: 1;
   position: absolute;
   bottom: 21px;
@@ -146,7 +143,6 @@
 .backup-page-previous {
   font-size: 18px;
   line-height: 20px;
-  color: rgba(75, 75, 75, 1);
   opacity: 1;
   position: absolute;
   bottom: 21px;
@@ -157,14 +153,11 @@
   width: 152px;
   height: 152px;
   opacity: 1;
-  background-color: rgba(75, 75, 75, 1);
-  box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.39);
   animation: popup 0.1s ease-in-out 0s 1;
   margin-left: 49px;
-  border-radius: 10px;
+  border-radius: 5px;
 }
 .icon-local {
-  color: rgba(75, 75, 75, 1);
   opacity: 1;
 }
 .restore-file {
@@ -185,7 +178,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  color: rgba(75, 75, 75, 1);
   text-align: center;
 }
 .backup-page-finish-icon {
@@ -194,5 +186,5 @@
 }
 .backup-page-finish-text {
   line-height: 50px;
-  font-size: 20px;
+  font-size: 18px;
 }

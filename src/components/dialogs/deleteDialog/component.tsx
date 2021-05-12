@@ -60,6 +60,7 @@ class DeleteDialog extends React.Component<DeleteDialogProps> {
       AddFavorite.clear(this.props.currentBook.key);
       this.props.handleFetchBooks();
     }
+
     this.props.handleDeleteDialog(false);
     this.props.handleMessage("Delete Successfully");
     this.props.handleMessageBox(true);

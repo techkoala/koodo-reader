@@ -18,8 +18,8 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
       prevPage: 0,
       nextPage: 0,
       scale: OtherUtil.getReaderConfig("scale") || 1,
-      isShowFooter: OtherUtil.getReaderConfig("isShowFooter") !== "no",
-      isShowHeader: OtherUtil.getReaderConfig("isShowHeader") !== "no",
+      isHideFooter: OtherUtil.getReaderConfig("isHideFooter") === "yes",
+      isHideHeader: OtherUtil.getReaderConfig("isHideHeader") === "yes",
       isUseBackground: OtherUtil.getReaderConfig("isUseBackground") === "yes",
     };
     this.isFirst = true;
@@ -68,7 +68,7 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
               : "",
           }}
         >
-          {this.state.isShowHeader && this.state.currentChapter && (
+          {!this.state.isHideHeader && this.state.currentChapter && (
             <p
               className="progress-chapter-name"
               style={
@@ -85,7 +85,7 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
               <Trans>{this.state.currentChapter}</Trans>
             </p>
           )}
-          {this.state.isShowHeader && !this.state.isSingle && (
+          {!this.state.isHideHeader && !this.state.isSingle && (
             <p
               className="progress-book-name"
               style={
@@ -102,7 +102,7 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
               <Trans>{this.props.currentBook.name}</Trans>
             </p>
           )}
-          {this.state.isShowFooter && this.state.prevPage > 0 && (
+          {!this.state.isHideFooter && this.state.prevPage > 0 && (
             <p
               className="background-page-left"
               style={
@@ -124,7 +124,7 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
               </Trans>
             </p>
           )}
-          {this.state.isShowFooter &&
+          {!this.state.isHideFooter &&
             this.state.nextPage > 0 &&
             !this.state.isSingle && (
               <p className="background-page-right">
@@ -148,7 +148,7 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
             : "",
         }}
       >
-        {this.state.isShowHeader && this.state.currentChapter && (
+        {!this.state.isHideHeader && this.state.currentChapter && (
           <p
             className="progress-chapter-name"
             style={
@@ -166,7 +166,7 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
           </p>
         )}
 
-        {this.state.isShowHeader && !this.state.isSingle && (
+        {!this.state.isHideHeader && !this.state.isSingle && (
           <p
             className="progress-book-name"
             style={
@@ -184,7 +184,7 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
           </p>
         )}
 
-        {this.state.isShowFooter && this.state.prevPage > 0 && (
+        {!this.state.isHideFooter && this.state.prevPage > 0 && (
           <p
             className="background-page-left"
             style={
@@ -206,7 +206,7 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
             </Trans>
           </p>
         )}
-        {this.state.isShowFooter &&
+        {!this.state.isHideFooter &&
           this.state.nextPage > 0 &&
           !this.state.isSingle && (
             <p className="background-page-right">
@@ -253,38 +253,45 @@ class Background extends React.Component<BackgroundProps, BackgroundState> {
               : {}
           }
         >
-          <div
-            className="spine-shadow-left"
-            style={
-              this.state.isSingle ||
-              (OtherUtil.getReaderConfig("backgroundColor") &&
-                (OtherUtil.getReaderConfig("backgroundColor") ===
-                  "rgba(44,47,49,1)" ||
-                  OtherUtil.getReaderConfig("backgroundColor").startsWith("#")))
-                ? { display: "none" }
-                : {}
-            }
-          ></div>
+          {OtherUtil.getReaderConfig("isDisplayDark") !== "yes" && (
+            <div
+              className="spine-shadow-left"
+              style={
+                this.state.isSingle ||
+                (OtherUtil.getReaderConfig("backgroundColor") &&
+                  (OtherUtil.getReaderConfig("isDisplayDark") === "yes" ||
+                    OtherUtil.getReaderConfig("backgroundColor") ===
+                      "rgba(44,47,49,1)" ||
+                    OtherUtil.getReaderConfig("backgroundColor").startsWith(
+                      "#"
+                    )))
+                  ? { display: "none" }
+                  : {}
+              }
+            ></div>
+          )}
           <div
             className="book-spine"
             style={this.state.isSingle ? { display: "none" } : {}}
           ></div>
-          <div
-            className="spine-shadow-right"
-            style={
-              OtherUtil.getReaderConfig("backgroundColor") &&
-              (OtherUtil.getReaderConfig("backgroundColor") ===
-                "rgba(44,47,49,1)" ||
-                OtherUtil.getReaderConfig("backgroundColor").startsWith("#"))
-                ? { display: "none" }
-                : this.state.isSingle
-                ? {
-                    position: "relative",
-                    right: 0,
-                  }
-                : {}
-            }
-          ></div>
+          {OtherUtil.getReaderConfig("isDisplayDark") !== "yes" && (
+            <div
+              className="spine-shadow-right"
+              style={
+                OtherUtil.getReaderConfig("backgroundColor") &&
+                (OtherUtil.getReaderConfig("backgroundColor") ===
+                  "rgba(44,47,49,1)" ||
+                  OtherUtil.getReaderConfig("backgroundColor").startsWith("#"))
+                  ? { display: "none" }
+                  : this.state.isSingle
+                  ? {
+                      position: "relative",
+                      right: 0,
+                    }
+                  : {}
+              }
+            ></div>
+          )}
         </div>
 
         <div

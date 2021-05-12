@@ -5,6 +5,7 @@ import DeleteDialog from "../../components/dialogs/deleteDialog";
 import EditDialog from "../../components/dialogs/editDialog";
 import AddDialog from "../../components/dialogs/addDialog";
 import SortDialog from "../../components/dialogs/sortDialog";
+import AboutDialog from "../../components/dialogs/aboutDialog";
 import MessageBox from "../../containers/messageBox";
 import BackupDialog from "../../components/dialogs/backupDialog";
 import "./manager.css";
@@ -88,10 +89,6 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
   handleDrag = (isDrag: boolean) => {
     this.setState({ isDrag });
   };
-  componentWillUnmout() {
-    clearTimeout(this.timer);
-  }
-
   render() {
     let { books } = this.props;
     if (isMobileOnly) {
@@ -110,9 +107,9 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
           <div>
             <img
               src={
-                process.env.NODE_ENV === "production"
-                  ? "./assets/empty.svg"
-                  : "../../assets/empty.svg"
+                OtherUtil.getReaderConfig("isDisplayDark") === "yes"
+                  ? "./assets/empty_light.svg"
+                  : "./assets/empty.svg"
               }
               alt=""
               className="waring-pic"
@@ -150,6 +147,16 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
         {
           <div
             className="drag-background"
+            onClick={() => {
+              this.props.handleEditDialog(false);
+              this.props.handleDeleteDialog(false);
+              this.props.handleAddDialog(false);
+              this.props.handleDownloadDesk(false);
+              this.props.handleLoadingDialog(false);
+              this.props.handleNewDialog(false);
+              this.props.handleBackupDialog(false);
+              this.props.handleSetting(false);
+            }}
             style={
               this.props.isSettingOpen ||
               this.props.isBackup ||
@@ -169,6 +176,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
 
         {this.props.isMessage && <MessageBox />}
         {this.props.isSortDisplay && <SortDialog />}
+        {this.props.isAboutOpen && <AboutDialog />}
         {this.props.isBackup && <BackupDialog />}
         {this.props.isSettingOpen && <SettingDialog />}
         {this.props.isDownloadDesk && !isElectron && <DownloadDesk />}

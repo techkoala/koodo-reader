@@ -33,6 +33,9 @@ class DropdownList extends React.Component<
       currentLineHeightIndex: dropdownList[1].option.findIndex((item: any) => {
         return item === (OtherUtil.getReaderConfig("lineHeight") || "1.25");
       }),
+      currentTextAlignIndex: dropdownList[2].option.findIndex((item: any) => {
+        return item === (OtherUtil.getReaderConfig("textAlign") || "left");
+      }),
     };
   }
   componentDidMount() {
@@ -50,6 +53,12 @@ class DropdownList extends React.Component<
       .querySelector(".paragraph-character-setting")!
       .children[1].children[1].children[
         this.state.currentLineHeightIndex
+      ].setAttribute("selected", "selected");
+
+    document
+      .querySelector(".paragraph-character-setting")!
+      .children[2].children[1].children[
+        this.state.currentTextAlignIndex
       ].setAttribute("selected", "selected");
   }
   //切换不同的样式
@@ -78,7 +87,16 @@ class DropdownList extends React.Component<
           },
         });
         break;
-
+      case "textAlign":
+        this.setState({
+          currentTextAlignIndex: arr[1],
+        });
+        this.props.currentEpub.rendition.themes.default({
+          "a, article, cite, code, div, li, p, pre, span, table": {
+            "text-align": `${arr[0] || "left"} !important`,
+          },
+        });
+        break;
       default:
         break;
     }
@@ -98,13 +116,12 @@ class DropdownList extends React.Component<
             }}
           >
             {item.option.map((subItem: string, index: number) => (
-              <NamespacesConsumer>
+              <NamespacesConsumer key={index}>
                 {(t) => {
                   return (
                     <option
                       value={[subItem, index.toString()]}
                       className="general-setting-option"
-                      key={index}
                     >
                       {t(subItem)}
                     </option>

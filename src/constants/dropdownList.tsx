@@ -19,4 +19,16 @@ export const dropdownList = [
     value: "lineHeight",
     option: ["1.25", "1", "1.25", "1.5", "1.75", "2"],
   },
+  {
+    id: 3,
+    title: "Text Align",
+    value: "textAlign",
+    option: ["left", "justify", "right"],
+  },
 ];
+export const speedList = {
+  id: 3,
+  title: "Speed",
+  value: "speed",
+  option: ["0.5", "0.75", "1", "1.25", "1.5", "1.75", "2"],
+};

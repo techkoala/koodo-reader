@@ -1,32 +1,22 @@
-const { remote, app, BrowserWindow, ipcMain, screen } = require("electron");
-const isDev = require("electron-is-dev");
-const path = require("path");
+const { app, BrowserWindow } = require("electron");
 let mainWin;
-app.disableHardwareAcceleration();
-const configDir = (app || remote.app).getPath("userData");
-const dirPath = path.join(configDir, "uploads");
 const singleInstance = app.requestSingleInstanceLock();
 var filePath = null;
 if (process.platform == "win32" && process.argv.length >= 2) {
   filePath = process.argv[1];
 }
-
 // Single Instance Lock
 if (!singleInstance) {
   app.quit();
 } else {
   app.on("second-instance", (event, argv, workingDir) => {
-    console.log(event, argv, workingDir);
     if (mainWin) {
       if (!mainWin.isVisible()) mainWin.show();
       mainWin.focus();
     }
   });
 }
-console.log("1");
 app.on("ready", () => {
-  console.log("2");
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   mainWin = new BrowserWindow({
     width: 1050,
     height: 660,
@@ -39,26 +29,27 @@ app.on("ready", () => {
       allowRunningInsecureContent: true,
     },
   });
+  const isDev = require("electron-is-dev");
   if (!isDev) {
     const { Menu } = require("electron");
     Menu.setApplicationMenu(null);
   }
-
+  const path = require("path");
   const urlLocation = isDev
     ? "http://localhost:3000"
     : `file://${path.join(__dirname, "./build/index.html")}`;
+
   mainWin.loadURL(urlLocation);
-  console.log("3");
+  const { remote, ipcMain } = require("electron");
   mainWin.webContents.on(
     "new-window",
     (event, url, frameName, disposition, options, additionalFeatures) => {
       event.preventDefault();
       if (url.indexOf("full") > -1) {
-        console.log("full");
         Object.assign(options, {
           parent: mainWin,
-          width: width,
-          height: height,
+          width: 1050,
+          height: 660,
         });
         event.newGuest = new BrowserWindow(options);
         event.newGuest.maximize();
@@ -66,7 +57,7 @@ app.on("ready", () => {
         var urlParams;
 
         var match,
-          pl = /\+/g, // Regex for replacing addition symbol with a space
+          pl = /\+/g,
           search = /([^&=]+)=?([^&]*)/g,
           decode = function (s) {
             return decodeURIComponent(s.replace(pl, " "));
@@ -85,10 +76,12 @@ app.on("ready", () => {
         });
         event.newGuest = new BrowserWindow(options);
       }
-      mainWin.minimize();
-      event.newGuest.show();
+      mainWin &&
+        mainWin.on("minimize", () => {
+          event.newGuest && event.newGuest.show();
+        });
+
       event.newGuest.on("close", () => {
-        mainWin.restore();
         event.newGuest = null;
       });
     }
@@ -108,7 +101,10 @@ app.on("ready", () => {
         console.log(err);
       });
   });
+
   ipcMain.on("storage-location", (event, arg) => {
+    const configDir = (app || remote.app).getPath("userData");
+    const dirPath = path.join(configDir, "uploads");
     event.returnValue = path.join(dirPath, "data");
   });
   ipcMain.on("get-file-data", function (event) {
@@ -116,7 +112,6 @@ app.on("ready", () => {
     filePath = null;
   });
 });
-
 app.on("window-all-closed", () => {
   app.quit();
 });

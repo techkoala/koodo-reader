@@ -2,7 +2,7 @@ import OtherUtil from "./otherUtil";
 import { isElectron } from "react-device-detect";
 import localforage from "localforage";
 import BookModel from "../model/Book";
-const isTitle = (line: string, isSuccess: boolean) => {
+const isTitle = (line: string) => {
   return (
     line.length < 30 &&
     line.indexOf("[") === -1 &&
@@ -11,15 +11,38 @@ const isTitle = (line: string, isSuccess: boolean) => {
       line.startsWith("Chapter ") ||
       line.startsWith("序章") ||
       line.startsWith("前言") ||
-      (line.startsWith(isSuccess ? "@" : "*") && line !== "*") ||
       line.startsWith("写在前面的话") ||
       line.startsWith("后记") ||
       line.startsWith("楔子") ||
       line.startsWith("后记") ||
       line.startsWith("后序") ||
-      (line.indexOf("第") > -1 && line.indexOf("章") > -1) ||
-      (line.indexOf("第") > -1 && line.indexOf("节") > -1) ||
-      (line.indexOf("第") > -1 && line.indexOf("回") > -1) ||
+      (line.indexOf("第") > -1 &&
+        line.indexOf("章") > -1 &&
+        line.indexOf("第") < line.indexOf("章")) ||
+      (line.indexOf("第") > -1 &&
+        line.indexOf("节") > -1 &&
+        line.indexOf("第") < line.indexOf("节")) ||
+      (line.indexOf("第") > -1 &&
+        line.indexOf("回") > -1 &&
+        line.indexOf("第") < line.indexOf("回")) ||
+      (line.indexOf("第") > -1 &&
+        line.indexOf("卷") > -1 &&
+        line.indexOf("第") < line.indexOf("卷")) ||
+      (line.indexOf("第") > -1 &&
+        line.indexOf("部") > -1 &&
+        line.indexOf("第") < line.indexOf("部")) ||
+      (line.indexOf("第") > -1 &&
+        line.indexOf("辑") > -1 &&
+        line.indexOf("第") < line.indexOf("辑")) ||
+      (line.indexOf("第") > -1 &&
+        line.indexOf("集") > -1 &&
+        line.indexOf("第") < line.indexOf("集")) ||
+      (line.indexOf("第") > -1 &&
+        line.indexOf("话") > -1 &&
+        line.indexOf("第") < line.indexOf("话")) ||
+      (line.indexOf("第") > -1 &&
+        line.indexOf("篇") > -1 &&
+        line.indexOf("第") < line.indexOf("篇")) ||
       /^[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u767e\u5343\u4e07]+$/.test(
         line
       ) ||
@@ -57,8 +80,8 @@ class BookUtil {
     if (isElectron) {
       const fs = window.require("fs");
       const path = window.require("path");
-      const dataPath = OtherUtil.getReaderConfig("storageLocation")
-        ? OtherUtil.getReaderConfig("storageLocation")
+      const dataPath = localStorage.getItem("storageLocation")
+        ? localStorage.getItem("storageLocation")
         : window
             .require("electron")
             .ipcRenderer.sendSync("storage-location", "ping");
@@ -89,8 +112,8 @@ class BookUtil {
     if (isElectron) {
       const fs = window.require("fs-extra");
       const path = window.require("path");
-      const dataPath = OtherUtil.getReaderConfig("storageLocation")
-        ? OtherUtil.getReaderConfig("storageLocation")
+      const dataPath = localStorage.getItem("storageLocation")
+        ? localStorage.getItem("storageLocation")
         : window
             .require("electron")
             .ipcRenderer.sendSync("storage-location", "ping");
@@ -115,8 +138,8 @@ class BookUtil {
         var path = window.require("path");
         var data = fs.readFileSync(
           path.join(
-            OtherUtil.getReaderConfig("storageLocation")
-              ? OtherUtil.getReaderConfig("storageLocation")
+            localStorage.getItem("storageLocation")
+              ? localStorage.getItem("storageLocation")
               : window
                   .require("electron")
                   .ipcRenderer.sendSync("storage-location", "ping"),
@@ -145,7 +168,7 @@ class BookUtil {
           await localforage.setItem("pdf", event.target!.result as any);
           if (OtherUtil.getReaderConfig("isRememberSize") === "yes") {
             window.open(
-              `./lib/pdf/viewer.html?file=pdf&width=${OtherUtil.getReaderConfig(
+              `./lib/pdf/web/viewer.html?file=pdf&width=${OtherUtil.getReaderConfig(
                 "windowWidth"
               )}&height=${OtherUtil.getReaderConfig(
                 "windowHeight"
@@ -154,11 +177,11 @@ class BookUtil {
               )}&y=${OtherUtil.getReaderConfig("windowY")}`
             );
           } else {
-            window.open(`./lib/pdf/viewer.html?file=pdf&width=full`);
+            window.open(`./lib/pdf/web/viewer.html?file=pdf&width=full`);
           }
         };
       } else {
-        window.open(`./lib/pdf/viewer.html?file=${book.key}`);
+        window.open(`./lib/pdf/web/viewer.html?file=${book.key}`);
       }
     } else {
       if (OtherUtil.getReaderConfig("isRememberSize") === "yes") {
@@ -209,6 +232,7 @@ class BookUtil {
           path.join(dirPath, file.name),
           Buffer.from(event.target!.result as any)
         );
+
         var metadata = {
           id: new Date().getTime(),
           title: bookName,
@@ -230,7 +254,7 @@ class BookUtil {
         var epub = nodepub.document(metadata, path.join(dirPath, `cover.png`));
         let content: any = [];
         let contentFilter: any = [];
-        const analyzeChapter = (isSuccess) => {
+        const analyzeChapter = () => {
           const data = readFileSync(path.join(dirPath, file.name), {
             encoding: "binary",
           });
@@ -244,9 +268,9 @@ class BookUtil {
           lines.splice(imgIndex, lineLength - imgIndex);
           for (let i = 0; i < lines.length; i++) {
             const line = escapeHTML(lines[i]).trim();
-            if (isTitle(line, isSuccess)) {
+            if (isTitle(line)) {
               content.push({
-                title: line.startsWith("*") ? line.substr(1) : line,
+                title: line,
                 data: "",
               });
             } else if (line) {
@@ -281,18 +305,15 @@ class BookUtil {
             return item.data.trim() && item.data.trim().length > 50;
           });
         };
-        analyzeChapter(true);
-        if (contentFilter.length < 7) {
-          content = [];
-          contentFilter = [];
-          analyzeChapter(false);
-        }
+        analyzeChapter();
+
         for (let i = 0; i < contentFilter.length; i++) {
           epub.addSection(
             contentFilter[i].title,
             `<h1>${contentFilter[i].title}</h1>` + contentFilter[i].data
           );
         }
+
         epub.writeEPUB(
           function (e) {
             console.log("Error:", e);
@@ -307,6 +328,7 @@ class BookUtil {
               lastModified: new Date().getTime(),
               type: blobTemp.type,
             });
+
             try {
               const fs = window.require("fs-extra");
               fs.remove(path.join(dirPath, `${bookName}.epub`), (err) => {

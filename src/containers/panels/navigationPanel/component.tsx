@@ -69,7 +69,7 @@ class NavigationPanel extends React.Component<
         return (
           <li
             className="nav-search-list-item"
-            key={item.cfi}
+            key={index}
             onClick={() => {
               this.props.currentEpub.rendition.display(item.cfi);
             }}
@@ -236,9 +236,7 @@ class NavigationPanel extends React.Component<
                     this.handleChangeTab("contents");
                   }}
                   style={
-                    this.state.currentTab === "contents"
-                      ? { color: "rgba(112, 112, 112, 1)" }
-                      : { color: "rgba(217, 217, 217, 1)" }
+                    this.state.currentTab === "contents" ? {} : { opacity: 0.5 }
                   }
                 >
                   <Trans>Content</Trans>
@@ -247,8 +245,8 @@ class NavigationPanel extends React.Component<
                   className="book-bookmark-title"
                   style={
                     this.state.currentTab === "bookmarks"
-                      ? { color: "rgba(112, 112, 112, 1)" }
-                      : { color: "rgba(217, 217, 217, 1)" }
+                      ? {}
+                      : { opacity: 0.5 }
                   }
                   onClick={() => {
                     this.handleChangeTab("bookmarks");
@@ -259,9 +257,7 @@ class NavigationPanel extends React.Component<
                 <span
                   className="book-bookmark-title"
                   style={
-                    this.state.currentTab === "notes"
-                      ? { color: "rgba(112, 112, 112, 1)" }
-                      : { color: "rgba(217, 217, 217, 1)" }
+                    this.state.currentTab === "notes" ? {} : { opacity: 0.5 }
                   }
                   onClick={() => {
                     this.handleChangeTab("notes");
@@ -272,9 +268,7 @@ class NavigationPanel extends React.Component<
                 <span
                   className="book-bookmark-title"
                   style={
-                    this.state.currentTab === "digests"
-                      ? { color: "rgba(112, 112, 112, 1)" }
-                      : { color: "rgba(217, 217, 217, 1)" }
+                    this.state.currentTab === "digests" ? {} : { opacity: 0.5 }
                   }
                   onClick={() => {
                     this.handleChangeTab("digests");

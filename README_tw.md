@@ -20,16 +20,6 @@
 
 </div>
 
-<div align="center">
-  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
-    <img src="https://img.shields.io/github/release/troyeguo/koodo-reader.svg?style=flat-square" alt="">
-  </a>
-
-  <a href="https://github.com/troyeguo/koodo-reader/blob/master/LICENSE">
-    <img src="https://img.shields.io/github/license/troyeguo/koodo-reader.svg?style=flat-square" alt="">
-  </a>
-</div>
-
 ## 預覽
 
 <div align="center">
@@ -61,6 +51,8 @@
 自定義字體，字體大小，行間距，閱讀背景色，文字顏色
 
 觸控屏手勢支持
+
+黑夜模式和主題色
 
 文字高亮和下劃線標記
 

@@ -4,8 +4,9 @@ import "./importLocal.css";
 import BookModel from "../../model/Book";
 import localforage from "localforage";
 import SparkMD5 from "spark-md5";
-import { Trans } from "react-i18next";
+import { Trans, NamespacesConsumer } from "react-i18next";
 import Dropzone from "react-dropzone";
+import { Tooltip } from "react-tippy";
 import { ImportLocalProps, ImportLocalState } from "./interface";
 import RecordRecent from "../../utils/readUtils/recordRecent";
 import MobiFile from "../../utils/mobiUtil";
@@ -13,9 +14,7 @@ import iconv from "iconv-lite";
 import { isElectron } from "react-device-detect";
 import { withRouter } from "react-router-dom";
 import RecentBooks from "../../utils/readUtils/recordRecent";
-import OtherUtil from "../../utils/otherUtil";
 import BookUtil from "../../utils/bookUtil";
-import BackupUtil from "../../utils/syncUtils/backupUtil";
 
 declare var window: any;
 var pdfjsLib = window["pdfjs-dist/build/pdf"];
@@ -31,16 +30,12 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
   componentDidMount() {
     if (isElectron) {
       const { ipcRenderer } = window.require("electron");
-      if (!OtherUtil.getReaderConfig("storageLocation"))
-        OtherUtil.setReaderConfig(
+      if (!localStorage.getItem("storageLocation")) {
+        localStorage.setItem(
           "storageLocation",
           ipcRenderer.sendSync("storage-location", "ping")
         );
-      ipcRenderer.on("open-book", (event: any, result: string) => {
-        if (result && result !== ".") {
-          this.handleFilePath(result);
-        }
-      });
+      }
       var filePath = ipcRenderer.sendSync("get-file-data");
       if (filePath && filePath !== ".") {
         this.handleFilePath(filePath);
@@ -50,45 +45,72 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
       this.setState({ width: document.body.clientWidth });
     });
   }
-  handleFilePath = (filePath: string) => {
-    fetch(filePath)
-      .then((response) => response.body)
-      .then((body) => {
-        const reader = body!.getReader();
-        return new ReadableStream({
-          start(controller) {
-            return pump();
-            function pump(): any {
-              return reader.read().then(({ done, value }) => {
-                // When no more data needs to be consumed, close the stream
-                if (done) {
-                  controller.close();
-                  return;
-                }
-                // Enqueue the next data chunk into our target stream
-                controller.enqueue(value);
-                return pump();
-              });
-            }
-          },
-        });
-      })
-      .then((stream) => new Response(stream))
-      .then((response) => response.blob())
-      .then((blob) => {
-        let fileTemp = new File(
-          [blob],
-          "file." + filePath.split(".").reverse()[0],
-          {
-            lastModified: new Date().getTime(),
-            type: blob.type,
+  handleFilePath = async (filePath: string) => {
+    var crypto = window.require("crypto");
+    var fs = window.require("fs");
+
+    var md5sum = crypto.createHash("md5");
+    var s = fs.ReadStream(filePath);
+    s.on("data", function (d) {
+      md5sum.update(d);
+    });
+
+    s.on("end", () => {
+      var md5 = md5sum.digest("hex");
+      if ([...this.props.books, ...this.props.deletedBooks].length > 0) {
+        let isRepeat = false;
+        let repeatBook: BookModel | null = null;
+        [...this.props.books, ...this.props.deletedBooks].forEach((item) => {
+          if (item.md5 === md5) {
+            isRepeat = true;
+            repeatBook = item;
           }
-        );
-        this.setState({ isOpenFile: true }, () => {
-          this.doIncrementalTest(fileTemp);
         });
-      })
-      .catch((err) => console.error(err));
+        if (isRepeat && repeatBook) {
+          this.props.handleLoadingDialog(false);
+          this.handleJump(repeatBook);
+        } else {
+          fetch(filePath)
+            .then((response) => response.body)
+            .then((body) => {
+              const reader = body!.getReader();
+              return new ReadableStream({
+                start(controller) {
+                  return pump();
+                  function pump(): any {
+                    return reader.read().then(({ done, value }) => {
+                      if (done) {
+                        controller.close();
+                        return;
+                      }
+                      controller.enqueue(value);
+                      return pump();
+                    });
+                  }
+                },
+              });
+            })
+            .then((stream) => new Response(stream))
+            .then((response) => response.blob())
+            .then((blob) => {
+              let fileTemp = new File(
+                [blob],
+                window.navigator.platform.indexOf("Win") > -1
+                  ? filePath.split("\\").reverse()[0]
+                  : filePath.split("/").reverse()[0],
+                {
+                  lastModified: new Date().getTime(),
+                  type: blob.type,
+                }
+              );
+              this.setState({ isOpenFile: true }, async () => {
+                await this.getMd5WithBrowser(fileTemp);
+              });
+            })
+            .catch((err) => console.error(err));
+        }
+      }
+    });
   };
   handleJump = (book: BookModel) => {
     RecentBooks.setRecent(book.key);
@@ -120,16 +142,6 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
             },
             this.state.isOpenFile ? 0 : 1000
           );
-          if (isElectron) {
-            BackupUtil.backup(
-              bookArr,
-              this.props.notes,
-              this.props.bookmarks,
-              () => {},
-              5,
-              () => {}
-            );
-          }
           resolve();
         })
         .catch(() => {
@@ -141,7 +153,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
     });
   };
   //获取书籍md5
-  doIncrementalTest = (file: any) => {
+  getMd5WithBrowser = (file: any) => {
     let extension = file.name.split(".").reverse()[0];
     this.props.handleLoadingDialog(true);
     if (
@@ -168,7 +180,6 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
         currentChunk = 0,
         spark = new SparkMD5(), //创建SparkMD5的实例
         fileReader = new FileReader();
-
       fileReader.onload = async (e) => {
         if (!e.target) {
           reject();
@@ -198,6 +209,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
       loadNext();
     });
   };
+
   handleBook = (file: any, md5: string) => {
     let extension = file.name.split(".").reverse()[0];
     let bookName = file.name.substr(0, file.name.length - extension.length - 1);
@@ -228,6 +240,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
             reject();
             throw new Error();
           }
+
           if (extension === "pdf") {
             if (!e.target) {
               setTimeout(() => {
@@ -240,54 +253,34 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
               .getDocument({ data: e.target.result })
               .promise.then((pdfDoc_: any) => {
                 let pdfDoc = pdfDoc_;
-                pdfDoc.getMetadata().then((metadata: any) => {
-                  pdfDoc.getPage(1).then((page: any) => {
-                    var scale = 1.5;
-                    var viewport = page.getViewport({
-                      scale: scale,
-                    });
-                    var canvas: any = document.getElementById("the-canvas");
-                    var context = canvas.getContext("2d");
-                    canvas.height =
-                      viewport.height ||
-                      viewport.viewBox[3]; /* viewport.height is NaN */
-                    canvas.width =
-                      viewport.width ||
-                      viewport.viewBox[2]; /* viewport.width is also NaN */
-                    var task = page.render({
-                      canvasContext: context,
-                      viewport: viewport,
-                    });
-                    task.promise.then(async () => {
-                      let cover: any = canvas.toDataURL("image/jpeg");
-                      let key: string,
-                        name: string,
-                        author: string,
-                        publisher: string,
-                        description: string;
-                      [name, author, description, publisher] = [
-                        metadata.info.Title || bookName,
-                        metadata.info.Author || "Unknown Authur",
-                        "pdf",
-                        metadata.info.publisher,
-                      ];
-                      let format = "PDF";
-                      key = new Date().getTime() + "";
-                      let book = new BookModel(
-                        key,
-                        name,
-                        author,
-                        description,
-                        md5,
-                        cover,
-                        format,
-                        publisher
-                      );
-                      await this.handleAddBook(book);
-                      BookUtil.addBook(key, e.target!.result as ArrayBuffer);
-                      resolve();
-                    });
-                  });
+                pdfDoc.getMetadata().then(async (metadata: any) => {
+                  let cover: any = "noCover";
+                  let key: string,
+                    name: string,
+                    author: string,
+                    publisher: string,
+                    description: string;
+                  [name, author, description, publisher] = [
+                    metadata.info.Title || bookName,
+                    metadata.info.Author || "Unknown Authur",
+                    "pdf",
+                    metadata.info.publisher,
+                  ];
+                  let format = "PDF";
+                  key = new Date().getTime() + "";
+                  let book = new BookModel(
+                    key,
+                    name,
+                    author,
+                    description,
+                    md5,
+                    cover,
+                    format,
+                    publisher
+                  );
+                  await this.handleAddBook(book);
+                  BookUtil.addBook(key, e.target!.result as ArrayBuffer);
+                  resolve();
                 });
               })
               .catch((err: any) => {
@@ -314,14 +307,15 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                 lastModified: new Date().getTime(),
                 type: blobTemp.type,
               });
-              this.doIncrementalTest(fileTemp);
+              await this.getMd5WithBrowser(fileTemp);
+              resolve();
             };
             reader.readAsArrayBuffer(file);
           } else if (extension === "txt") {
-            console.log(file, "import");
             let result = await BookUtil.parseBook(file);
             if (result) {
-              this.doIncrementalTest(result);
+              await this.getMd5WithBrowser(result);
+              resolve();
             } else {
               this.props.handleMessage("Import Failed");
               this.props.handleMessageBox(true);
@@ -451,24 +445,8 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
         onDrop={async (acceptedFiles) => {
           this.props.handleDrag(false);
           for (let i = 0; i < acceptedFiles.length; i++) {
-            let extension = acceptedFiles[i].name.split(".")[
-              acceptedFiles[i].name.split(".").length - 1
-            ];
-            if (
-              acceptedFiles.length > 1 &&
-              (extension === "mobi" ||
-                extension === "txt" ||
-                extension === "azw3")
-            ) {
-              this.props.handleMessage(
-                "Batch import only support epub or pdf files"
-              );
-              this.props.handleMessageBox(true);
-              return;
-            }
-
             //异步解析文件
-            await this.doIncrementalTest(acceptedFiles[i]);
+            await this.getMd5WithBrowser(acceptedFiles[i]);
           }
           setTimeout(() => {
             this.props.handleLoadingDialog(false);
@@ -489,7 +467,21 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
           >
             <div className="animation-mask-local"></div>
             {this.props.isCollapsed && this.state.width < 950 ? (
-              <span className="icon-export"></span>
+              <NamespacesConsumer>
+                {(t) => (
+                  <Tooltip
+                    title={t("Import from Local")}
+                    position="top"
+                    style={{ height: "20px" }}
+                    trigger="mouseenter"
+                  >
+                    <span
+                      className="icon-folder"
+                      style={{ fontSize: "15px", fontWeight: 500 }}
+                    ></span>
+                  </Tooltip>
+                )}
+              </NamespacesConsumer>
             ) : (
               <span>
                 <Trans>Import from Local</Trans>

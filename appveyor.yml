@@ -19,6 +19,14 @@ cache:
 
 init:
   - git config --global core.autocrlf input
+  - sh: |
+      if [ "${APPVEYOR_BUILD_WORKER_IMAGE}" == "Ubuntu" ]
+      then
+        sudo apt-get install --no-install-recommends -y icnsutils graphicsmagick xz-utils
+        sudo apt-get install snapd
+        sudo snap install snapcraft --classic
+        sudo apt-get install -y rpm
+      fi
 
 install:
   - git reset --hard HEAD

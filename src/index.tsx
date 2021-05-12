@@ -4,24 +4,35 @@ import ReactDOM from "react-dom";
 import "./assets/styles/reset.css";
 import "./assets/styles/global.css";
 import "./assets/styles/style.css";
+import "react-tippy/dist/tippy.css";
 import { Provider } from "react-redux";
 import "./i18n";
 import store from "./store";
 import Router from "./router/index";
-import * as serviceWorker from "./serviceWorker";
-import { isElectron } from "react-device-detect";
+import OtherUtil from "./utils/otherUtil";
+const addStyle = (url) => {
+  const style = document.createElement("link");
+  style.href = url;
+  style.rel = "stylesheet";
+  // style.async = true;
+  document.head.appendChild(style);
+};
+if (OtherUtil.getReaderConfig("isDisplayDark") === "yes") {
+  addStyle("./assets/styles/dark.css");
+} else {
+  addStyle("./assets/styles/default.css");
+}
+OtherUtil.getReaderConfig("themeColor") &&
+  OtherUtil.getReaderConfig("themeColor") !== "default" &&
+  addStyle(
+    "./assets/styles/" + OtherUtil.getReaderConfig("themeColor") + ".css"
+  );
+let coverLoading: any = document.querySelector(".loading-cover");
+coverLoading && coverLoading.parentNode.removeChild(coverLoading);
+
 ReactDOM.render(
   <Provider store={store}>
     <Router />
   </Provider>,
   document.getElementById("root")
 );
-
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-if (isElectron) {
-  serviceWorker.unregister();
-} else {
-  serviceWorker.register();
-}

@@ -72,11 +72,11 @@ class BookCardItem extends React.Component<BookCardProps, BookCardState> {
     }
     this.setState(
       {
-        left: x - 200,
+        left: x,
         top:
-          document.body.clientHeight - e.clientY > 400
-            ? document.body.clientHeight - 310 - e.clientY
-            : 200,
+          document.body.clientHeight - e.clientY > 300
+            ? e.clientY
+            : e.clientY - 300,
       },
       () => {
         this.props.handleActionDialog(true);
