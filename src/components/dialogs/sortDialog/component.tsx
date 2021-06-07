@@ -1,7 +1,7 @@
 //排序弹窗
 import React from "react";
 import "./sortDialog.css";
-import OtherUtil from "../../../utils/otherUtil";
+import SortUtil from "../../../utils/readUtils/sortUtil";
 import { Trans } from "react-i18next";
 import { SortDialogProps, SortDialogState } from "./interface";
 
@@ -19,13 +19,13 @@ class SortDialog extends React.Component<SortDialogProps, SortDialogState> {
       noteSortCode.sort = code;
       this.props.handleNoteSortCode(noteSortCode);
       this.props.handleNoteSort(true);
-      OtherUtil.setNoteSortCode(code, this.props.noteSortCode.order);
+      SortUtil.setNoteSortCode(code, this.props.noteSortCode.order);
     } else {
       let bookSortCode = this.props.bookSortCode;
       bookSortCode.sort = code;
       this.props.handleBookSortCode(bookSortCode);
       this.props.handleBookSort(true);
-      OtherUtil.setBookSortCode(code, this.props.bookSortCode.order);
+      SortUtil.setBookSortCode(code, this.props.bookSortCode.order);
     }
   };
   handleOrder = (code: number) => {
@@ -33,23 +33,17 @@ class SortDialog extends React.Component<SortDialogProps, SortDialogState> {
       let noteSortCode = this.props.noteSortCode;
       noteSortCode.order = code;
       this.props.handleNoteSort(true);
-      OtherUtil.setNoteSortCode(this.props.noteSortCode.sort, code);
+      SortUtil.setNoteSortCode(this.props.noteSortCode.sort, code);
       this.props.handleNoteSortCode(noteSortCode);
     } else {
       let bookSortCode = this.props.bookSortCode;
       bookSortCode.order = code;
       this.props.handleBookSort(true);
-      OtherUtil.setBookSortCode(this.props.bookSortCode.sort, code);
+      SortUtil.setBookSortCode(this.props.bookSortCode.sort, code);
       this.props.handleBookSortCode(bookSortCode);
     }
   };
-  handleSortBooks = () => {
-    if (this.props.isSortDisplay) {
-      this.props.handleSortDisplay(false);
-    } else {
-      this.props.handleSortDisplay(true);
-    }
-  };
+
   render() {
     let sortCode = this.state.isNote
       ? this.props.noteSortCode
@@ -58,10 +52,12 @@ class SortDialog extends React.Component<SortDialogProps, SortDialogState> {
       <div
         className="sort-dialog-container"
         onMouseLeave={() => {
-          this.handleSortBooks();
+          this.props.handleSortDisplay(false);
+        }}
+        onMouseEnter={() => {
+          this.props.handleSortDisplay(true);
         }}
         style={this.state.isNote ? { height: "120px" } : {}}
-        // style={this.state.isNote ? { height: "120px" } : {}}
       >
         {this.state.isNote ? (
           <ul className="sort-by-category">
@@ -103,7 +99,10 @@ class SortDialog extends React.Component<SortDialogProps, SortDialogState> {
                 >
                   <Trans>{item}</Trans>
                   {sortCode.sort === index && (
-                    <span className="icon-check"></span>
+                    <span
+                      className="icon-check"
+                      style={{ fontWeight: "bold" }}
+                    ></span>
                   )}
                 </li>
               );
@@ -120,7 +119,12 @@ class SortDialog extends React.Component<SortDialogProps, SortDialogState> {
             style={sortCode.order === 1 ? {} : { opacity: 0.34 }}
           >
             <Trans>Ascending Order</Trans>
-            {sortCode.order === 1 && <span className="icon-check"></span>}
+            {sortCode.order === 1 && (
+              <span
+                className="icon-check"
+                style={{ fontWeight: "bold" }}
+              ></span>
+            )}
           </li>
           <li
             className="sort-by-order-list"
@@ -130,7 +134,12 @@ class SortDialog extends React.Component<SortDialogProps, SortDialogState> {
             style={sortCode.order === 2 ? {} : { opacity: 0.34 }}
           >
             <Trans>Descending Order</Trans>
-            {sortCode.order === 2 && <span className="icon-check"></span>}
+            {sortCode.order === 2 && (
+              <span
+                className="icon-check"
+                style={{ fontWeight: "bold" }}
+              ></span>
+            )}
           </li>
         </ul>
       </div>

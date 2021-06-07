@@ -19,9 +19,7 @@ import { Route, Switch, Redirect } from "react-router-dom";
 import { routes } from "../../router/routes";
 import Arrow from "../../components/arrow";
 import LoadingDialog from "../../components/dialogs/loadingDialog";
-import DownloadDesk from "../../components/dialogs/downloadDesk";
-import { isElectron } from "react-device-detect";
-// declare var window: any;
+import TipDialog from "../../components/dialogs/TipDialog";
 
 //判断是否为触控设备
 const is_touch_device = () => {
@@ -42,14 +40,6 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
       isDrag: false,
       token: "",
     };
-  }
-  //从indexdb里读取书籍
-  UNSAFE_componentWillMount() {
-    this.props.handleFetchBooks();
-    this.props.handleFetchNotes();
-    this.props.handleFetchBookmarks();
-    this.props.handleFetchBookSortCode();
-    this.props.handleFetchList();
   }
 
   UNSAFE_componentWillReceiveProps(nextProps: ManagerProps) {
@@ -84,6 +74,11 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
     if (is_touch_device() && !OtherUtil.getReaderConfig("isTouch")) {
       OtherUtil.setReaderConfig("isTouch", "yes");
     }
+    this.props.handleFetchBooks();
+    this.props.handleFetchNotes();
+    this.props.handleFetchBookmarks();
+    this.props.handleFetchBookSortCode();
+    this.props.handleFetchList();
   }
 
   handleDrag = (isDrag: boolean) => {
@@ -151,7 +146,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
               this.props.handleEditDialog(false);
               this.props.handleDeleteDialog(false);
               this.props.handleAddDialog(false);
-              this.props.handleDownloadDesk(false);
+              this.props.handleTipDialog(false);
               this.props.handleLoadingDialog(false);
               this.props.handleNewDialog(false);
               this.props.handleBackupDialog(false);
@@ -164,7 +159,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
               this.props.isOpenDeleteDialog ||
               this.props.isOpenEditDialog ||
               this.props.isOpenAddDialog ||
-              this.props.isDownloadDesk ||
+              this.props.isTipDialog ||
               this.props.isShowLoading
                 ? {}
                 : {
@@ -179,7 +174,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
         {this.props.isAboutOpen && <AboutDialog />}
         {this.props.isBackup && <BackupDialog />}
         {this.props.isSettingOpen && <SettingDialog />}
-        {this.props.isDownloadDesk && !isElectron && <DownloadDesk />}
+        {this.props.isTipDialog && <TipDialog />}
         {(!books || books.length === 0) && this.state.totalBooks ? (
           <Redirect to="/manager/loading" />
         ) : (

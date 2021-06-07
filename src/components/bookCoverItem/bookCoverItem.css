@@ -96,13 +96,13 @@
 .book-cover-item-desc {
   width: 240px;
   margin-top: 5px;
-  height: 60px;
+  height: 68px;
   font-size: 13px;
   line-height: 17px;
   opacity: 1;
   text-align: left;
-  overflow: scroll;
   position: relative;
+  overflow-y: scroll;
   float: left;
 }
 @keyframes slide-down {

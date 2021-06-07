@@ -3,7 +3,7 @@ import React from "react";
 import "./header.css";
 import SearchBox from "../../components/searchBox";
 import ImportLocal from "../../components/importLocal";
-import { Trans, NamespacesConsumer } from "react-i18next";
+import { Trans } from "react-i18next";
 import { HeaderProps, HeaderState } from "./interface";
 import OtherUtil from "../../utils/otherUtil";
 import UpdateInfo from "../../components/dialogs/updateInfo";
@@ -20,6 +20,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       language: OtherUtil.getReaderConfig("lang"),
       isNewVersion: false,
       width: document.body.clientWidth,
+      isdataChange: false,
     };
   }
   async componentDidMount() {
@@ -60,6 +61,32 @@ class Header extends React.Component<HeaderProps, HeaderState> {
             }
           });
       }
+      //Check for data update
+      let storageLocation = localStorage.getItem("storageLocation")
+        ? localStorage.getItem("storageLocation")
+        : window
+            .require("electron")
+            .ipcRenderer.sendSync("storage-location", "ping");
+      let sourcePath = path.join(
+        storageLocation,
+        "config",
+        "readerConfig.json"
+      );
+      //Detect data modification
+      try {
+        const readerConfig = JSON.parse(
+          fs.readFileSync(sourcePath, { encoding: "utf8", flag: "r" })
+        );
+        if (
+          localStorage.getItem("lastSyncTime") &&
+          parseInt(readerConfig.lastSyncTime) >
+            parseInt(localStorage.getItem("lastSyncTime")!)
+        ) {
+          this.setState({ isdataChange: true });
+        }
+      } catch (error) {
+        throw error;
+      }
     }
 
     window.addEventListener("resize", () => {
@@ -98,6 +125,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
           () => {
             this.props.handleMessage("Sync Successfully");
             this.props.handleMessageBox(true);
+            this.setState({ isdataChange: false });
           },
           5,
           () => {}
@@ -107,6 +135,11 @@ class Header extends React.Component<HeaderProps, HeaderState> {
     );
   };
   syncToLocation = () => {
+    if (OtherUtil.getReaderConfig("isFirst") !== "no") {
+      this.props.handleTipDialog(true);
+      OtherUtil.setReaderConfig("isFirst", "no");
+      return;
+    }
     const fs = window.require("fs");
     const path = window.require("path");
     let storageLocation = localStorage.getItem("storageLocation")
@@ -115,32 +148,36 @@ class Header extends React.Component<HeaderProps, HeaderState> {
           .require("electron")
           .ipcRenderer.sendSync("storage-location", "ping");
     let sourcePath = path.join(storageLocation, "config", "readerConfig.json");
+    let readerConfig: any;
     try {
-      const readerConfig = JSON.parse(
+      readerConfig = JSON.parse(
         fs.readFileSync(sourcePath, { encoding: "utf8", flag: "r" })
       );
-      //如果同步文件夹的记录较新，就从同步文件夹同步数据到Koodo
-      if (
-        localStorage.getItem("lastSyncTime") &&
-        parseInt(readerConfig.lastSyncTime) >
-          parseInt(localStorage.getItem("lastSyncTime")!)
-      ) {
-        this.syncFromLocation();
-      } else {
-        //否则就把Koodo中数据同步到同步文件夹
-        BackupUtil.backup(
-          this.props.books,
-          this.props.notes,
-          this.props.bookmarks,
-          () => {
-            this.props.handleMessage("Sync Successfully");
-            this.props.handleMessageBox(true);
-          },
-          5,
-          () => {}
-        );
-      }
     } catch (error) {
+      BackupUtil.backup(
+        this.props.books,
+        this.props.notes,
+        this.props.bookmarks,
+        () => {
+          this.props.handleMessage("Sync Successfully");
+          this.props.handleMessageBox(true);
+        },
+        5,
+        () => {}
+      );
+      return;
+    }
+    //如果同步文件夹的记录较新，就从同步文件夹同步数据到Koodo
+
+    if (
+      readerConfig &&
+      localStorage.getItem("lastSyncTime") &&
+      parseInt(readerConfig.lastSyncTime) >
+        parseInt(localStorage.getItem("lastSyncTime")!)
+    ) {
+      this.syncFromLocation();
+    } else {
+      //否则就把Koodo中数据同步到同步文件夹
       BackupUtil.backup(
         this.props.books,
         this.props.notes,
@@ -161,54 +198,72 @@ class Header extends React.Component<HeaderProps, HeaderState> {
         <div className="header-search-container">
           <SearchBox />
         </div>
-        <NamespacesConsumer>
-          {(t) => (
-            <>
-              <div
-                className="setting-icon-container"
-                onClick={() => {
-                  this.props.handleSortDisplay(!this.props.isSortDisplay);
-                }}
-                style={{ left: "490px", top: "18px" }}
+
+        <>
+          <div
+            className="setting-icon-container"
+            onClick={() => {
+              this.props.handleSortDisplay(!this.props.isSortDisplay);
+            }}
+            onMouseLeave={() => {
+              this.props.handleSortDisplay(false);
+            }}
+            style={{ left: "490px", top: "18px" }}
+          >
+            <Tooltip
+              title={this.props.t("Sort")}
+              position="top"
+              trigger="mouseenter"
+            >
+              <span className="icon-sort-desc header-sort-icon"></span>
+            </Tooltip>
+          </div>
+          <div
+            className="setting-icon-container"
+            onClick={() => {
+              this.props.handleAbout(!this.props.isAboutOpen);
+            }}
+            onMouseLeave={() => {
+              this.props.handleAbout(false);
+            }}
+          >
+            <Tooltip
+              title={this.props.t("Setting")}
+              position="top"
+              trigger="mouseenter"
+            >
+              <span className="icon-setting setting-icon"></span>
+            </Tooltip>
+          </div>
+          {isElectron && (
+            <div
+              className="setting-icon-container"
+              onClick={() => {
+                this.syncToLocation();
+              }}
+              style={{ left: "635px" }}
+            >
+              <Tooltip
+                title={this.props.t(
+                  this.state.isdataChange
+                    ? "Data change detected, whether to update?"
+                    : "Sync"
+                )}
+                position="top"
+                trigger="mouseenter"
               >
-                <Tooltip title={t("Sort")} position="top" trigger="mouseenter">
-                  <span className="icon-sort-desc header-sort-icon"></span>
-                </Tooltip>
-              </div>
-              <div
-                className="setting-icon-container"
-                onClick={() => {
-                  this.props.handleAbout(!this.props.isAboutOpen);
-                }}
-              >
-                <Tooltip
-                  title={t("Setting")}
-                  position="top"
-                  trigger="mouseenter"
-                >
-                  <span className="icon-setting setting-icon"></span>
-                </Tooltip>
-              </div>
-              {isElectron && (
-                <div
-                  className="setting-icon-container"
-                  onClick={() => {
-                    this.syncToLocation();
-                  }}
-                  style={{ left: "635px" }}
-                >
-                  <Tooltip
-                    title={t("Sync")}
-                    position="top"
-                    trigger="mouseenter"
-                  >
-                    <span className="icon-sync setting-icon"></span>
-                  </Tooltip>
-                </div>
-              )}
-            </>
+                <span
+                  className="icon-sync setting-icon"
+                  style={
+                    this.state.isdataChange
+                      ? { color: "rgb(35, 170, 242)" }
+                      : {}
+                  }
+                ></span>
+              </Tooltip>
+            </div>
           )}
-        </NamespacesConsumer>
+        </>
 
         <div
           className="import-from-cloud"
@@ -223,20 +278,16 @@ class Header extends React.Component<HeaderProps, HeaderState> {
         >
           <div className="animation-mask"></div>
           {this.props.isCollapsed && this.state.width < 950 ? (
-            <NamespacesConsumer>
-              {(t) => (
-                <Tooltip
-                  title={t("Backup and Restore")}
-                  position="top"
-                  trigger="mouseenter"
-                >
-                  <span
-                    className="icon-share"
-                    style={{ fontSize: "15px", fontWeight: 600 }}
-                  ></span>
-                </Tooltip>
-              )}
-            </NamespacesConsumer>
+            <Tooltip
+              title={this.props.t("Backup and Restore")}
+              position="top"
+              trigger="mouseenter"
+            >
+              <span
+                className="icon-share"
+                style={{ fontSize: "15px", fontWeight: 600 }}
+              ></span>
+            </Tooltip>
           ) : (
             <Trans>Backup and Restore</Trans>
           )}

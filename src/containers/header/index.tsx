@@ -1,12 +1,13 @@
 //header 页面
 import { connect } from "react-redux";
-import { withNamespaces } from "react-i18next";
+import { withTranslation } from "react-i18next";
 import {
   handleSortDisplay,
   handleMessageBox,
   handleMessage,
   handleSetting,
   handleAbout,
+  handleTipDialog,
 } from "../../store/actions/manager";
 import { handleBackupDialog } from "../../store/actions/backupPage";
 import { stateType } from "../../store";
@@ -31,8 +32,9 @@ const actionCreator = {
   handleBackupDialog,
   handleSetting,
   handleAbout,
+  handleTipDialog,
 };
 export default connect(
   mapStateToProps,
   actionCreator
-)(withNamespaces()(Header as any));
+)(withTranslation()(Header as any));

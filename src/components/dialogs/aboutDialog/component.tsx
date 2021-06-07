@@ -21,7 +21,10 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
       <div
         className="sort-dialog-container"
         onMouseLeave={() => {
-          this.props.handleAbout(!this.props.isAboutOpen);
+          this.props.handleAbout(false);
+        }}
+        onMouseEnter={() => {
+          this.props.handleAbout(true);
         }}
         style={{
           left: "525px",
@@ -39,14 +42,7 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
           >
             <Trans>Setting</Trans>
           </li>
-          <li
-            className="sort-by-category-list"
-            onClick={() => {
-              this.handleJump("https://koodo.960960.xyz/support");
-            }}
-          >
-            <Trans>Feedback</Trans>
-          </li>
+
           <li
             className="sort-by-category-list"
             onClick={() => {
@@ -62,6 +58,14 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
             }}
           >
             <Trans>Help</Trans>
+          </li>
+          <li
+            className="sort-by-category-list"
+            onClick={() => {
+              this.handleJump("https://koodo.960960.xyz/support");
+            }}
+          >
+            <Trans>Feedback</Trans>
           </li>
           <li
             className="sort-by-category-list"

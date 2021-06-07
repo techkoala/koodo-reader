@@ -93,10 +93,6 @@ class BackupDialog extends React.Component<
           break;
 
         case 3:
-          if (!isElectron) {
-            this.props.handleDownloadDesk(true);
-            break;
-          }
           if (!OtherUtil.getReaderConfig("webdav_token")) {
             this.props.handleTokenDialog(true);
             break;
@@ -127,6 +123,7 @@ class BackupDialog extends React.Component<
   };
   render() {
     const renderDrivePage = () => {
+      !isElectron && driveList.pop();
       return driveList.map((item, index) => {
         return (
           <li

@@ -2,21 +2,9 @@
 import React from "react";
 import { dropdownList } from "../../../constants/dropdownList";
 import "./dropdownList.css";
-import { Trans, NamespacesConsumer } from "react-i18next";
+import { Trans } from "react-i18next";
 import { DropdownListProps, DropdownListState } from "./interface";
 import OtherUtil from "../../../utils/otherUtil";
-import { isElectron } from "react-device-detect";
-
-if (
-  isElectron &&
-  navigator.appVersion.indexOf("NT 6.1") === -1 &&
-  navigator.appVersion.indexOf("NT 5.1") === -1 &&
-  navigator.appVersion.indexOf("NT 6.0") === -1
-) {
-  const { ipcRenderer } = window.require("electron");
-  dropdownList[0].option = ipcRenderer.sendSync("fonts-ready", "ping");
-  dropdownList[0].option.push("Built-in font");
-}
 
 class DropdownList extends React.Component<
   DropdownListProps,
@@ -116,18 +104,13 @@ class DropdownList extends React.Component<
             }}
           >
             {item.option.map((subItem: string, index: number) => (
-              <NamespacesConsumer key={index}>
-                {(t) => {
-                  return (
-                    <option
-                      value={[subItem, index.toString()]}
-                      className="general-setting-option"
-                    >
-                      {t(subItem)}
-                    </option>
-                  );
-                }}
-              </NamespacesConsumer>
+              <option
+                value={[subItem, index.toString()]}
+                key={index}
+                className="general-setting-option"
+              >
+                {this.props.t(subItem)}
+              </option>
             ))}
           </select>
         </li>

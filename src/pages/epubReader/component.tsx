@@ -1,7 +1,5 @@
-//卡片模式下的图书显示
 import React from "react";
 import RecentBooks from "../../utils/readUtils/recordRecent";
-// import "./bookCardItem.css";
 import { EpubReaderProps, EpubReaderState } from "./interface";
 import localforage from "localforage";
 import Reader from "../../containers/epubViewer";
@@ -9,6 +7,7 @@ import { withRouter } from "react-router-dom";
 import _ from "underscore";
 import BookUtil from "../../utils/bookUtil";
 import Lottie from "react-lottie";
+import "../../assets/styles/reset.css";
 import animationSiri from "../../assets/lotties/siri.json";
 
 const siriOptions = {

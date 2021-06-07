@@ -16,7 +16,7 @@
 </h3>
 <div align="center">
 
-[下载](https://koodo.960960.xyz/download) | [官网](https://koodo.960960.xyz)
+[下载](https://koodo.960960.xyz/download) | [官网](https://koodo.960960.xyz) | [反馈](https://koodo.960960.xyz/support) | [文档](https://www.notion.so/troyeguo/e9c4e5755d564b0db6340eeba6d9ece9?v=7c8fcbed9adf4592ada95cfd593868c9) | [计划](https://www.notion.so/troyeguo/215baeda57804fd29dbb0e91d1e6a021?v=360c00183d944b598668f34c255edfd7)
 
 </div>
 
@@ -34,7 +34,7 @@
 
 ## 特色
 
-支持阅读 **epub** , **pdf**, **mobi**, **azw3** 和 **txt** 格式的图书
+支持阅读 **epub**, **pdf**, **mobi**, **azw3**, **txt**, **Markdown** 和 **djvu** 格式的图书
 
 支持 **Windows** ， **macOS**， **Linux** 和 **网页版**
 
@@ -58,14 +58,20 @@
 
 ## 使用方法
 
-桌面端：[Github](https://github.com/troyeguo/koodo-reader/releases/latest) | [蓝奏云](https://wwa.lanzous.com/b0c90cieb) 密码：1234 | [历史版本](https://wwa.lanzous.com/b0c97tupi) 密码：1234
+桌面端：[Github](https://github.com/troyeguo/koodo-reader/releases/latest) | [蓝奏云](https://wwa.lanzoui.com/b0c90cieb) 密码：1234 | [历史版本](https://wwa.lanzoui.com/b0c97tupi) 密码：1234
 
-网页版：[前往](https://reader.960960.xyz) (可能需要科学上网)
+网页版：[前往](https://reader.960960.xyz)
 
 使用 [Homebrew](https://brew.sh/) 安装：
 
 ```shell
 brew install --cask koodo-reader
+```
+
+使用 Docker 安装：
+
+```bash
+docker-compose up -d
 ```
 
 ## 运行源码
@@ -91,14 +97,6 @@ brew install --cask koodo-reader
    yarn
    yarn start
    ```
-
-## Docker
-
-可以使用 `docker compose` 运行本项目
-
-```bash
-docker-compose up -d
-```
 
 ## 贡献
 

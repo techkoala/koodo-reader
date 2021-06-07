@@ -8,6 +8,10 @@ import { version } from "../../../../package.json";
 import OtherUtil from "../../../utils/otherUtil";
 import SyncUtil from "../../../utils/syncUtils/common";
 import { isElectron } from "react-device-detect";
+import { dropdownList } from "../../../constants/dropdownList";
+import { Tooltip } from "react-tippy";
+import RestoreUtil from "../../../utils/syncUtils/restoreUtil";
+import BackupUtil from "../../../utils/syncUtils/backupUtil";
 import {
   settingList,
   langList,
@@ -22,33 +26,41 @@ class SettingDialog extends React.Component<
   constructor(props: SettingInfoProps) {
     super(props);
     this.state = {
-      language: OtherUtil.getReaderConfig("lang"),
       isTouch: OtherUtil.getReaderConfig("isTouch") === "yes",
-      isRememberSize: OtherUtil.getReaderConfig("isRememberSize") === "yes",
+      isAutoFullscreen: OtherUtil.getReaderConfig("isAutoFullscreen") === "yes",
       isOpenBook: OtherUtil.getReaderConfig("isOpenBook") === "yes",
       isExpandContent: OtherUtil.getReaderConfig("isExpandContent") === "yes",
       isDisableUpdate: OtherUtil.getReaderConfig("isDisableUpdate") === "yes",
       isDisplayDark: OtherUtil.getReaderConfig("isDisplayDark") === "yes",
-      searchEngine: navigator.language === "zh-CN" ? "baidu" : "google",
       currentThemeIndex: _.findLastIndex(themeList, {
         name: OtherUtil.getReaderConfig("themeColor"),
       }),
     };
   }
   componentDidMount() {
-    const lng = OtherUtil.getReaderConfig("lang");
-    if (lng) {
-      this.setState({
-        language: lng,
-      });
-    }
+    OtherUtil.getReaderConfig("systemFont") &&
+      document
+        .getElementsByClassName("lang-setting-dropdown")[0]
+        ?.children[
+          dropdownList[0].option.indexOf(
+            OtherUtil.getReaderConfig("systemFont")
+          )
+        ].setAttribute("selected", "selected");
     document
-      .querySelector(".lang-setting-dropdown")
+      .getElementsByClassName("lang-setting-dropdown")[1]
       ?.children[
         ["zh", "cht", "en", "ru"].indexOf(
-          OtherUtil.getReaderConfig("lang") || "zh"
+          OtherUtil.getReaderConfig("lang") ||
+            (navigator.language.indexOf("zh") > -1 ? "zh" : "en")
         )
       ].setAttribute("selected", "selected");
+    document.getElementsByClassName("lang-setting-dropdown")[2]?.children[
+      _.findLastIndex(searchList, {
+        value:
+          OtherUtil.getReaderConfig("searchEngine") ||
+          (navigator.language === "zh-CN" ? "baidu" : "google"),
+      })
+    ].setAttribute("selected", "selected");
   }
   handleRest = (bool: boolean) => {
     bool
@@ -58,56 +70,64 @@ class SettingDialog extends React.Component<
   };
   changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
-    this.setState({ language: lng });
     OtherUtil.setReaderConfig("lang", lng);
   };
   changeSearch = (searchEngine: string) => {
-    this.setState({ searchEngine });
     OtherUtil.setReaderConfig("searchEngine", searchEngine);
   };
-  handleChangeTouch = () => {
-    this.setState({ isTouch: !this.state.isTouch });
-    OtherUtil.setReaderConfig("isTouch", this.state.isTouch ? "no" : "yes");
-    this.handleRest(this.state.isTouch);
+  changeFont = (font: string) => {
+    let body = document.getElementsByTagName("body")[0];
+    body.setAttribute("style", "font-family:" + font + "!important");
+    OtherUtil.setReaderConfig("systemFont", font);
   };
   handleJump = (url: string) => {
     isElectron
       ? window.require("electron").shell.openExternal(url)
       : window.open(url);
   };
+  handleSetting = (stateName: string) => {
+    this.setState({ [stateName]: !this.state[stateName] } as any);
+    OtherUtil.setReaderConfig(stateName, this.state[stateName] ? "no" : "yes");
+    this.handleRest(this.state[stateName]);
+  };
+  syncFromLocation = async () => {
+    const fs = window.require("fs");
+    const path = window.require("path");
+    const { zip } = window.require("zip-a-folder");
+    let storageLocation = localStorage.getItem("storageLocation")
+      ? localStorage.getItem("storageLocation")
+      : window
+          .require("electron")
+          .ipcRenderer.sendSync("storage-location", "ping");
+    let sourcePath = path.join(storageLocation, "config");
+    let outPath = path.join(storageLocation, "config.zip");
+    await zip(sourcePath, outPath);
 
-  handleExpandContent = () => {
-    this.setState({ isExpandContent: !this.state.isExpandContent });
-    OtherUtil.setReaderConfig(
-      "isExpandContent",
-      this.state.isExpandContent ? "no" : "yes"
-    );
-    this.handleRest(this.state.isExpandContent);
-  };
-  handleDisableUpdate = () => {
-    this.setState({ isDisableUpdate: !this.state.isDisableUpdate });
-    OtherUtil.setReaderConfig(
-      "isDisableUpdate",
-      this.state.isDisableUpdate ? "no" : "yes"
-    );
-    this.handleRest(this.state.isDisableUpdate);
-  };
+    var data = fs.readFileSync(outPath);
 
-  handleChangeOpen = () => {
-    this.setState({ isOpenBook: !this.state.isOpenBook });
-    OtherUtil.setReaderConfig(
-      "isOpenBook",
-      this.state.isOpenBook ? "no" : "yes"
+    let blobTemp = new Blob([data], { type: "application/epub+zip" });
+    let fileTemp = new File([blobTemp], "config.zip", {
+      lastModified: new Date().getTime(),
+      type: blobTemp.type,
+    });
+
+    RestoreUtil.restore(
+      fileTemp,
+      () => {
+        BackupUtil.backup(
+          this.props.books,
+          this.props.notes,
+          this.props.bookmarks,
+          () => {
+            this.props.handleMessage("Change Successfully");
+            this.props.handleMessageBox(true);
+          },
+          5,
+          () => {}
+        );
+      },
+      true
     );
-    this.handleRest(this.state.isOpenBook);
-  };
-  handleWindowSize = () => {
-    this.setState({ isRememberSize: !this.state.isRememberSize });
-    OtherUtil.setReaderConfig(
-      "isRememberSize",
-      this.state.isRememberSize ? "no" : "yes"
-    );
-    this.handleRest(this.state.isRememberSize);
   };
   handleChangeLocation = async () => {
     const { dialog } = window.require("electron").remote;
@@ -122,7 +142,8 @@ class SettingDialog extends React.Component<
           : ipcRenderer.sendSync("storage-location", "ping"),
         path.filePaths[0],
         this.props.handleMessage,
-        this.props.handleMessageBox
+        this.props.handleMessageBox,
+        this.syncFromLocation
       );
     localStorage.setItem("storageLocation", path.filePaths[0]);
     document.getElementsByClassName(
@@ -190,19 +211,11 @@ class SettingDialog extends React.Component<
                   onClick={() => {
                     switch (index) {
                       case 0:
-                        this.handleChangeTouch();
-                        break;
                       case 1:
-                        this.handleChangeOpen();
-                        break;
                       case 2:
-                        this.handleWindowSize();
-                        break;
                       case 3:
-                        this.handleExpandContent();
-                        break;
                       case 4:
-                        this.handleDisableUpdate();
+                        this.handleSetting(item.propName);
                         break;
                       case 5:
                         this.handleDisplayDark();
@@ -211,11 +224,7 @@ class SettingDialog extends React.Component<
                         break;
                     }
                   }}
-                  style={
-                    this.state[item.propName]
-                      ? { background: "rgba(46, 170, 220)", float: "right" }
-                      : { float: "right" }
-                  }
+                  style={this.state[item.propName] ? {} : { opacity: 0.6 }}
                 >
                   <span
                     className="single-control-button"
@@ -239,18 +248,24 @@ class SettingDialog extends React.Component<
             <Trans>Theme Color</Trans>
             <ul className="theme-setting-container">
               {themeList.map((item, index) => (
-                <li
+                <Tooltip
                   key={item.id}
-                  className={
-                    index === this.state.currentThemeIndex
-                      ? "active-color theme-setting-item"
-                      : "theme-setting-item"
-                  }
-                  onClick={() => {
-                    this.handleTheme(item.name, index);
-                  }}
-                  style={{ backgroundColor: item.color }}
-                ></li>
+                  title={this.props.t(item.title)}
+                  position="top"
+                  trigger="mouseenter"
+                >
+                  <li
+                    className={
+                      index === this.state.currentThemeIndex
+                        ? "active-color theme-setting-item"
+                        : "theme-setting-item"
+                    }
+                    onClick={() => {
+                      this.handleTheme(item.name, index);
+                    }}
+                    style={{ backgroundColor: item.color }}
+                  ></li>
+                </Tooltip>
               ))}
             </ul>
           </div>
@@ -278,6 +293,22 @@ class SettingDialog extends React.Component<
               </div>
             </>
           )}
+          <div className="setting-dialog-new-title">
+            <Trans>System Font</Trans>
+            <select
+              name=""
+              className="lang-setting-dropdown"
+              onChange={(event) => {
+                this.changeFont(event.target.value);
+              }}
+            >
+              {dropdownList[0].option.map((item) => (
+                <option value={item} key={item} className="lang-setting-option">
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="setting-dialog-new-title">
             <Trans>Language</Trans>
@@ -289,7 +320,11 @@ class SettingDialog extends React.Component<
               }}
             >
               {langList.map((item) => (
-                <option value={item.value} className="lang-setting-option">
+                <option
+                  value={item.value}
+                  key={item.value}
+                  className="lang-setting-option"
+                >
                   {item.label}
                 </option>
               ))}
@@ -305,7 +340,11 @@ class SettingDialog extends React.Component<
               }}
             >
               {searchList.map((item) => (
-                <option value={item.value} className="lang-setting-option">
+                <option
+                  value={item.value}
+                  key={item.value}
+                  className="lang-setting-option"
+                >
                   {item.label}
                 </option>
               ))}
