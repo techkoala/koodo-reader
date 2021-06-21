@@ -4,7 +4,11 @@ import { SettingSwitchProps, SettingSwitchState } from "./interface";
 import { Trans } from "react-i18next";
 import TextToSpeech from "../../textToSpeech";
 import OtherUtil from "../../../utils/otherUtil";
-import { readerSettingList } from "../../../constants/settingList";
+import {
+  readerSettingList,
+  htmlSettingList,
+} from "../../../constants/settingList";
+import { isElectron } from "react-device-detect";
 
 class SettingSwitch extends React.Component<
   SettingSwitchProps,
@@ -17,22 +21,36 @@ class SettingSwitch extends React.Component<
       isUnderline: OtherUtil.getReaderConfig("isUnderline") === "yes",
       isShadow: OtherUtil.getReaderConfig("isShadow") === "yes",
       isItalic: OtherUtil.getReaderConfig("isItalic") === "yes",
+      isInvert: OtherUtil.getReaderConfig("isInvert") === "yes",
       isUseBackground: OtherUtil.getReaderConfig("isUseBackground") === "yes",
       isHideFooter: OtherUtil.getReaderConfig("isHideFooter") === "yes",
       isHideHeader: OtherUtil.getReaderConfig("isHideHeader") === "yes",
     };
   }
-
+  handleRest = () => {
+    this.props.renderFunc();
+  };
+  _handleRest = () => {
+    if (isElectron) {
+      this.props.handleMessage("Take effect at next startup");
+      this.props.handleMessageBox(true);
+    } else {
+      window.location.reload();
+    }
+  };
   handleBold = () => {
     this.setState({ isBold: !this.state.isBold }, () => {
       OtherUtil.setReaderConfig("isBold", this.state.isBold ? "yes" : "no");
+      setTimeout(() => {
+        this.handleRest();
+      }, 500);
     });
   };
   handleItalic = () => {
     this.setState({ isItalic: !this.state.isItalic }, () => {
       OtherUtil.setReaderConfig("isItalic", this.state.isItalic ? "yes" : "no");
       setTimeout(() => {
-        window.location.reload();
+        this.handleRest();
       }, 500);
     });
   };
@@ -40,7 +58,15 @@ class SettingSwitch extends React.Component<
     this.setState({ isShadow: !this.state.isShadow }, () => {
       OtherUtil.setReaderConfig("isShadow", this.state.isShadow ? "yes" : "no");
       setTimeout(() => {
-        window.location.reload();
+        this.handleRest();
+      }, 500);
+    });
+  };
+  handleInvert = () => {
+    this.setState({ isInvert: !this.state.isInvert }, () => {
+      OtherUtil.setReaderConfig("isInvert", this.state.isInvert ? "yes" : "no");
+      setTimeout(() => {
+        this.handleRest();
       }, 500);
     });
   };
@@ -51,7 +77,7 @@ class SettingSwitch extends React.Component<
         this.state.isUnderline ? "yes" : "no"
       );
       setTimeout(() => {
-        window.location.reload();
+        this.handleRest();
       }, 500);
     });
   };
@@ -66,7 +92,7 @@ class SettingSwitch extends React.Component<
       : this.props.handleMessage("Turn On Successfully");
     this.props.handleMessageBox(true);
     setTimeout(() => {
-      window.location.reload();
+      this._handleRest();
     }, 500);
   };
   handleFooter = () => {
@@ -80,7 +106,7 @@ class SettingSwitch extends React.Component<
       : this.props.handleMessage("Turn Off Successfully");
     this.props.handleMessageBox(true);
     setTimeout(() => {
-      window.location.reload();
+      this._handleRest();
     }, 500);
   };
   handleHeader = () => {
@@ -94,15 +120,18 @@ class SettingSwitch extends React.Component<
       : this.props.handleMessage("Turn Off Successfully");
     this.props.handleMessageBox(true);
     setTimeout(() => {
-      window.location.reload();
+      this._handleRest();
     }, 500);
   };
 
   render() {
     return (
       <>
-        <TextToSpeech />
-        {readerSettingList.map((item) => (
+        {this.props.currentEpub.archived && <TextToSpeech />}
+        {(this.props.currentEpub.rendition
+          ? readerSettingList
+          : htmlSettingList
+        ).map((item) => (
           <div className="single-control-switch-container" key={item.title}>
             <span className="single-control-switch-title">
               <Trans>{item.title}</Trans>
@@ -124,6 +153,9 @@ class SettingSwitch extends React.Component<
                   case "isShadow":
                     this.handleShadow();
                     break;
+                  case "isInvert":
+                    this.handleInvert();
+                    break;
                   case "isHideFooter":
                     this.handleFooter();
                     break;
@@ -137,11 +169,7 @@ class SettingSwitch extends React.Component<
                     break;
                 }
               }}
-              style={
-                this.state[item.propName]
-                  ? { background: "rgba(46, 170, 220)", float: "right" }
-                  : { float: "right" }
-              }
+              style={this.state[item.propName] ? {} : { opacity: 0.6 }}
             >
               <span
                 className="single-control-button"

@@ -57,7 +57,7 @@ class SettingPanel extends React.Component<
           <Trans>Reading Option</Trans>
         </div>
         <div className="setting-panel">
-          <ModeControl />
+          {this.props.currentEpub.archived && <ModeControl />}
           <ThemeList />
           <SliderList
             {...{
@@ -70,17 +70,19 @@ class SettingPanel extends React.Component<
               title: "Font Size",
             }}
           />
-          <SliderList
-            {...{
-              maxValue: 80,
-              minValue: 0,
-              mode: "margin",
-              minLabel: "0",
-              maxLabel: "100",
-              step: 5,
-              title: "Margin",
-            }}
-          />
+          {this.props.currentEpub.archived && (
+            <SliderList
+              {...{
+                maxValue: 80,
+                minValue: 0,
+                mode: "margin",
+                minLabel: "0",
+                maxLabel: "100",
+                step: 5,
+                title: "Margin",
+              }}
+            />
+          )}
           <SliderList
             {...{
               maxValue: 20,
@@ -92,30 +94,44 @@ class SettingPanel extends React.Component<
               title: "Letter Spacing",
             }}
           />
-          <SliderList
-            {...{
-              maxValue: 60,
-              minValue: 0,
-              mode: "paraSpacing",
-              minLabel: "0",
-              maxLabel: "60",
-              step: 1,
-              title: "Paragraph Spacing",
-            }}
-          />
-          {this.state.readerMode && this.state.readerMode !== "double" ? (
+          {this.props.currentEpub.archived && (
+            <SliderList
+              {...{
+                maxValue: 60,
+                minValue: 0,
+                mode: "paraSpacing",
+                minLabel: "0",
+                maxLabel: "60",
+                step: 1,
+                title: "Paragraph Spacing",
+              }}
+            />
+          )}
+          {(this.state.readerMode && this.state.readerMode !== "double") ||
+          !this.props.currentEpub.archived ? (
             <SliderList
               {...{
                 maxValue: 3,
-                minValue: 1,
+                minValue: 0.5,
                 mode: "scale",
-                minLabel: "1",
+                minLabel: "0.5",
                 maxLabel: "3",
-                step: 0.2,
+                step: 0.1,
                 title: "Scale",
               }}
             />
           ) : null}
+          <SliderList
+            {...{
+              maxValue: 2,
+              minValue: 0.5,
+              mode: "brightness",
+              minLabel: "0.5",
+              maxLabel: "2",
+              step: 0.1,
+              title: "Brightness",
+            }}
+          />
           <DropdownList />
           <ReaderSwitch />
         </div>

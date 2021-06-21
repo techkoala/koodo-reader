@@ -138,10 +138,10 @@ class PopupMenu extends React.Component<PopupMenuProps, PopupMenuStates> {
     let posX = x + rect.width / 2 - 20;
     //防止menu超出图书
     let rightEdge =
-      this.props.menuMode === "note"
+      this.props.menuMode === "note" || this.props.menuMode === "trans"
         ? this.props.currentEpub.rendition._layout.width - 310
         : this.props.currentEpub.rendition._layout.width - 200;
-    let posY;
+    let posY: number;
     //控制menu方向
     if (y < height) {
       this.props.handleChangeDirection(true);
@@ -160,8 +160,11 @@ class PopupMenu extends React.Component<PopupMenuProps, PopupMenuStates> {
   renderHighlighters = () => {
     let highlighters: any = this.props.notes;
     if (!highlighters) return;
-    const currentLocation = this.props.currentEpub.rendition.currentLocation();
-    if (!currentLocation.start) return;
+    if (!this.props.rendition || !this.props.rendition.currentLocation) {
+      return;
+    }
+    const currentLocation = this.props.rendition.currentLocation();
+    if (!currentLocation || !currentLocation.start) return;
     let chapterIndex = currentLocation.start.index;
     let highlightersByChapter = highlighters.filter(
       (item: any) => item.chapterIndex === chapterIndex

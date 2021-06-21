@@ -41,6 +41,7 @@ class BackupDialog extends React.Component<
   handleFinish = () => {
     this.setState({ currentStep: 2 });
     this.props.handleLoadingDialog(false);
+    this.showMessage("Sync Successfully");
   };
   handleRestoreToLocal = (event: any) => {
     event.preventDefault();
@@ -275,7 +276,7 @@ class BackupDialog extends React.Component<
             this.handleClose();
           }}
         >
-          <span className="icon-close "></span>
+          <span className="icon-close backup-close-icon"></span>
         </div>
 
         {this.state.currentStep === 1 ? (

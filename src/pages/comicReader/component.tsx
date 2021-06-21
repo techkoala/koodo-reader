@@ -10,7 +10,7 @@ import "./viewer.css";
 import untar from "js-untar";
 import OtherUtil from "../../utils/otherUtil";
 import { mimetype } from "../../constants/mimetype";
-
+import RecordLocation from "../../utils/readUtils/recordLocation";
 declare var window: any;
 
 let JSZip = window.JSZip;
@@ -20,13 +20,38 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
   epub: any;
   constructor(props: ViewerProps) {
     super(props);
-    this.state = {};
+    this.state = {
+      key: "",
+      comicScale: OtherUtil.getReaderConfig("comicScale") || "100%",
+    };
   }
 
   componentDidMount() {
     let url = document.location.href.split("/");
     let key = url[url.length - 1].split("?")[0];
-
+    this.setState({ key });
+    this.handleRender(key);
+    document
+      .getElementsByClassName("lang-setting-dropdown")[0]
+      ?.children[
+        ["25%", "50%", "75%", "100%"].indexOf(
+          OtherUtil.getReaderConfig("comicScale") || "100%"
+        )
+      ].setAttribute("selected", "selected");
+    window.frames[0].document.addEventListener("wheel", (event) => {
+      RecordLocation.recordScrollHeight(
+        key,
+        document.body.clientWidth,
+        document.body.clientHeight,
+        window.frames[0].document.scrollingElement!.scrollTop,
+        window.frames[0].document.scrollingElement!.scrollHeight
+      );
+    });
+    window.onbeforeunload = () => {
+      this.handleExit(key);
+    };
+  }
+  handleRender = (key: string) => {
     localforage.getItem("books").then((result: any) => {
       let book = result[_.findIndex(result, { key })];
       BookUtil.fetchBook(key, true).then((result) => {
@@ -42,15 +67,9 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
         RecentBooks.setRecent(key);
       });
     });
-    document
-      .querySelectorAll('style,link[rel="stylesheet"]')
-      .forEach((item) => item.remove());
-    window.onbeforeunload = () => {
-      this.handleExit();
-    };
-  }
+  };
   // 点击退出按钮的处理程序
-  handleExit() {
+  handleExit(key: string) {
     this.props.handleReadingState(false);
 
     OtherUtil.setReaderConfig("windowWidth", document.body.clientWidth + "");
@@ -97,26 +116,37 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
     let url = this.base64ArrayBuffer(content);
 
     let imageDom = document.createElement("img");
-    imageDom.src = "data:" + mimetype[extension] + ";base64," + url;
-    let viewer: HTMLElement | null = document.querySelector(".ebook-viewer");
-    if (!viewer?.innerHTML) return;
-    viewer.appendChild(imageDom);
-    let loading = document.querySelector("p");
+    imageDom.src =
+      "data:" + mimetype[extension.toLowerCase()] + ";base64," + url;
+    imageDom.setAttribute(
+      "style",
+      `width:${OtherUtil.getReaderConfig("comicScale") || "100%"};margin-left:${
+        OtherUtil.getReaderConfig("comicScale") === "75%" ? "12.5%" : "0%"
+      }`
+    );
+    window.frames[0].document.body.appendChild(imageDom);
+    let loading = window.frames[0].document.querySelector("p");
     if (!loading) return;
-    viewer.removeChild(loading);
+    window.frames[0].document.body.removeChild(loading);
+  };
+  handleJump = () => {
+    window.frames[0].document.scrollingElement!.scrollTo(
+      0,
+      RecordLocation.getScrollHeight(this.state.key).scroll
+    );
   };
   handleCbz = (result: ArrayBuffer) => {
     let zip = new JSZip();
-    zip.loadAsync(result).then((contents) => {
-      Object.keys(contents.files).forEach(async (filename) => {
+    zip.loadAsync(result).then(async (contents) => {
+      for (let filename of Object.keys(contents.files).sort()) {
         const content = await zip.file(filename).async("arraybuffer");
         const extension = filename.split(".").reverse()[0];
         this.addImage(content, extension);
-      });
+      }
+      this.handleJump();
     });
   };
   handleCbr = (result: ArrayBuffer) => {
-    console.log(window);
     let unrar = new Unrar(result);
     var entries = unrar.getEntries();
     for (let item of entries) {
@@ -127,6 +157,10 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
       const extension = item.name.split(".").reverse()[0];
       this.addImage(fileData, extension);
     }
+    document.scrollingElement!.scrollTo(
+      0,
+      RecordLocation.getScrollHeight(this.state.key).scroll
+    );
   };
   handleCbt = (result: ArrayBuffer) => {
     untar(result).then(
@@ -135,6 +169,10 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
           const extension = item.name.split(".").reverse()[0];
           this.addImage(item.buffer, extension);
         }
+        document.scrollingElement!.scrollTo(
+          0,
+          RecordLocation.getScrollHeight(this.state.key).scroll
+        );
         // onSuccess
       },
       function (err) {
@@ -147,9 +185,36 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
   };
   render() {
     return (
-      <div className="ebook-viewer">
-        <p>Loading</p>
-      </div>
+      <>
+        <iframe
+          className="ebook-viewer"
+          title="html-viewer"
+          width="100%"
+          height="100%"
+        >
+          <p>Loading</p>
+        </iframe>
+        <div className="comic-scale">
+          <select
+            name=""
+            className="lang-setting-dropdown"
+            id="text-speech-voice"
+            onChange={(event) => {
+              OtherUtil.setReaderConfig("comicScale", event.target.value);
+              window.frames[0].document.body.innerHTML = "";
+              this.handleRender(this.state.key);
+            }}
+          >
+            {["25%", "50%", "75%", "100%"].map((item, index) => {
+              return (
+                <option value={item} className="lang-setting-option">
+                  {item}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </>
     );
   }
 }

@@ -62,6 +62,10 @@ export const readerSettingList = [
     propName: "isShadow",
   },
   {
+    title: "Invert color",
+    propName: "isInvert",
+  },
+  {
     title: "Don't show footer",
     propName: "isHideFooter",
   },
@@ -72,5 +76,23 @@ export const readerSettingList = [
   {
     title: "Dont't use mimical background",
     propName: "isUseBackground",
+  },
+];
+export const htmlSettingList = [
+  {
+    title: "Bold Font",
+    propName: "isBold",
+  },
+  {
+    title: "Italic",
+    propName: "isItalic",
+  },
+  {
+    title: "Text Underline",
+    propName: "isUnderline",
+  },
+  {
+    title: "Text Shadow",
+    propName: "isShadow",
   },
 ];

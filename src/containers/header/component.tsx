@@ -23,7 +23,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       isdataChange: false,
     };
   }
-  async componentDidMount() {
+  componentDidMount() {
     if (isElectron) {
       const fs = window.require("fs");
       const path = window.require("path");
@@ -73,10 +73,12 @@ class Header extends React.Component<HeaderProps, HeaderState> {
         "readerConfig.json"
       );
       //Detect data modification
-      try {
-        const readerConfig = JSON.parse(
-          fs.readFileSync(sourcePath, { encoding: "utf8", flag: "r" })
-        );
+      fs.readFile(sourcePath, "utf8", (err, data) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        const readerConfig = JSON.parse(data);
         if (
           localStorage.getItem("lastSyncTime") &&
           parseInt(readerConfig.lastSyncTime) >
@@ -84,9 +86,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
         ) {
           this.setState({ isdataChange: true });
         }
-      } catch (error) {
-        throw error;
-      }
+      });
     }
 
     window.addEventListener("resize", () => {
@@ -114,22 +114,35 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       lastModified: new Date().getTime(),
       type: blobTemp.type,
     });
-
     RestoreUtil.restore(
       fileTemp,
       () => {
-        BackupUtil.backup(
-          this.props.books,
-          this.props.notes,
-          this.props.bookmarks,
-          () => {
-            this.props.handleMessage("Sync Successfully");
-            this.props.handleMessageBox(true);
-            this.setState({ isdataChange: false });
-          },
-          5,
-          () => {}
+        this.setState({ isdataChange: false });
+        //Check for data update
+        let storageLocation = localStorage.getItem("storageLocation")
+          ? localStorage.getItem("storageLocation")
+          : window
+              .require("electron")
+              .ipcRenderer.sendSync("storage-location", "ping");
+        let sourcePath = path.join(
+          storageLocation,
+          "config",
+          "readerConfig.json"
         );
+
+        fs.readFile(sourcePath, "utf8", (err, data) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+          const readerConfig = JSON.parse(data);
+          if (
+            localStorage.getItem("lastSyncTime") &&
+            readerConfig.lastSyncTime
+          ) {
+            localStorage.setItem("lastSyncTime", readerConfig.lastSyncTime);
+          }
+        });
       },
       true
     );
@@ -137,6 +150,9 @@ class Header extends React.Component<HeaderProps, HeaderState> {
   syncToLocation = () => {
     if (OtherUtil.getReaderConfig("isFirst") !== "no") {
       this.props.handleTipDialog(true);
+      this.props.handleTip(
+        "You need to manually change the storage location to the same sync folder on different computers. When you click the sync button, Koodo Reader will automatically upload or download the data from this folder according the timestamp."
+      );
       OtherUtil.setReaderConfig("isFirst", "no");
       return;
     }
@@ -148,48 +164,46 @@ class Header extends React.Component<HeaderProps, HeaderState> {
           .require("electron")
           .ipcRenderer.sendSync("storage-location", "ping");
     let sourcePath = path.join(storageLocation, "config", "readerConfig.json");
-    let readerConfig: any;
-    try {
-      readerConfig = JSON.parse(
-        fs.readFileSync(sourcePath, { encoding: "utf8", flag: "r" })
-      );
-    } catch (error) {
-      BackupUtil.backup(
-        this.props.books,
-        this.props.notes,
-        this.props.bookmarks,
-        () => {
-          this.props.handleMessage("Sync Successfully");
-          this.props.handleMessageBox(true);
-        },
-        5,
-        () => {}
-      );
-      return;
-    }
-    //如果同步文件夹的记录较新，就从同步文件夹同步数据到Koodo
+    fs.readFile(sourcePath, "utf8", (err, data) => {
+      if (err) {
+        BackupUtil.backup(
+          this.props.books,
+          this.props.notes,
+          this.props.bookmarks,
+          () => {
+            this.props.handleMessage("Sync Successfully");
+            this.props.handleMessageBox(true);
+          },
+          5,
+          () => {}
+        );
+        console.log(err);
+        return;
+      }
+      const readerConfig = JSON.parse(data);
 
-    if (
-      readerConfig &&
-      localStorage.getItem("lastSyncTime") &&
-      parseInt(readerConfig.lastSyncTime) >
-        parseInt(localStorage.getItem("lastSyncTime")!)
-    ) {
-      this.syncFromLocation();
-    } else {
-      //否则就把Koodo中数据同步到同步文件夹
-      BackupUtil.backup(
-        this.props.books,
-        this.props.notes,
-        this.props.bookmarks,
-        () => {
-          this.props.handleMessage("Sync Successfully");
-          this.props.handleMessageBox(true);
-        },
-        5,
-        () => {}
-      );
-    }
+      if (
+        readerConfig &&
+        localStorage.getItem("lastSyncTime") &&
+        parseInt(readerConfig.lastSyncTime) >
+          parseInt(localStorage.getItem("lastSyncTime")!)
+      ) {
+        this.syncFromLocation();
+      } else {
+        //否则就把Koodo中数据同步到同步文件夹
+        BackupUtil.backup(
+          this.props.books,
+          this.props.notes,
+          this.props.bookmarks,
+          () => {
+            this.props.handleMessage("Sync Successfully");
+            this.props.handleMessageBox(true);
+          },
+          5,
+          () => {}
+        );
+      }
+    });
   };
 
   render() {
@@ -239,6 +253,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
             <div
               className="setting-icon-container"
               onClick={() => {
+                // this.syncFromLocation();
                 this.syncToLocation();
               }}
               style={{ left: "635px" }}

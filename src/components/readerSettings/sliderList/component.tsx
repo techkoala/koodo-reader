@@ -4,6 +4,8 @@ import { Trans } from "react-i18next";
 import { SliderListProps, SliderListState } from "./interface";
 import "./sliderList.css";
 import OtherUtil from "../../../utils/otherUtil";
+import { isElectron } from "react-device-detect";
+
 class SliderList extends React.Component<SliderListProps, SliderListState> {
   constructor(props: SliderListProps) {
     super(props);
@@ -17,20 +19,28 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
           ? OtherUtil.getReaderConfig("letterSpacing") || "0"
           : this.props.mode === "paraSpacing"
           ? OtherUtil.getReaderConfig("paraSpacing") || "0"
+          : this.props.mode === "brightness"
+          ? OtherUtil.getReaderConfig("brightness") || "1"
           : OtherUtil.getReaderConfig("margin") || "60",
     };
   }
-
+  handleRest = () => {
+    if (this.props.mode === "scale" || this.props.mode === "margin") {
+      if (isElectron) {
+        this.props.handleMessage("Take effect at next startup");
+        this.props.handleMessageBox(true);
+      } else {
+        window.location.reload();
+      }
+      return;
+    }
+    this.props.renderFunc();
+  };
   onValueChange = (event: any) => {
     if (this.props.mode === "fontSize") {
       const fontSize = event.target.value;
       this.setState({ value: fontSize });
       OtherUtil.setReaderConfig("fontSize", fontSize);
-      this.props.currentEpub.rendition.themes.default({
-        "a, article, cite, code, div, li, p, pre, span, table": {
-          "font-size": `${fontSize || 17}px !important`,
-        },
-      });
     } else if (this.props.mode === "scale") {
       const scale = event.target.value;
       this.setState({ value: scale });
@@ -43,6 +53,10 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
       const paraSpacing = event.target.value;
       this.setState({ value: paraSpacing });
       OtherUtil.setReaderConfig("paraSpacing", paraSpacing);
+    } else if (this.props.mode === "brightness") {
+      const brightness = event.target.value;
+      this.setState({ value: brightness });
+      OtherUtil.setReaderConfig("brightness", brightness);
     } else {
       const margin = event.target.value;
       this.setState({ value: margin });
@@ -74,11 +88,14 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
             className="input-value"
             defaultValue={this.state.value}
             type="number"
-            step={this.props.title === "Scale" ? "0.1" : "1"}
+            step={
+              this.props.title === "Scale" || this.props.title === "Brightness"
+                ? "0.1"
+                : "1"
+            }
             onBlur={(event) => {
               this.onValueChange(event);
-
-              window.location.reload();
+              this.handleRest();
             }}
           />
           <span style={{ marginLeft: "10px" }}>{this.state.value}</span>
@@ -100,7 +117,7 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
               this.onValueInput(event);
             }}
             onMouseUp={() => {
-              window.location.reload();
+              this.handleRest();
             }}
           />
         </div>

@@ -23,7 +23,7 @@ export const emptyList = [
   {
     mode: "digest",
     main: "Empty Digest",
-    sub: "Select any text and click the Collect button on the popup Menu",
+    sub: "Select any text and click the Highlight button on the popup Menu",
   },
   {
     mode: "shelf",
@@ -34,6 +34,6 @@ export const emptyList = [
   {
     mode: "trash",
     main: "Empty Recycle Bin",
-    sub: "Drag any book to the Deleted tab to add it to Recycle Bin",
+    sub: "The deleted books will show up here",
   },
 ];

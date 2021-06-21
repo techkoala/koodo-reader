@@ -26,12 +26,12 @@ class BookCardItem extends React.Component<BookCardProps, BookCardState> {
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     let filePath = "";
     //控制是否自动打开本书
     if (isElectron) {
       const { ipcRenderer } = window.require("electron");
-      filePath = ipcRenderer.sendSync("get-file-data");
+      filePath = await ipcRenderer.sendSync("get-file-data");
     }
 
     if (
@@ -110,7 +110,6 @@ class BookCardItem extends React.Component<BookCardProps, BookCardState> {
   };
   handleJump = () => {
     RecentBooks.setRecent(this.props.book.key);
-
     BookUtil.RedirectBook(this.props.book);
   };
   render() {

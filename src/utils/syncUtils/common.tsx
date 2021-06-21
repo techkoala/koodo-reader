@@ -20,7 +20,7 @@ export const moveData = (
   books: BookModel[] = [],
   handleFinish: () => void = () => {}
 ) => {
-  let file = new File([blob], "moveData.zip", {
+  let file = new File([blob], "config.zip", {
     lastModified: new Date().getTime(),
     type: blob.type,
   });
@@ -45,26 +45,26 @@ export const moveData = (
     );
     var zip = new AdmZip(path.join(dirPath, file.name));
     zip.extractAllTo(/*target path*/ dataPath, /*overwrite*/ true);
-    try {
-      const fs = window.require("fs-extra");
-
-      fs.remove(path.join(dirPath, file.name), async (err) => {
-        if (err) console.log(err);
-        if (driveIndex === 4) {
-          let deleteBooks = books.map((item) => {
-            return localforage.removeItem(item.key);
-          });
-          await Promise.all(deleteBooks);
-        }
-        if (driveIndex === 5) {
-          handleFinish();
-        }
+    const fs_extra = window.require("fs-extra");
+    fs_extra.copy(
+      path.join(dirPath, file.name),
+      path.join(dataPath, file.name),
+      function (err) {
+        if (err) return;
+      }
+    );
+    if (driveIndex === 4) {
+      let deleteBooks = books.map((item) => {
+        return localforage.removeItem(item.key);
       });
-    } catch (e) {
-      console.error(e, "移动失败");
+      await Promise.all(deleteBooks);
+    }
+    if (driveIndex === 5) {
+      handleFinish();
     }
   };
 };
+
 class SyncUtil {
   static changeLocation(
     oldPath: string,
@@ -76,7 +76,6 @@ class SyncUtil {
     const fs = window.require("fs-extra");
     try {
       fs.readdir(newPath, (err, files: string[]) => {
-        console.log(files);
         let isConfiged: boolean = false;
         files.forEach((file: string) => {
           if (file === "config.zip") {
@@ -100,7 +99,45 @@ class SyncUtil {
       handleMessageBox(true);
     }
   }
-  static syncData() {}
+  static syncData(
+    blob,
+    driveIndex,
+    books: BookModel[] = [],
+    handleFinish: () => void = () => {}
+  ) {
+    let file = new File([blob], "config.zip", {
+      lastModified: new Date().getTime(),
+      type: blob.type,
+    });
+    const fs = window.require("fs");
+    const path = window.require("path");
+    const AdmZip = window.require("adm-zip");
+    const dataPath = localStorage.getItem("storageLocation")
+      ? localStorage.getItem("storageLocation")
+      : window
+          .require("electron")
+          .ipcRenderer.sendSync("storage-location", "ping");
+    var reader = new FileReader();
+    reader.readAsArrayBuffer(file);
+    reader.onload = async (event) => {
+      fs.writeFileSync(
+        path.join(dataPath, file.name),
+        Buffer.from(event.target!.result as any)
+      );
+      var zip = new AdmZip(path.join(dataPath, file.name));
+      zip.extractAllTo(/*target path*/ dataPath, /*overwrite*/ true);
+
+      if (driveIndex === 4) {
+        let deleteBooks = books.map((item) => {
+          return localforage.removeItem(item.key);
+        });
+        await Promise.all(deleteBooks);
+      }
+      if (driveIndex === 5) {
+        handleFinish();
+      }
+    };
+  }
 }
 
 export default SyncUtil;

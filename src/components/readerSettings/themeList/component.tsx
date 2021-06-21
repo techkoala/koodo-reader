@@ -41,28 +41,40 @@ class ThemeList extends React.Component<ThemeListProps, ThemeListState> {
       currentBackgroundIndex: index,
     });
     if (index === 1) {
-      this.props.currentEpub.rendition.themes.default({
-        "a, article, cite, code, div, li, p, pre, span, table": {
-          color: `white !important`,
-        },
-      });
+      this.props.currentEpub.rendition &&
+        this.props.currentEpub.rendition.themes.default({
+          "a, article, cite, code, div, li, p, pre, span, table": {
+            color: `white !important`,
+          },
+        });
+      OtherUtil.setReaderConfig("textColor", "rgba(255,255,255,1)");
     } else if (
       index === 0 &&
       OtherUtil.getReaderConfig("backgroundColor") === "rgba(255,255,255,1)"
     ) {
-      this.props.currentEpub.rendition.themes.default({
-        "a, article, cite, code, div, li, p, pre, span, table": {
-          color: `black !important`,
-        },
-      });
+      this.props.currentEpub.rendition &&
+        this.props.currentEpub.rendition.themes.default({
+          "a, article, cite, code, div, li, p, pre, span, table": {
+            color: `black !important`,
+          },
+        });
+      OtherUtil.setReaderConfig("textColor", "rgba(0,0,0,1)");
     } else {
-      this.props.currentEpub.rendition.themes.default({
-        "a, article, cite, code, div, li, p, pre, span, table": {
-          color: `inherit !important`,
-        },
-      });
+      this.props.currentEpub.rendition &&
+        this.props.currentEpub.rendition.themes.default({
+          "a, article, cite, code, div, li, p, pre, span, table": {
+            color: `inherit !important`,
+          },
+        });
     }
-    StyleUtil.addDefaultCss();
+    if (!this.props.currentEpub.rendition) {
+      this.handleRest();
+    } else {
+      StyleUtil.addDefaultCss();
+    }
+  };
+  handleRest = () => {
+    this.props.renderFunc();
   };
   handleChooseBgColor = (color) => {
     OtherUtil.setReaderConfig("backgroundColor", color.color);
@@ -108,11 +120,15 @@ class ThemeList extends React.Component<ThemeListProps, ThemeListState> {
       "textColor",
       typeof color === "object" ? color.color : color
     );
-    this.props.currentEpub.rendition.themes.default({
-      "a, article, cite, code, div, li, p, pre, span, table": {
-        color: `${typeof color === "object" ? color.color : color} !important`,
-      },
-    });
+    this.props.currentEpub.rendition &&
+      this.props.currentEpub.rendition.themes.default({
+        "a, article, cite, code, div, li, p, pre, span, table": {
+          color: `${
+            typeof color === "object" ? color.color : color
+          } !important`,
+        },
+      });
+    this.handleRest();
   };
   render() {
     const renderBackgroundColorList = () => {
@@ -202,7 +218,7 @@ class ThemeList extends React.Component<ThemeListProps, ThemeListState> {
         {this.state.isShowBgPicker && (
           <ColorPickerPanel
             enableAlpha={false}
-            color={"#345679"}
+            color={OtherUtil.getReaderConfig("backgroundColor")}
             onChange={this.handleChooseBgColor}
             mode="RGB"
             style={{
@@ -240,7 +256,7 @@ class ThemeList extends React.Component<ThemeListProps, ThemeListState> {
         {this.state.isShowTextPicker && (
           <ColorPickerPanel
             enableAlpha={false}
-            color={"#345679"}
+            color={OtherUtil.getReaderConfig("textColor")}
             onChange={this.handleChooseTextColor}
             mode="RGB"
             style={{

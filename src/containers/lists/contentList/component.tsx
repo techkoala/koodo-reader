@@ -17,18 +17,39 @@ class ContentList extends React.Component<ContentListProps, ContentListState> {
 
   componentWillMount() {
     //获取目录
-    this.props.currentEpub.loaded.navigation
-      .then((chapters: any) => {
-        this.setState({ chapters: chapters.toc });
-      })
-      .catch(() => {
-        console.log("Error occurs");
+    if (this.props.currentEpub.loaded) {
+      this.props.currentEpub.loaded.navigation
+        .then((chapters: any) => {
+          this.setState({ chapters: chapters.toc });
+        })
+        .catch(() => {
+          console.log("Error occurs");
+        });
+    }
+  }
+  componentDidMount() {
+    this.props.htmlBook &&
+      this.setState({
+        chapters: this.props.htmlBook.chapters,
       });
   }
   handleJump(event: any) {
     event.preventDefault();
     let href = event.target.getAttribute("href");
-    this.props.currentEpub.rendition.display(href);
+    if (this.props.currentEpub.rendition) {
+      this.props.currentEpub.rendition.display(href);
+    } else {
+      let id = href.substr(1);
+
+      var top = window.frames[0].document.getElementById(id)?.offsetTop;
+      if (!top) return;
+      window.frames[0].scrollTo(0, top);
+    }
+  }
+  UNSAFE_componentWillReceiveProps(nextProps: ContentListProps) {
+    if (nextProps.htmlBook !== this.props.htmlBook) {
+      this.setState({ chapters: nextProps.htmlBook.chapters });
+    }
   }
   render() {
     const renderContentList = (items: any, level: number) => {

@@ -118,7 +118,9 @@ class SearchBox extends React.Component<SearchBoxProps> {
             onClick={() => {
               this.handleCancel();
             }}
-            style={this.props.mode === "nav" ? { right: "-9px" } : {}}
+            style={
+              this.props.mode === "nav" ? { right: "-9px", top: "14px" } : {}
+            }
           >
             <span className="icon-close"></span>
           </span>
