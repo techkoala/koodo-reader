@@ -3,19 +3,15 @@ import NoteModel from "../../model/Note";
 import ReadingTime from "./readingTime";
 import RecordLocation from "./recordLocation";
 import _ from "underscore";
-//获取所有图书的书名
 const getBookName = (books: BookModel[]) => {
   return books.map((item) => item.name);
 };
-//获取所有作者名
 const getAuthorName = (books: BookModel[]) => {
   return books.map((item) => item.author);
 };
-//获取所有图书的key值
 const getBookKey = (books: BookModel[]) => {
   return books.map((item) => item.key);
 };
-//获取图书索引
 const getBookIndex = (nameArr: string[], oldNameArr: string[]) => {
   let indexArr: number[] = [];
   for (let i = 0; i < nameArr.length; i++) {
@@ -80,6 +76,7 @@ class SortUtil {
     }
     if (bookSortCode.sort === 3) {
       let durationKeys = getDurationArr();
+
       let bookKeys = getBookKey(books);
       if (bookSortCode.order === 1) {
         return getBookIndex(_.union(durationKeys, bookKeys), bookKeys);

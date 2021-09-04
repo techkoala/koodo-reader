@@ -1,4 +1,3 @@
-//右侧阅读选项面板
 import React from "react";
 import "./settingPanel.css";
 import ThemeList from "../../../components/readerSettings/themeList";
@@ -57,20 +56,20 @@ class SettingPanel extends React.Component<
           <Trans>Reading Option</Trans>
         </div>
         <div className="setting-panel">
-          {this.props.currentEpub.archived && <ModeControl />}
+          {Object.keys(this.props.currentEpub).length !== 0 && <ModeControl />}
           <ThemeList />
           <SliderList
             {...{
-              maxValue: 31,
+              maxValue: 40,
               minValue: 13,
               mode: "fontSize",
               minLabel: "13",
-              maxLabel: "31",
+              maxLabel: "40",
               step: 1,
               title: "Font Size",
             }}
           />
-          {this.props.currentEpub.archived && (
+          {Object.keys(this.props.currentEpub).length !== 0 && (
             <SliderList
               {...{
                 maxValue: 80,
@@ -94,7 +93,7 @@ class SettingPanel extends React.Component<
               title: "Letter Spacing",
             }}
           />
-          {this.props.currentEpub.archived && (
+          {Object.keys(this.props.currentEpub).length !== 0 && (
             <SliderList
               {...{
                 maxValue: 60,

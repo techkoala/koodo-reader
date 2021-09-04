@@ -1,4 +1,3 @@
-//图书导航栏的目录列表
 import React from "react";
 import "./contentList.css";
 import { ContentListProps, ContentListState } from "./interface";
@@ -43,7 +42,7 @@ class ContentList extends React.Component<ContentListProps, ContentListState> {
 
       var top = window.frames[0].document.getElementById(id)?.offsetTop;
       if (!top) return;
-      window.frames[0].scrollTo(0, top);
+      document.getElementsByClassName("ebook-viewer")[0].scrollTo(0, top);
     }
   }
   UNSAFE_componentWillReceiveProps(nextProps: ContentListProps) {

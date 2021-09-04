@@ -65,20 +65,22 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
       });
     }
     if (nextProps.isMessage) {
-      this.timer = setTimeout(() => {
+      this.timer = global.setTimeout(() => {
         this.props.handleMessageBox(false);
       }, 2000);
     }
   }
-  componentDidMount() {
-    if (is_touch_device() && !OtherUtil.getReaderConfig("isTouch")) {
-      OtherUtil.setReaderConfig("isTouch", "yes");
-    }
+  UNSAFE_componentWillMount() {
     this.props.handleFetchBooks();
     this.props.handleFetchNotes();
     this.props.handleFetchBookmarks();
     this.props.handleFetchBookSortCode();
     this.props.handleFetchList();
+  }
+  componentDidMount() {
+    if (is_touch_device() && !OtherUtil.getReaderConfig("isTouch")) {
+      OtherUtil.setReaderConfig("isTouch", "yes");
+    }
   }
 
   handleDrag = (isDrag: boolean) => {
@@ -124,7 +126,35 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
         }}
       >
         {this.state.isDrag && !this.props.dragItem && (
-          <div className="drag-background">
+          <div
+            className="drag-background"
+            onClick={() => {
+              this.props.handleEditDialog(false);
+              this.props.handleDeleteDialog(false);
+              this.props.handleAddDialog(false);
+              this.props.handleTipDialog(false);
+              this.props.handleLoadingDialog(false);
+              this.props.handleNewDialog(false);
+              this.props.handleBackupDialog(false);
+              this.props.handleSetting(false);
+              this.handleDrag(false);
+            }}
+            style={
+              this.props.isSettingOpen ||
+              this.props.isBackup ||
+              this.props.isShowNew ||
+              this.props.isOpenDeleteDialog ||
+              this.props.isOpenEditDialog ||
+              this.props.isOpenAddDialog ||
+              this.props.isTipDialog ||
+              this.props.isShowLoading ||
+              this.state.isDrag
+                ? {}
+                : {
+                    display: "none",
+                  }
+            }
+          >
             <div className="drag-info">
               <Arrow />
               <p className="arrow-text">
@@ -139,36 +169,6 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
         {this.props.isOpenEditDialog && <EditDialog />}
         {this.props.isOpenAddDialog && <AddDialog />}
         {this.props.isShowLoading && <LoadingDialog />}
-        {
-          <div
-            className="drag-background"
-            onClick={() => {
-              this.props.handleEditDialog(false);
-              this.props.handleDeleteDialog(false);
-              this.props.handleAddDialog(false);
-              this.props.handleTipDialog(false);
-              this.props.handleLoadingDialog(false);
-              this.props.handleNewDialog(false);
-              this.props.handleBackupDialog(false);
-              this.props.handleSetting(false);
-            }}
-            style={
-              this.props.isSettingOpen ||
-              this.props.isBackup ||
-              this.props.isShowNew ||
-              this.props.isOpenDeleteDialog ||
-              this.props.isOpenEditDialog ||
-              this.props.isOpenAddDialog ||
-              this.props.isTipDialog ||
-              this.props.isShowLoading
-                ? {}
-                : {
-                    display: "none",
-                  }
-            }
-          ></div>
-        }
-
         {this.props.isMessage && <MessageBox />}
         {this.props.isSortDisplay && <SortDialog />}
         {this.props.isAboutOpen && <AboutDialog />}

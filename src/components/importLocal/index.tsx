@@ -1,4 +1,3 @@
-//从本地导入书籍
 import "./importLocal.css";
 import { connect } from "react-redux";
 import {
@@ -6,8 +5,8 @@ import {
   handleMessage,
   handleFetchBooks,
   handleLoadingDialog,
-} from "../../store/actions/manager";
-import { handleReadingBook } from "../../store/actions/book";
+} from "../../store/actions";
+import { handleReadingBook } from "../../store/actions";
 import { stateType } from "../../store";
 import { withTranslation } from "react-i18next";
 import ImportLocal from "./component";

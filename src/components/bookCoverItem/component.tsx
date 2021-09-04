@@ -1,4 +1,3 @@
-//卡片模式下的图书显示
 import React from "react";
 import RecentBooks from "../../utils/readUtils/recordRecent";
 import "./bookCoverItem.css";
@@ -12,7 +11,7 @@ import { isElectron } from "react-device-detect";
 import EmptyCover from "../emptyCover";
 import Parser from "html-react-parser";
 import { Trans } from "react-i18next";
-import BookUtil from "../../utils/bookUtil";
+import BookUtil from "../../utils/fileUtils/bookUtil";
 
 declare var window: any;
 
@@ -47,26 +46,7 @@ class BookCoverItem extends React.Component<BookCoverProps, BookCoverState> {
     }
     this.props.handleReadingBook(this.props.book);
   }
-  componentWillReceiveProps(nextProps: BookCoverProps) {
-    if (nextProps.isDragToLove !== this.props.isDragToLove) {
-      if (
-        nextProps.isDragToLove &&
-        this.props.dragItem === this.props.book.key
-      ) {
-        this.handleLoveBook();
-        this.props.handleDragToLove(false);
-      }
-    }
-    if (nextProps.isDragToDelete !== this.props.isDragToDelete) {
-      if (
-        nextProps.isDragToDelete &&
-        this.props.dragItem === this.props.book.key
-      ) {
-        this.handleDeleteBook();
-        this.props.handleDragToDelete(false);
-      }
-    }
-  }
+
   handleMoreAction = (event: any) => {
     const e = event || window.event;
     let x = e.clientX;
@@ -139,26 +119,34 @@ class BookCoverItem extends React.Component<BookCoverProps, BookCoverState> {
               src={this.props.book.cover}
               alt=""
               onClick={() => {
+                if (this.props.isSelectBook) {
+                  this.props.handleSelectedBooks(
+                    this.props.isSelected
+                      ? this.props.selectedBooks.filter(
+                          (item) => item !== this.props.book.key
+                        )
+                      : [...this.props.selectedBooks, this.props.book.key]
+                  );
+                  return;
+                }
                 this.handleJump();
-              }}
-              onDragStart={() => {
-                this.props.handleDragItem(this.props.book.key);
-              }}
-              onDragEnd={() => {
-                this.props.handleDragItem("");
               }}
             />
           ) : (
             <div
               className="book-cover-item-cover"
               onClick={() => {
+                if (this.props.isSelectBook) {
+                  this.props.handleSelectedBooks(
+                    this.props.isSelected
+                      ? this.props.selectedBooks.filter(
+                          (item) => item !== this.props.book.key
+                        )
+                      : [...this.props.selectedBooks, this.props.book.key]
+                  );
+                  return;
+                }
                 this.handleJump();
-              }}
-              onDragStart={() => {
-                this.props.handleDragItem(this.props.book.key);
-              }}
-              onDragEnd={() => {
-                this.props.handleDragItem("");
               }}
             >
               <EmptyCover
@@ -197,8 +185,13 @@ class BookCoverItem extends React.Component<BookCoverProps, BookCoverState> {
               style={{ right: "274px", bottom: "25px" }}
             ></span>
           ) : null}
-
-          {this.state.isOpenConfig ? (
+          {this.props.isSelectBook && this.props.isSelected ? (
+            <span
+              className="icon-message book-selected-icon"
+              style={{ right: "274px", bottom: "25px" }}
+            ></span>
+          ) : null}
+          {this.state.isOpenConfig && !this.props.isSelectBook ? (
             <>
               {this.props.book.format !== "PDF" && (
                 <div

@@ -1,13 +1,13 @@
-//卡片模式下的图书显示
 import React from "react";
 import RecentBooks from "../../utils/readUtils/recordRecent";
 import { ViewerProps, ViewerState } from "./interface";
 import localforage from "localforage";
 import { withRouter } from "react-router-dom";
 import _ from "underscore";
-import BookUtil from "../../utils/bookUtil";
+import BookUtil from "../../utils/fileUtils/bookUtil";
 import "./viewer.css";
 import OtherUtil from "../../utils/otherUtil";
+import { isElectron } from "react-device-detect";
 
 declare var window: any;
 
@@ -29,6 +29,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
         this.handleDjvu(result as ArrayBuffer);
         this.props.handleReadingState(true);
         RecentBooks.setRecent(key);
+        document.title = book.name + " - Koodo Reader";
       });
     });
     document
@@ -42,10 +43,14 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
   handleExit() {
     this.props.handleReadingState(false);
 
-    OtherUtil.setReaderConfig("windowWidth", document.body.clientWidth + "");
-    OtherUtil.setReaderConfig("windowHeight", document.body.clientHeight + "");
-    OtherUtil.setReaderConfig("windowX", window.screenX + "");
-    OtherUtil.setReaderConfig("windowY", window.screenY + "");
+    if (isElectron) {
+      const { remote } = window.require("electron");
+      let bounds = remote.getCurrentWindow().getBounds();
+      OtherUtil.setReaderConfig("windowWidth", bounds.width);
+      OtherUtil.setReaderConfig("windowHeight", bounds.height);
+      OtherUtil.setReaderConfig("windowX", bounds.x);
+      OtherUtil.setReaderConfig("windowY", bounds.y);
+    }
   }
 
   handleDjvu = async (result: ArrayBuffer) => {

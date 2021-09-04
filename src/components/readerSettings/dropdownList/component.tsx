@@ -5,6 +5,7 @@ import "./dropdownList.css";
 import { Trans } from "react-i18next";
 import { DropdownListProps, DropdownListState } from "./interface";
 import OtherUtil from "../../../utils/otherUtil";
+import { isElectron } from "react-device-detect";
 class DropdownList extends React.Component<
   DropdownListProps,
   DropdownListState
@@ -27,14 +28,39 @@ class DropdownList extends React.Component<
   }
   componentDidMount() {
     //使下拉菜单选中预设的值
-
-    document
-      .querySelector(".paragraph-character-setting")!
-      .children[0].children[1].children[
-        this.state.currentFontFamilyIndex === -1
-          ? 0
-          : this.state.currentFontFamilyIndex
-      ].setAttribute("selected", "selected");
+    if (
+      isElectron &&
+      navigator.appVersion.indexOf("NT 6.1") === -1 &&
+      navigator.appVersion.indexOf("NT 5.1") === -1 &&
+      navigator.appVersion.indexOf("NT 6.0") === -1
+    ) {
+      const { ipcRenderer } = window.require("electron");
+      ipcRenderer.invoke("fonts-ready", "ping").then((result) => {
+        dropdownList[0].option = result;
+        dropdownList[0].option.push("Built-in font");
+        this.setState(
+          {
+            currentFontFamilyIndex: dropdownList[0].option.findIndex(
+              (item: any) => {
+                return (
+                  item ===
+                  (OtherUtil.getReaderConfig("fontFamily") || "Built-in font")
+                );
+              }
+            ),
+          },
+          () => {
+            document
+              .querySelector(".paragraph-character-setting")!
+              .children[0].children[1].children[
+                this.state.currentFontFamilyIndex === -1
+                  ? 0
+                  : this.state.currentFontFamilyIndex
+              ].setAttribute("selected", "selected");
+          }
+        );
+      });
+    }
 
     document
       .querySelector(".paragraph-character-setting")!

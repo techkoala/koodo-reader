@@ -2,14 +2,9 @@ import localforage from "localforage";
 import OtherUtil from "../../utils/otherUtil";
 import SortUtil from "../../utils/readUtils/sortUtil";
 import BookModel from "../../model/Book";
-import BookmarkModel from "../../model/Bookmark";
-import NoteModel from "../../model/Note";
 import { Dispatch } from "redux";
 import AddTrash from "../../utils/readUtils/addTrash";
 
-export function handleNotes(notes: NoteModel[]) {
-  return { type: "HANDLE_NOTES", payload: notes };
-}
 export function handleBooks(books: BookModel[]) {
   return { type: "HANDLE_BOOKS", payload: books };
 }
@@ -53,6 +48,15 @@ export function handleLoadingDialog(isShowLoading: boolean) {
 export function handleNewDialog(isShowNew: boolean) {
   return { type: "HANDLE_SHOW_NEW", payload: isShowNew };
 }
+export function handleSelectBook(isSelectBook: boolean) {
+  return { type: "HANDLE_SELECT_BOOK", payload: isSelectBook };
+}
+export function handleSelectedBooks(selectedBooks: string[]) {
+  return { type: "HANDLE_SELECTED_BOOKS", payload: selectedBooks };
+}
+export function handleNewWarning(isNewWarning: boolean) {
+  return { type: "HANDLE_NEW_WARNING", payload: isNewWarning };
+}
 export function handleBookSort(isBookSort: boolean) {
   return { type: "HANDLE_BOOK_SORT", payload: isBookSort };
 }
@@ -72,9 +76,7 @@ export function handleNoteSortCode(noteSortCode: {
 }) {
   return { type: "HANDLE_NOTE_SORT_CODE", payload: noteSortCode };
 }
-export function handleBookmarks(bookmarks: BookmarkModel[]) {
-  return { type: "HANDLE_BOOKMARKS", payload: bookmarks };
-}
+
 export function handleFetchBooks(isTrash = false) {
   return (dispatch: Dispatch) => {
     localforage.getItem("books", async (err, value) => {

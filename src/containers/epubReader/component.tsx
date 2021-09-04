@@ -1,6 +1,6 @@
 import React from "react";
-import ViewArea from "../epubViewer";
-import Background from "../background";
+import EpubViewer from "../epubViewer";
+import Background from "../epubBackground";
 import SettingPanel from "../panels/settingPanel";
 import NavigationPanel from "../panels/navigationPanel";
 import OperationPanel from "../panels/operationPanel";
@@ -10,7 +10,7 @@ import { ReaderProps, ReaderState } from "./interface";
 import { MouseEvent } from "../../utils/mouseEvent";
 import OtherUtil from "../../utils/otherUtil";
 import ReadingTime from "../../utils/readUtils/readingTime";
-
+import { isElectron } from "react-device-detect";
 class Reader extends React.Component<ReaderProps, ReaderState> {
   messageTimer!: NodeJS.Timeout;
   tickTimer!: NodeJS.Timeout;
@@ -48,7 +48,7 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
 
     //控制消息提示两秒之后消失
     if (nextProps.isMessage) {
-      this.messageTimer = setTimeout(() => {
+      this.messageTimer = global.setTimeout(() => {
         this.props.handleMessageBox(false);
         this.setState({ isMessage: false });
       }, 2000);
@@ -60,7 +60,7 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
     window.addEventListener("resize", () => {
       this.handleRenderBook();
     });
-    this.tickTimer = setInterval(() => {
+    this.tickTimer = global.setInterval(() => {
       let time = this.state.time;
       time += 1;
       let page = document.querySelector("#page-area");
@@ -109,11 +109,14 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
   };
   handleRecord() {
     OtherUtil.setReaderConfig("isFullScreen", "no");
-
-    OtherUtil.setReaderConfig("windowWidth", document.body.clientWidth + "");
-    OtherUtil.setReaderConfig("windowHeight", document.body.clientHeight + "");
-    OtherUtil.setReaderConfig("windowX", window.screenX + "");
-    OtherUtil.setReaderConfig("windowY", window.screenY + "");
+    if (isElectron) {
+      const { remote } = window.require("electron");
+      let bounds = remote.getCurrentWindow().getBounds();
+      OtherUtil.setReaderConfig("windowWidth", bounds.width);
+      OtherUtil.setReaderConfig("windowHeight", bounds.height);
+      OtherUtil.setReaderConfig("windowX", bounds.x);
+      OtherUtil.setReaderConfig("windowY", bounds.y);
+    }
   }
   //进入阅读器
   handleEnterReader = (position: string) => {
@@ -191,22 +194,26 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
     };
     return (
       <div className="viewer">
-        <div
-          className="previous-chapter-single-container"
-          onClick={() => {
-            this.prevPage();
-          }}
-        >
-          <span className="icon-dropdown previous-chapter-single"></span>
-        </div>
-        <div
-          className="next-chapter-single-container"
-          onClick={() => {
-            this.nextPage();
-          }}
-        >
-          <span className="icon-dropdown next-chapter-single"></span>
-        </div>
+        {OtherUtil.getReaderConfig("isHidePageButton") !== "yes" && (
+          <>
+            <div
+              className="previous-chapter-single-container"
+              onClick={() => {
+                this.prevPage();
+              }}
+            >
+              <span className="icon-dropdown previous-chapter-single"></span>
+            </div>
+            <div
+              className="next-chapter-single-container"
+              onClick={() => {
+                this.nextPage();
+              }}
+            >
+              <span className="icon-dropdown next-chapter-single"></span>
+            </div>
+          </>
+        )}
         <div
           className="reader-setting-icon-container"
           onClick={() => {
@@ -269,7 +276,7 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
         ></div>
 
         {this.state.rendition && this.props.currentEpub.rendition && (
-          <ViewArea {...renditionProps} />
+          <EpubViewer {...renditionProps} />
         )}
         <div
           className="setting-panel-container"

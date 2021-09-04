@@ -1,15 +1,11 @@
-//编辑图书对话框
 import { connect } from "react-redux";
 import "./editDialog.css";
 import {
   handleFetchBooks,
   handleMessageBox,
   handleMessage,
-} from "../../../store/actions/manager";
-import {
-  handleEditDialog,
-  handleActionDialog,
-} from "../../../store/actions/book";
+} from "../../../store/actions";
+import { handleEditDialog, handleActionDialog } from "../../../store/actions";
 import { stateType } from "../../../store";
 import EditDialog from "./component";
 

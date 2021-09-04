@@ -1,4 +1,3 @@
-//左侧图书导航面板
 import React from "react";
 import "./navigationPanel.css";
 import ContentList from "../../lists/contentList";
@@ -238,7 +237,7 @@ class NavigationPanel extends React.Component<
                 &nbsp;
                 <Trans>Minute</Trans>
               </span>
-              {this.props.currentEpub.archived && (
+              {Object.keys(this.props.currentEpub).length !== 0 && (
                 <div className="navigation-search-box">
                   <SearchBox {...searchProps} />
                 </div>
@@ -289,7 +288,7 @@ class NavigationPanel extends React.Component<
                     this.handleChangeTab("digests");
                   }}
                 >
-                  <Trans>Digest</Trans>
+                  <Trans>Highlight</Trans>
                 </span>
               </div>
             </div>

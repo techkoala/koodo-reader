@@ -1,8 +1,7 @@
-//我的笔记页面
 import { connect } from "react-redux";
 import { stateType } from "../../../store";
 import NoteList from "./component";
-import { handleFetchNotes } from "../../../store/actions/reader";
+import { handleFetchNotes } from "../../../store/actions";
 
 const mapStateToProps = (state: stateType) => {
   return {

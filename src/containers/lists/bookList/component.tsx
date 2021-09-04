@@ -1,7 +1,6 @@
-//全部图书，最近阅读，搜索结果，排序结果的数据
 import React from "react";
 import "./booklist.css";
-import BookCardItem from "../../../components/bookCardtem";
+import BookCardItem from "../../../components/bookCardItem";
 import BookListItem from "../../../components/bookListItem";
 import BookCoverItem from "../../../components/bookCoverItem";
 import AddFavorite from "../../../utils/readUtils/addFavorite";
@@ -17,9 +16,9 @@ import DeletePopup from "../../../components/dialogs/deletePopup";
 import Empty from "../../emptyPage";
 import { Redirect, withRouter } from "react-router-dom";
 import ViewMode from "../../../components/viewMode";
-import BackUtil from "../../../utils/syncUtils/backupUtil";
+import { backup } from "../../../utils/syncUtils/backupUtil";
 import { isElectron } from "react-device-detect";
-
+import SelectBook from "../../../components/selectBook";
 class BookList extends React.Component<BookListProps, BookListState> {
   constructor(props: BookListProps) {
     super(props);
@@ -75,6 +74,7 @@ class BookList extends React.Component<BookListProps, BookListState> {
     OtherUtil.setReaderConfig("viewMode", mode);
     this.props.handleFetchList();
   };
+
   //根据搜索图书index获取到搜索出的图书
   handleIndexFilter = (items: any, arr: number[]) => {
     let itemArr: any[] = [];
@@ -126,7 +126,6 @@ class BookList extends React.Component<BookListProps, BookListState> {
         </div>
       );
     }
-
     return books.map((item: BookModel, index: number) => {
       return this.props.viewMode === "list" ? (
         <BookListItem
@@ -136,12 +135,17 @@ class BookList extends React.Component<BookListProps, BookListState> {
           }}
         />
       ) : this.props.viewMode === "card" ? (
-        <BookCardItem key={item.key} book={item} />
+        <BookCardItem
+          key={item.key}
+          book={item}
+          isSelected={this.props.selectedBooks.indexOf(item.key) > -1}
+        />
       ) : (
         <BookCoverItem
           {...{
             key: item.key,
             book: item,
+            isSelected: this.props.selectedBooks.indexOf(item.key) > -1,
           }}
         />
       );
@@ -200,13 +204,11 @@ class BookList extends React.Component<BookListProps, BookListState> {
       //兼容之前的版本
       localforage.getItem(this.props.books[0].key).then((result) => {
         if (result) {
-          BackUtil.backup(
+          backup(
             this.props.books,
             this.props.notes,
             this.props.bookmarks,
-            () => {},
-            4,
-            () => {}
+            false
           );
         }
       });
@@ -224,7 +226,7 @@ class BookList extends React.Component<BookListProps, BookListState> {
       <>
         {this.state.isOpenDelete && <DeletePopup {...deletePopupProps} />}
         <ViewMode />
-
+        <SelectBook />
         <div className="booklist-shelf-container">
           <p className="general-setting-title" style={{ display: "inline" }}>
             <Trans>My Shelves</Trans>
@@ -246,7 +248,6 @@ class BookList extends React.Component<BookListProps, BookListState> {
             ></span>
           ) : null}
         </div>
-
         <div
           className="book-list-container-parent"
           style={

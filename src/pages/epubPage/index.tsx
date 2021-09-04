@@ -1,12 +1,12 @@
-//卡片模式下的图书显示
 import { connect } from "react-redux";
 import {
   handleActionDialog,
   handleReadingState,
   handleReadingBook,
   handleReadingEpub,
-} from "../../store/actions/book";
-import { handleMessageBox, handleMessage } from "../../store/actions/manager";
+  handleMessageBox,
+  handleMessage,
+} from "../../store/actions";
 import EpubReader from "./component";
 import { stateType } from "../../store";
 

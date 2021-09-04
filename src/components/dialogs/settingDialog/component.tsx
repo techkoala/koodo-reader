@@ -1,4 +1,3 @@
-//左下角的图标外链
 import React from "react";
 import "./settingDialog.css";
 import { SettingInfoProps, SettingInfoState } from "./interface";
@@ -6,12 +5,11 @@ import { Trans } from "react-i18next";
 import i18n from "../../../i18n";
 import { version } from "../../../../package.json";
 import OtherUtil from "../../../utils/otherUtil";
-import SyncUtil from "../../../utils/syncUtils/common";
+import { changePath } from "../../../utils/syncUtils/common";
 import { isElectron } from "react-device-detect";
 import { dropdownList } from "../../../constants/dropdownList";
 import { Tooltip } from "react-tippy";
-import RestoreUtil from "../../../utils/syncUtils/restoreUtil";
-import BackupUtil from "../../../utils/syncUtils/backupUtil";
+import { restore } from "../../../utils/syncUtils/restoreUtil";
 import {
   settingList,
   langList,
@@ -32,7 +30,8 @@ class SettingDialog extends React.Component<
       isExpandContent: OtherUtil.getReaderConfig("isExpandContent") === "yes",
       isDisableUpdate: OtherUtil.getReaderConfig("isDisableUpdate") === "yes",
       isDisplayDark: OtherUtil.getReaderConfig("isDisplayDark") === "yes",
-
+      isDisableAnalytics:
+        OtherUtil.getReaderConfig("isDisableAnalytics") === "yes",
       currentThemeIndex: _.findLastIndex(themeList, {
         name: OtherUtil.getReaderConfig("themeColor"),
       }),
@@ -64,9 +63,7 @@ class SettingDialog extends React.Component<
     ].setAttribute("selected", "selected");
   }
   handleRest = (bool: boolean) => {
-    bool
-      ? this.props.handleMessage("Turn Off Successfully")
-      : this.props.handleMessage("Turn On Successfully");
+    this.props.handleMessage("Change Successfully");
     this.props.handleMessageBox(true);
   };
   changeLanguage = (lng: string) => {
@@ -112,23 +109,14 @@ class SettingDialog extends React.Component<
       type: blobTemp.type,
     });
 
-    RestoreUtil.restore(
-      fileTemp,
-      () => {
-        BackupUtil.backup(
-          this.props.books,
-          this.props.notes,
-          this.props.bookmarks,
-          () => {
-            this.props.handleMessage("Change Successfully");
-            this.props.handleMessageBox(true);
-          },
-          5,
-          () => {}
-        );
-      },
-      true
-    );
+    let result = await restore(fileTemp, true);
+    if (result) {
+      this.props.handleMessage("Change Successfully");
+      this.props.handleMessageBox(true);
+    } else {
+      this.props.handleMessage("Change Failed");
+      this.props.handleMessageBox(true);
+    }
   };
   handleChangeLocation = async () => {
     const { dialog } = window.require("electron").remote;
@@ -139,15 +127,21 @@ class SettingDialog extends React.Component<
     if (!path.filePaths[0]) {
       return;
     }
-    SyncUtil.changeLocation(
+    let result = await changePath(
       localStorage.getItem("storageLocation")
         ? localStorage.getItem("storageLocation")
         : ipcRenderer.sendSync("storage-location", "ping"),
-      path.filePaths[0],
-      this.props.handleMessage,
-      this.props.handleMessageBox,
-      this.syncFromLocation
+      path.filePaths[0]
     );
+    if (result === 1) {
+      this.syncFromLocation();
+    } else if (result === 2) {
+      this.props.handleMessage("Change Successfully");
+      this.props.handleMessageBox(true);
+    } else {
+      this.props.handleMessage("Change Failed");
+      this.props.handleMessageBox(true);
+    }
     localStorage.setItem("storageLocation", path.filePaths[0]);
     document.getElementsByClassName(
       "setting-dialog-location-title"
@@ -203,48 +197,53 @@ class SettingDialog extends React.Component<
           {settingList.map((item, index) => {
             return (
               <div
-                className="setting-dialog-new-title"
-                key={item.title}
                 style={
                   item.isElectron ? (isElectron ? {} : { display: "none" }) : {}
                 }
+                key={item.propName}
               >
-                <Trans>{item.title}</Trans>
-                <span
-                  className="single-control-switch"
-                  onClick={() => {
-                    switch (index) {
-                      case 0:
-                      case 1:
-                      case 2:
-                      case 3:
-                      case 4:
-                        this.handleSetting(item.propName);
-                        break;
-                      case 5:
-                        this.handleDisplayDark();
-                        break;
-                      default:
-                        break;
-                    }
-                  }}
-                  style={this.state[item.propName] ? {} : { opacity: 0.6 }}
-                >
+                <div className="setting-dialog-new-title" key={item.title}>
+                  <Trans>{item.title}</Trans>
                   <span
-                    className="single-control-button"
-                    style={
-                      this.state[item.propName]
-                        ? {
-                            transform: "translateX(20px)",
-                            transition: "transform 0.5s ease",
-                          }
-                        : {
-                            transform: "translateX(0px)",
-                            transition: "transform 0.5s ease",
-                          }
-                    }
-                  ></span>
-                </span>
+                    className="single-control-switch"
+                    onClick={() => {
+                      switch (index) {
+                        case 0:
+                        case 1:
+                        case 2:
+                        case 3:
+                        case 4:
+                        case 5:
+                          this.handleSetting(item.propName);
+                          break;
+                        case 6:
+                          this.handleDisplayDark();
+                          break;
+                        default:
+                          break;
+                      }
+                    }}
+                    style={this.state[item.propName] ? {} : { opacity: 0.6 }}
+                  >
+                    <span
+                      className="single-control-button"
+                      style={
+                        this.state[item.propName]
+                          ? {
+                              transform: "translateX(20px)",
+                              transition: "transform 0.5s ease",
+                            }
+                          : {
+                              transform: "translateX(0px)",
+                              transition: "transform 0.5s ease",
+                            }
+                      }
+                    ></span>
+                  </span>
+                </div>
+                <p className="setting-option-subtitle">
+                  <Trans>{item.desc}</Trans>
+                </p>
               </div>
             );
           })}

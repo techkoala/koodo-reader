@@ -1,4 +1,3 @@
-//右侧阅读选项面板
 import React from "react";
 import { TextToSpeechProps, TextToSpeechState } from "./interface";
 import { Trans } from "react-i18next";
@@ -32,7 +31,7 @@ class TextToSpeech extends React.Component<
       this.setState({ isAudioOn: false });
     } else {
       const setSpeech = () => {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
           let synth = window.speechSynthesis;
           let id;
 
@@ -40,6 +39,8 @@ class TextToSpeech extends React.Component<
             if (synth.getVoices().length !== 0) {
               resolve(synth.getVoices());
               clearInterval(id);
+            } else {
+              this.setState({ isSupported: false });
             }
           }, 10);
         });
@@ -106,11 +107,11 @@ class TextToSpeech extends React.Component<
     msg.onerror = (err) => {
       console.log(err);
     };
+
     msg.onend = (event) => {
       if (!(this.state.isAudioOn && this.props.isReading)) {
         return;
       }
-
       this.props.currentEpub.rendition.next().then(() => {
         this.handleAudio();
       });

@@ -2,6 +2,7 @@ export interface SettingSwitchProps {
   currentEpub: any;
   locations: any;
   isReading: boolean;
+  htmlBook;
   handleMessageBox: (isShow: boolean) => void;
   handleMessage: (message: string) => void;
   renderFunc: () => void;
@@ -15,4 +16,5 @@ export interface SettingSwitchState {
   isItalic: boolean;
   isInvert: boolean;
   isHideHeader: boolean;
+  isHidePageButton: boolean;
 }

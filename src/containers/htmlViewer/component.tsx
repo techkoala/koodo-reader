@@ -1,31 +1,48 @@
-//卡片模式下的图书显示
 import React from "react";
 import RecentBooks from "../../utils/readUtils/recordRecent";
 import { ViewerProps, ViewerState } from "./interface";
 import localforage from "localforage";
 import { withRouter } from "react-router-dom";
-import _ from "underscore";
-import BookUtil from "../../utils/bookUtil";
-import MobiParser from "../../utils/mobiParser";
+import BookUtil from "../../utils/fileUtils/bookUtil";
+import MobiParser from "../../utils/fileUtils/mobiParser";
 import marked from "marked";
 import iconv from "iconv-lite";
 import chardet from "chardet";
 import rtfToHTML from "@iarna/rtf-to-html";
-import { xmlBookTagFilter, xmlBookToObj, txtToHtml } from "../../utils/xmlUtil";
-import HtmlParser from "../../utils/htmlParser";
+import {
+  xmlBookTagFilter,
+  xmlBookToObj,
+  txtToHtml,
+} from "../../utils/fileUtils/xmlUtil";
+import HtmlParser from "../../utils/fileUtils/htmlParser";
 import OtherUtil from "../../utils/otherUtil";
 import RecordLocation from "../../utils/readUtils/recordLocation";
 import { mimetype } from "../../constants/mimetype";
 import styleUtil from "../../utils/readUtils/styleUtil";
-import { setInterval } from "timers";
+import { isElectron } from "react-device-detect";
+import Lottie from "react-lottie";
+import animationSiri from "../../assets/lotties/siri.json";
+import _ from "underscore";
+import BackgroundWidget from "../../components/backgroundWidget";
 
 declare var window: any;
-
+const siriOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: animationSiri,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice",
+  },
+};
 class Viewer extends React.Component<ViewerProps, ViewerState> {
   epub: any;
   constructor(props: ViewerProps) {
     super(props);
-    this.state = { key: "" };
+    this.state = {
+      key: "",
+      isLoading: true,
+      scale: OtherUtil.getReaderConfig("scale") || 1,
+    };
   }
 
   componentDidMount() {
@@ -58,12 +75,11 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
         }
         this.props.handleReadingState(true);
         RecentBooks.setRecent(key);
+        document.title = book.name + " - Koodo Reader";
       });
     });
     this.props.handleRenderFunc(this.handleRenderHtml);
-    setInterval(() => {
-      this.handleRecord();
-    }, 1000);
+
     window.frames[0].document.addEventListener("click", (event) => {
       this.props.handleLeaveReader("left");
       this.props.handleLeaveReader("right");
@@ -75,19 +91,78 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
     let iFrame: any = document.getElementsByTagName("iframe")[0];
     var body = iFrame.contentWindow.document.body,
       html = iFrame.contentWindow.document.documentElement;
-    iFrame.height = Math.max(
-      body.scrollHeight,
-      body.offsetHeight,
-      html.clientHeight,
-      html.scrollHeight,
-      html.offsetHeight
-    );
+    iFrame.height =
+      Math.max(
+        body.scrollHeight,
+        body.offsetHeight,
+        html.clientHeight,
+        html.scrollHeight,
+        html.offsetHeight
+      ) * 2;
+    setTimeout(() => {
+      let iFrame: any = document.getElementsByTagName("iframe")[0];
+      let body = iFrame.contentWindow.document.body;
+      let lastchild = body.lastElementChild;
+      let lastEle = body.lastChild;
+      let itemAs = body.querySelectorAll("a");
+      let itemPs = body.querySelectorAll("p");
+      let lastItemA = itemAs[itemAs.length - 1];
+      let lastItemP = itemPs[itemPs.length - 1];
+      let lastItem;
+      if (_.isElement(lastItemA) && _.isElement(lastItemP)) {
+        if (
+          lastItemA.clientHeight + (lastItemA as any).offsetTop >
+          lastItemP.clientHeight + (lastItemP as any).offsetTop
+        ) {
+          lastItem = lastItemA;
+        } else {
+          lastItem = lastItemP;
+        }
+      }
+
+      let nodeHeight = 0;
+
+      if (!lastchild && !lastItem && !lastEle) return;
+      if (lastEle.nodeType === 3 && !lastchild && !lastItem) return;
+
+      if (lastEle.nodeType === 3) {
+        if (document.createRange) {
+          let range = document.createRange();
+          range.selectNodeContents(lastEle);
+          if (range.getBoundingClientRect) {
+            let rect = range.getBoundingClientRect();
+            if (rect) {
+              nodeHeight = rect.bottom - rect.top;
+            }
+          }
+        }
+      }
+
+      iFrame.height =
+        Math.max(
+          _.isElement(lastchild)
+            ? lastchild.clientHeight + (lastchild as any).offsetTop
+            : 0,
+          _.isElement(lastEle)
+            ? lastEle.clientHeight + (lastEle as any).offsetTop
+            : 0,
+          _.isElement(lastItem)
+            ? lastItem.clientHeight + (lastItem as any).offsetTop
+            : 0
+        ) +
+        400 +
+        (lastEle.nodeType === 3 ? nodeHeight : 0);
+    }, 500);
   };
   handleRecord() {
-    OtherUtil.setReaderConfig("windowWidth", document.body.clientWidth + "");
-    OtherUtil.setReaderConfig("windowHeight", document.body.clientHeight + "");
-    OtherUtil.setReaderConfig("windowX", window.screenX + "");
-    OtherUtil.setReaderConfig("windowY", window.screenY + "");
+    if (isElectron) {
+      const { remote } = window.require("electron");
+      let bounds = remote.getCurrentWindow().getBounds();
+      OtherUtil.setReaderConfig("windowWidth", bounds.width);
+      OtherUtil.setReaderConfig("windowHeight", bounds.height);
+      OtherUtil.setReaderConfig("windowX", bounds.x);
+      OtherUtil.setReaderConfig("windowY", bounds.y);
+    }
     RecordLocation.recordScrollHeight(
       this.state.key,
       document.body.clientWidth,
@@ -111,13 +186,60 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
     window.frames[0].document.body.innerHTML = "";
     window.frames[0].document.body.innerHTML = (this.props.htmlBook
       .doc as any).documentElement.outerHTML;
+    this.setState({ isLoading: false });
+
     styleUtil.addHtmlCss();
+    this.handleIframeHeight();
+
     setTimeout(() => {
       document
         .getElementsByClassName("ebook-viewer")[0]
         .scrollTo(0, RecordLocation.getScrollHeight(this.state.key).scroll);
+      let iframe = document.getElementsByTagName("iframe")[0];
+      if (!iframe) return;
+      let doc = iframe.contentDocument;
+      if (!doc) {
+        return;
+      }
+      let imgs = doc.getElementsByTagName("img");
+      let links = doc.getElementsByTagName("a");
+      for (let item of links) {
+        item.addEventListener("click", (e) => {
+          e.preventDefault();
+          this.handleJump(item.href);
+        });
+      }
+      for (let item of imgs) {
+        item.setAttribute("style", "max-width: 100%");
+      }
+      this.bindEvent(doc);
     }, 1);
-    this.handleIframeHeight();
+  };
+  handleJump = (url: string) => {
+    isElectron
+      ? window.require("electron").shell.openExternal(url)
+      : window.open(url);
+  };
+  bindEvent = (doc: any) => {
+    let isFirefox = navigator.userAgent.indexOf("Firefox") > -1;
+    // 鼠标滚轮翻页
+    if (isFirefox) {
+      doc.addEventListener(
+        "DOMMouseScroll",
+        () => {
+          this.handleRecord();
+        },
+        false
+      );
+    } else {
+      doc.addEventListener(
+        "mousewheel",
+        () => {
+          this.handleRecord();
+        },
+        false
+      );
+    }
   };
   handleMobi = async (result: ArrayBuffer) => {
     let mobiFile = new MobiParser(result);
@@ -175,25 +297,31 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
   };
   render() {
     return (
-      <div
-        className="ebook-viewer"
-        style={{
-          width: `${
-            (100 * parseFloat(OtherUtil.getReaderConfig("scale") || "1")) / 2
-          }%`,
-          height: "100%",
-          marginLeft: `${
-            (100 *
-              (2 - parseFloat(OtherUtil.getReaderConfig("scale") || "1"))) /
-            4
-          }%`,
-          overflowY: "scroll",
-        }}
-      >
-        <iframe title="html-viewer" width="100%">
-          Loading
-        </iframe>
-      </div>
+      <>
+        {this.state.isLoading && (
+          <div className="spinner">
+            <Lottie options={siriOptions} height={100} width={300} />
+          </div>
+        )}
+
+        <div
+          className="ebook-viewer"
+          style={{
+            position: "absolute",
+            left: `calc(50vw - ${270 * parseFloat(this.state.scale)}px + 9px)`,
+            right: `calc(50vw - ${270 * parseFloat(this.state.scale)}px + 7px)`,
+            top: "20px",
+            bottom: "20px",
+            overflowY: "scroll",
+            zIndex: 5,
+          }}
+        >
+          <iframe title="html-viewer" width="100%">
+            Loading
+          </iframe>
+        </div>
+        <BackgroundWidget />
+      </>
     );
   }
 }

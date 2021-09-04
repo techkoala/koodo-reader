@@ -1,14 +1,13 @@
-import { handleMode } from "../../store/actions/sidebar";
+import {
+  handleMode,
+  handleSearch,
+  handleSortDisplay,
+  handleCollapse,
+} from "../../store/actions";
 import { connect } from "react-redux";
 import { stateType } from "../../store";
 import { withTranslation } from "react-i18next";
 import Sidebar from "./component";
-import { handleSearch, handleSortDisplay } from "../../store/actions/manager";
-import {
-  handleDragToLove,
-  handleDragToDelete,
-  handleCollapse,
-} from "../../store/actions/sidebar";
 
 const mapStateToProps = (state: stateType) => {
   return { mode: state.sidebar.mode, isCollapsed: state.sidebar.isCollapsed };
@@ -16,8 +15,6 @@ const mapStateToProps = (state: stateType) => {
 const actionCreator = {
   handleMode,
   handleSearch,
-  handleDragToLove,
-  handleDragToDelete,
   handleSortDisplay,
   handleCollapse,
 };

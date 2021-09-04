@@ -2,7 +2,7 @@ export const emptyList = [
   {
     mode: "home",
     main: "Empty Library",
-    sub: "Click the top-right button to add books",
+    sub: "Click the import button to add books",
   },
   {
     mode: "favorite",
@@ -22,7 +22,7 @@ export const emptyList = [
   },
   {
     mode: "digest",
-    main: "Empty Digest",
+    main: "Empty Highlight",
     sub: "Select any text and click the Highlight button on the popup Menu",
   },
   {

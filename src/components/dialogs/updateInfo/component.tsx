@@ -1,4 +1,3 @@
-//提示更新的文字
 import React from "react";
 import "./updateInfo.css";
 import { UpdateInfoProps, UpdateInfoState } from "./interface";
@@ -42,13 +41,22 @@ class UpdateInfo extends React.Component<UpdateInfoProps, UpdateInfoState> {
       axios
         .get(`https://koodo.960960.xyz/api/update?name=${navigator.language}`)
         .then((res) => {
-          console.log(res);
           const newVersion = res.data.log.version;
-          setTimeout(() => {
-            if (version !== newVersion) {
-              this.setState({ updateLog: res.data.log });
+          console.log(
+            res,
+            version,
+            newVersion,
+            version.localeCompare(newVersion)
+          );
 
-              this.props.handleNewDialog(true);
+          setTimeout(() => {
+            if (version.localeCompare(newVersion) < 0) {
+              if (OtherUtil.getReaderConfig("isDisableUpdate") !== "yes") {
+                this.setState({ updateLog: res.data.log });
+                this.props.handleNewDialog(true);
+              } else {
+                this.props.handleNewWarning(true);
+              }
             } else if (
               OtherUtil.getReaderConfig("version") !== newVersion &&
               OtherUtil.getReaderConfig("isFirst")

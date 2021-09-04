@@ -1,4 +1,3 @@
-//header 页面
 import React from "react";
 import "./header.css";
 import SearchBox from "../../components/searchBox";
@@ -7,10 +6,12 @@ import { Trans } from "react-i18next";
 import { HeaderProps, HeaderState } from "./interface";
 import OtherUtil from "../../utils/otherUtil";
 import UpdateInfo from "../../components/dialogs/updateInfo";
-import RestoreUtil from "../../utils/syncUtils/restoreUtil";
-import BackupUtil from "../../utils/syncUtils/backupUtil";
+import { restore } from "../../utils/syncUtils/restoreUtil";
+import { backup } from "../../utils/syncUtils/backupUtil";
 import { Tooltip } from "react-tippy";
 import { isElectron } from "react-device-detect";
+import { syncData } from "../../utils/syncUtils/common";
+
 class Header extends React.Component<HeaderProps, HeaderState> {
   constructor(props: HeaderProps) {
     super(props);
@@ -114,40 +115,40 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       lastModified: new Date().getTime(),
       type: blobTemp.type,
     });
-    RestoreUtil.restore(
-      fileTemp,
-      () => {
-        this.setState({ isdataChange: false });
-        //Check for data update
-        let storageLocation = localStorage.getItem("storageLocation")
-          ? localStorage.getItem("storageLocation")
-          : window
-              .require("electron")
-              .ipcRenderer.sendSync("storage-location", "ping");
-        let sourcePath = path.join(
-          storageLocation,
-          "config",
-          "readerConfig.json"
-        );
+    let result = await restore(fileTemp, true);
+    if (result) {
+      this.setState({ isdataChange: false });
+      //Check for data update
+      let storageLocation = localStorage.getItem("storageLocation")
+        ? localStorage.getItem("storageLocation")
+        : window
+            .require("electron")
+            .ipcRenderer.sendSync("storage-location", "ping");
+      let sourcePath = path.join(
+        storageLocation,
+        "config",
+        "readerConfig.json"
+      );
 
-        fs.readFile(sourcePath, "utf8", (err, data) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          const readerConfig = JSON.parse(data);
-          if (
-            localStorage.getItem("lastSyncTime") &&
-            readerConfig.lastSyncTime
-          ) {
-            localStorage.setItem("lastSyncTime", readerConfig.lastSyncTime);
-          }
-        });
-      },
-      true
-    );
+      fs.readFile(sourcePath, "utf8", (err, data) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        const readerConfig = JSON.parse(data);
+        if (localStorage.getItem("lastSyncTime") && readerConfig.lastSyncTime) {
+          localStorage.setItem("lastSyncTime", readerConfig.lastSyncTime);
+        }
+      });
+    }
+    if (!result) {
+      this.props.handleMessage("Sync Failed");
+    } else {
+      this.props.handleMessage("Sync Successfully");
+    }
+    this.props.handleMessageBox(true);
   };
-  syncToLocation = () => {
+  handleSync = () => {
     if (OtherUtil.getReaderConfig("isFirst") !== "no") {
       this.props.handleTipDialog(true);
       this.props.handleTip(
@@ -164,21 +165,9 @@ class Header extends React.Component<HeaderProps, HeaderState> {
           .require("electron")
           .ipcRenderer.sendSync("storage-location", "ping");
     let sourcePath = path.join(storageLocation, "config", "readerConfig.json");
-    fs.readFile(sourcePath, "utf8", (err, data) => {
-      if (err) {
-        BackupUtil.backup(
-          this.props.books,
-          this.props.notes,
-          this.props.bookmarks,
-          () => {
-            this.props.handleMessage("Sync Successfully");
-            this.props.handleMessageBox(true);
-          },
-          5,
-          () => {}
-        );
-        console.log(err);
-        return;
+    fs.readFile(sourcePath, "utf8", async (err, data) => {
+      if (err || !data) {
+        this.syncToLocation();
       }
       const readerConfig = JSON.parse(data);
 
@@ -191,19 +180,27 @@ class Header extends React.Component<HeaderProps, HeaderState> {
         this.syncFromLocation();
       } else {
         //否则就把Koodo中数据同步到同步文件夹
-        BackupUtil.backup(
-          this.props.books,
-          this.props.notes,
-          this.props.bookmarks,
-          () => {
-            this.props.handleMessage("Sync Successfully");
-            this.props.handleMessageBox(true);
-          },
-          5,
-          () => {}
-        );
+        this.syncToLocation();
       }
     });
+  };
+  syncToLocation = async () => {
+    let timestamp = new Date().getTime().toString();
+    OtherUtil.setReaderConfig("lastSyncTime", timestamp);
+    localStorage.setItem("lastSyncTime", timestamp);
+    let result = await backup(
+      this.props.books,
+      this.props.notes,
+      this.props.bookmarks,
+      true
+    );
+    if (!result) {
+      this.props.handleMessage("Sync Failed");
+    } else {
+      syncData(result as Blob, this.props.books, true);
+      this.props.handleMessage("Sync Successfully");
+    }
+    this.props.handleMessageBox(true);
   };
 
   render() {
@@ -228,6 +225,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
               title={this.props.t("Sort")}
               position="top"
               trigger="mouseenter"
+              distance={20}
             >
               <span className="icon-sort-desc header-sort-icon"></span>
             </Tooltip>
@@ -246,7 +244,12 @@ class Header extends React.Component<HeaderProps, HeaderState> {
               position="top"
               trigger="mouseenter"
             >
-              <span className="icon-setting setting-icon"></span>
+              <span
+                className="icon-setting setting-icon"
+                style={
+                  this.props.isNewWarning ? { color: "rgb(35, 170, 242)" } : {}
+                }
+              ></span>
             </Tooltip>
           </div>
           {isElectron && (
@@ -254,7 +257,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
               className="setting-icon-container"
               onClick={() => {
                 // this.syncFromLocation();
-                this.syncToLocation();
+                this.handleSync();
               }}
               style={{ left: "635px" }}
             >
@@ -312,10 +315,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
             handleDrag: this.props.handleDrag,
           }}
         />
-        {isElectron &&
-          OtherUtil.getReaderConfig("isDisableUpdate") !== "yes" && (
-            <UpdateInfo />
-          )}
+        {isElectron && <UpdateInfo />}
       </div>
     );
   }

@@ -2,7 +2,7 @@
   display: flex;
   justify-content: space-between;
   margin: 18px;
-  margin-right: 50px;
+  margin-right: 18px;
 }
 .book-item-list-cover {
   width: 57px;
@@ -33,7 +33,7 @@
 .book-item-list-percentage,
 .book-item-list-config {
   height: 30px;
-  width: 120px;
+  min-width: 180px;
   font-size: 15px;
   opacity: 1;
   text-align: center;

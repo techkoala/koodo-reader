@@ -11,7 +11,8 @@ import Router from "./router/index";
 import StyleUtil from "./utils/readUtils/styleUtil";
 import { isElectron } from "react-device-detect";
 import { dropdownList } from "./constants/dropdownList";
-
+import OtherUtil from "./utils/otherUtil";
+import ga from "./utils/analytics";
 let coverLoading: any = document.querySelector(".loading-cover");
 coverLoading && coverLoading.parentNode.removeChild(coverLoading);
 
@@ -22,11 +23,10 @@ ReactDOM.render(
   document.getElementById("root")
 );
 
-if (isElectron) {
-  const { ipcRenderer } = window.require("electron");
-  const { ebtRenderer } = window.require("electron-baidu-tongji");
-  const BAIDU_SITE_ID = "358570be1bfc40e01db43adefade5ad5";
-  ebtRenderer(ipcRenderer, BAIDU_SITE_ID, Router);
+if (isElectron && OtherUtil.getReaderConfig("isDisableAnalytics") !== "yes") {
+  ga.event("Client", "show", {
+    evLabel: "startup",
+  });
 }
 if (
   isElectron &&

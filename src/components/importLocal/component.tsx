@@ -1,24 +1,26 @@
-//从本地导入书籍
 import React from "react";
 import "./importLocal.css";
 import BookModel from "../../model/Book";
 import localforage from "localforage";
-import { fetchMD5 } from "../../utils/md5Util";
-import { addEpub } from "../../utils/epubUtil";
+import { fetchMD5 } from "../../utils/fileUtils/md5Util";
+import { addEpub } from "../../utils/fileUtils/epubUtil";
 import { Trans } from "react-i18next";
 import Dropzone from "react-dropzone";
 import { Tooltip } from "react-tippy";
 import { ImportLocalProps, ImportLocalState } from "./interface";
 import RecordRecent from "../../utils/readUtils/recordRecent";
-import MobiParser from "../../utils/mobiParser";
+import MobiParser from "../../utils/fileUtils/mobiParser";
 import iconv from "iconv-lite";
 import { isElectron } from "react-device-detect";
 import { withRouter } from "react-router-dom";
 import RecentBooks from "../../utils/readUtils/recordRecent";
-import BookUtil from "../../utils/bookUtil";
-import { generateEpub } from "../../utils/generateEpub";
-import { addPdf } from "../../utils/pdfUtil";
-import { fetchFileFromPath, fetchMD5FromPath } from "../../utils/fileUtil";
+import BookUtil from "../../utils/fileUtils/bookUtil";
+import { generateEpub } from "../../utils/fileUtils/generateEpub";
+import { addPdf } from "../../utils/fileUtils/pdfUtil";
+import {
+  fetchFileFromPath,
+  fetchMD5FromPath,
+} from "../../utils/fileUtils/fileUtil";
 
 declare var window: any;
 
@@ -28,6 +30,9 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
     this.state = {
       isOpenFile: false,
       width: document.body.clientWidth,
+      //是否解析出kindle格式的目录
+      isKindleSuccess: true,
+      tempFile: null,
     };
   }
   componentDidMount() {
@@ -39,10 +44,21 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
           ipcRenderer.sendSync("storage-location", "ping")
         );
       }
-      var filePath = ipcRenderer.sendSync("get-file-data");
+
+      const filePath = ipcRenderer.sendSync("get-file-data");
       if (filePath && filePath !== ".") {
         this.handleFilePath(filePath);
       }
+      window.addEventListener(
+        "focus",
+        (event) => {
+          const _filePath = ipcRenderer.sendSync("get-file-data");
+          if (_filePath && _filePath !== ".") {
+            this.handleFilePath(_filePath);
+          }
+        },
+        false
+      );
     }
     window.addEventListener("resize", () => {
       this.setState({ width: document.body.clientWidth });
@@ -116,6 +132,9 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
 
   handleBook = (file: any, md5: string) => {
     let extension = file.name.split(".").reverse()[0];
+    if (extension === "mobi" || extension === "azw3") {
+      this.setState({ tempFile: file });
+    }
     let bookName = file.name.substr(0, file.name.length - extension.length - 1);
     let result: BookModel | Boolean;
     return new Promise<void>((resolve, reject) => {
@@ -171,7 +190,12 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
               const file_content = (event.target as any).result;
               let mobiFile = new MobiParser(file_content);
               let content: any = await mobiFile.render(isElectron);
-              if (typeof content === "object") {
+              //包含太多图片或者文件大于5m就不转换
+              if (
+                typeof content === "object" ||
+                file.size / 1024 / 1024 > 5 ||
+                !this.state.isKindleSuccess
+              ) {
                 result = BookUtil.generateBook(
                   bookName,
                   extension,
@@ -180,6 +204,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                 );
                 await this.handleAddBook(result);
                 BookUtil.addBook(result.key, file_content as ArrayBuffer);
+                this.setState({ isKindleSuccess: true });
                 resolve();
               } else {
                 let buf = iconv.encode(content, "UTF-8");
@@ -196,14 +221,35 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
           } else if (extension === "txt") {
             if (isElectron) {
               let _result = await generateEpub(file);
-              if (_result) {
-                await this.getMd5WithBrowser(_result);
-                resolve();
-              } else {
+              if (_result === 1) {
                 this.props.handleMessage("Import Failed");
                 this.props.handleMessageBox(true);
 
                 reject();
+              } else if (
+                _result === 2 &&
+                (bookName.indexOf("mobi") > -1 || bookName.indexOf("azw3") > -1)
+              ) {
+                this.setState({ isKindleSuccess: false });
+                await this.getMd5WithBrowser(this.state.tempFile);
+                resolve();
+                // let reader = new FileReader();
+                // reader.onload = async (event) => {
+                //   const file_content = (event.target as any).result;
+                //   result = BookUtil.generateBook(
+                //     bookName,
+                //     extension,
+                //     md5,
+                //     file.size
+                //   );
+                //   await this.handleAddBook(result);
+                //   BookUtil.addBook(result.key, file_content as ArrayBuffer);
+                //   resolve();
+                // };
+                // reader.readAsArrayBuffer(file);
+              } else {
+                await this.getMd5WithBrowser(_result);
+                resolve();
               }
             } else {
               let reader = new FileReader();

@@ -1,4 +1,3 @@
-//对图书操作的菜单
 import React from "react";
 import "./actionDialog.css";
 import { Trans } from "react-i18next";
@@ -118,7 +117,12 @@ class ActionDialog extends React.Component<ActionDialogProps> {
                   FileSaver.saveAs(
                     new Blob([result]),
                     this.props.currentBook.name +
-                      `.${this.props.currentBook.format.toLocaleLowerCase()}`
+                      `.${
+                        this.props.currentBook.format !== "EPUB" &&
+                        this.props.currentBook.cover !== "noCover"
+                          ? "epub"
+                          : this.props.currentBook.format.toLocaleLowerCase()
+                      }`
                   );
                 });
             }}
@@ -161,7 +165,11 @@ class ActionDialog extends React.Component<ActionDialogProps> {
             </p>
             <p className="action-dialog-book-title">
               {this.props.currentBook.size
-                ? parseInt(this.props.currentBook.size / 1024 + "") + "Kb"
+                ? this.props.currentBook.size / 1024 / 1024 > 1
+                  ? parseFloat(
+                      this.props.currentBook.size / 1024 / 1024 + ""
+                    ).toFixed(2) + "Mb"
+                  : parseInt(this.props.currentBook.size / 1024 + "") + "Kb"
                 : // eslint-disable-next-line
                   "0" + "Kb"}
             </p>
@@ -184,7 +192,7 @@ class ActionDialog extends React.Component<ActionDialogProps> {
               {ShelfUtil.getBookPosition(this.props.currentBook.key).map(
                 (item) => (
                   <>
-                    <Trans>{item}</Trans>&nbsp;
+                    #<Trans>{item}</Trans>&nbsp;
                   </>
                 )
               )}

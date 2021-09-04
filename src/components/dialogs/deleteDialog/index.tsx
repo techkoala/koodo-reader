@@ -3,21 +3,20 @@ import {
   handleFetchBooks,
   handleMessageBox,
   handleMessage,
-} from "../../../store/actions/manager";
-import {
   handleDeleteDialog,
   handleActionDialog,
-} from "../../../store/actions/book";
-import {
   handleFetchBookmarks,
   handleFetchNotes,
-} from "../../../store/actions/reader";
+  handleSelectedBooks,
+} from "../../../store/actions";
 import { stateType } from "../../../store";
 import DeleteDialog from "./component";
 
 const mapStateToProps = (state: stateType) => {
   return {
     books: state.manager.books,
+    selectedBooks: state.manager.selectedBooks,
+    isSelectBook: state.manager.isSelectBook,
     isOpenDeleteDialog: state.book.isOpenDeleteDialog,
     currentBook: state.book.currentBook,
     bookmarks: state.reader.bookmarks,
@@ -35,5 +34,6 @@ const actionCreator = {
   handleMessageBox,
   handleMessage,
   handleActionDialog,
+  handleSelectedBooks,
 };
 export default connect(mapStateToProps, actionCreator)(DeleteDialog);

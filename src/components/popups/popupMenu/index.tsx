@@ -1,17 +1,14 @@
-//弹出菜单
 import {
   handleSelection,
   handleOpenMenu,
   handleMenuMode,
   handleChangeDirection,
-} from "../../../store/actions/viewArea";
-import { connect } from "react-redux";
-import { stateType } from "../../../store";
-import {
   handleMessageBox,
   handleMessage,
-} from "../../../store/actions/manager";
-import { handleNoteKey } from "../../../store/actions/reader";
+  handleNoteKey,
+} from "../../../store/actions";
+import { connect } from "react-redux";
+import { stateType } from "../../../store";
 import PopupMenu from "./component";
 const mapStateToProps = (state: stateType) => {
   return {

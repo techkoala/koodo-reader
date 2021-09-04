@@ -1,4 +1,3 @@
-//控制列表模式下的图书显示
 import React from "react";
 import "./bookListItem.css";
 import RecordLocation from "../../utils/readUtils/recordLocation";
@@ -10,7 +9,10 @@ import RecentBooks from "../../utils/readUtils/recordRecent";
 import OtherUtil from "../../utils/otherUtil";
 import AddTrash from "../../utils/readUtils/addTrash";
 import EmptyCover from "../emptyCover";
-import BookUtil from "../../utils/bookUtil";
+import BookUtil from "../../utils/fileUtils/bookUtil";
+import FileSaver from "file-saver";
+import localforage from "localforage";
+import { isElectron } from "react-device-detect";
 
 class BookListItem extends React.Component<BookItemProps, BookItemState> {
   epub: any;
@@ -22,36 +24,23 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
     };
   }
   componentDidMount() {
+    let filePath = "";
     //控制是否自动打开本书
+    if (isElectron) {
+      const { ipcRenderer } = window.require("electron");
+      filePath = ipcRenderer.sendSync("get-file-data");
+    }
     if (
       OtherUtil.getReaderConfig("isOpenBook") === "yes" &&
       RecentBooks.getAllRecent()[0] === this.props.book.key &&
-      !this.props.currentBook.key
+      !this.props.currentBook.key &&
+      !filePath
     ) {
       BookUtil.RedirectBook(this.props.book);
     }
     this.props.handleReadingBook(this.props.book);
   }
-  componentWillReceiveProps(nextProps: BookItemProps) {
-    if (nextProps.isDragToLove !== this.props.isDragToLove) {
-      if (
-        nextProps.isDragToLove &&
-        this.props.dragItem === this.props.book.key
-      ) {
-        this.handleLoveBook();
-        this.props.handleDragToLove(false);
-      }
-    }
-    if (nextProps.isDragToDelete !== this.props.isDragToDelete) {
-      if (
-        nextProps.isDragToDelete &&
-        this.props.dragItem === this.props.book.key
-      ) {
-        this.handleDeleteBook();
-        this.props.handleDragToDelete(false);
-      }
-    }
-  }
+
   handleDeleteBook = () => {
     this.props.handleDeleteDialog(true);
     this.props.handleReadingBook(this.props.book);
@@ -105,24 +94,12 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
             onClick={() => {
               this.handleJump();
             }}
-            onDragStart={() => {
-              this.props.handleDragItem(this.props.book.key);
-            }}
-            onDragEnd={() => {
-              this.props.handleDragItem("");
-            }}
           />
         ) : (
           <div
             className="book-item-list-cover"
             onClick={() => {
               this.handleJump();
-            }}
-            onDragStart={() => {
-              this.props.handleDragItem(this.props.book.key);
-            }}
-            onDragEnd={() => {
-              this.props.handleDragItem("");
             }}
           >
             <EmptyCover
@@ -195,6 +172,22 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
               className="icon-edit list-icon"
               onClick={() => {
                 this.handleEditBook();
+              }}
+            ></span>
+            <span
+              className="icon-export list-icon"
+              onClick={() => {
+                localforage
+                  .getItem(this.props.currentBook.key)
+                  .then((result: any) => {
+                    this.props.handleMessage("Export Successfully");
+                    this.props.handleMessageBox(true);
+                    FileSaver.saveAs(
+                      new Blob([result]),
+                      this.props.currentBook.name +
+                        `.${this.props.currentBook.format.toLocaleLowerCase()}`
+                    );
+                  });
               }}
             ></span>
           </div>

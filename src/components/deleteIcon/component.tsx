@@ -1,4 +1,3 @@
-//我的书摘页面
 import React from "react";
 import "./deleteIcon.css";
 import { DeleteIconProps, DeleteIconStates } from "./interface";

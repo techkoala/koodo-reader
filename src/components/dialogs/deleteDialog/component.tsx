@@ -10,7 +10,7 @@ import { Trans } from "react-i18next";
 import { DeleteDialogProps } from "./interface";
 import { withRouter } from "react-router-dom";
 import AddTrash from "../../../utils/readUtils/addTrash";
-import BookUtil from "../../../utils/bookUtil";
+import BookUtil from "../../../utils/fileUtils/bookUtil";
 
 class DeleteDialog extends React.Component<DeleteDialogProps> {
   handleCancel = () => {
@@ -55,6 +55,14 @@ class DeleteDialog extends React.Component<DeleteDialogProps> {
       this.props.handleFetchBooks(true);
       this.props.handleFetchBookmarks();
       this.props.handleFetchNotes();
+    } else if (this.props.isSelectBook) {
+      this.props.selectedBooks.forEach((item) => {
+        AddTrash.setTrash(item);
+        //从喜爱的图书中删除
+        AddFavorite.clear(item);
+      });
+      this.props.handleSelectedBooks([]);
+      this.props.handleFetchBooks(false);
     } else {
       AddTrash.setTrash(this.props.currentBook.key);
       //从喜爱的图书中删除
@@ -111,7 +119,16 @@ class DeleteDialog extends React.Component<DeleteDialogProps> {
         {this.props.mode === "trash" ? null : (
           <div className="delete-dialog-book">
             <div className="delete-dialog-book-title">
-              {this.props.currentBook.name}
+              {this.props.isSelectBook ? (
+                <Trans
+                  i18nKey="Total books"
+                  count={this.props.selectedBooks.length}
+                >
+                  {"Total " + this.props.selectedBooks.length + " books"}
+                </Trans>
+              ) : (
+                this.props.currentBook.name
+              )}
             </div>
           </div>
         )}

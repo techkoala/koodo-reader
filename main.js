@@ -1,6 +1,9 @@
-const { app, BrowserWindow } = require("electron");
-const { ebtMain } = require("electron-baidu-tongji");
-
+const { app, BrowserWindow, Menu, remote, ipcMain } = require("electron");
+const path = require("path");
+const isDev = require("electron-is-dev");
+const fs = require("fs");
+const configDir = (app || remote.app).getPath("userData");
+const dirPath = path.join(configDir, "uploads");
 let mainWin;
 let readerWindow;
 const singleInstance = app.requestSingleInstanceLock();
@@ -11,6 +14,12 @@ if (process.platform == "win32" && process.argv.length >= 2) {
 // Single Instance Lock
 if (!singleInstance) {
   app.quit();
+  if (filePath) {
+    fs.writeFileSync(
+      path.join(dirPath, "log.json"),
+      JSON.stringify({ filePath })
+    );
+  }
 } else {
   app.on("second-instance", (event, argv, workingDir) => {
     if (mainWin) {
@@ -20,7 +29,7 @@ if (!singleInstance) {
   });
 }
 app.on("ready", () => {
-  mainWin = new BrowserWindow({
+  let option = {
     width: 1050,
     height: 660,
     webPreferences: {
@@ -31,21 +40,20 @@ app.on("ready", () => {
       nodeIntegrationInSubFrames: true,
       allowRunningInsecureContent: true,
     },
-  });
-  const isDev = require("electron-is-dev");
+  };
+
+  mainWin = new BrowserWindow(option);
+
   if (!isDev) {
-    const { Menu } = require("electron");
     Menu.setApplicationMenu(null);
   }
 
-  const path = require("path");
   const urlLocation = isDev
     ? "http://localhost:3000"
     : `file://${path.join(__dirname, "./build/index.html")}`;
 
   mainWin.loadURL(urlLocation);
-  const { remote, ipcMain } = require("electron");
-  ebtMain(ipcMain, isDev);
+
   mainWin.on("close", () => {
     mainWin = null;
   });
@@ -73,7 +81,18 @@ app.on("ready", () => {
           "web",
           "viewer.html"
         )}?${url.split("?")[1]}`;
+    var urlParams;
 
+    var match,
+      pl = /\+/g,
+      search = /([^&=]+)=?([^&]*)/g,
+      decode = function (s) {
+        return decodeURIComponent(s.replace(pl, " "));
+      },
+      query = url.split("?").reverse()[0];
+    urlParams = {};
+    while ((match = search.exec(query)))
+      urlParams[decode(match[1])] = decode(match[2]);
     if (url.indexOf("full") > -1) {
       Object.assign(options, {
         width: 1050,
@@ -83,18 +102,6 @@ app.on("ready", () => {
       readerWindow.loadURL(url.indexOf("pdf") > -1 ? pdfLocation : url);
       readerWindow.maximize();
     } else {
-      var urlParams;
-
-      var match,
-        pl = /\+/g,
-        search = /([^&=]+)=?([^&]*)/g,
-        decode = function (s) {
-          return decodeURIComponent(s.replace(pl, " "));
-        },
-        query = url.split("?").reverse()[0];
-      urlParams = {};
-      while ((match = search.exec(query)))
-        urlParams[decode(match[1])] = decode(match[2]);
       Object.assign(options, {
         width: parseInt(urlParams.width),
         height: parseInt(urlParams.height),
@@ -105,12 +112,10 @@ app.on("ready", () => {
       readerWindow.loadURL(url.indexOf("pdf") > -1 ? pdfLocation : url);
     }
     readerWindow.on("close", () => {
-      readerWindow = null;
+      readerWindow && readerWindow.destroy();
     });
+
     event.returnValue = "success";
-    readerWindow.on("close", () => {
-      readerWindow = null;
-    });
   });
   ipcMain.handle("fonts-ready", async (event, arg) => {
     const fontList = require("font-list");
@@ -119,11 +124,19 @@ app.on("ready", () => {
   });
 
   ipcMain.on("storage-location", (event, arg) => {
-    const configDir = (app || remote.app).getPath("userData");
-    const dirPath = path.join(configDir, "uploads");
     event.returnValue = path.join(dirPath, "data");
   });
   ipcMain.on("get-file-data", function (event) {
+    if (fs.existsSync(path.join(dirPath, "log.json"))) {
+      const _data = JSON.parse(
+        fs.readFileSync(path.join(dirPath, "log.json"), "utf8") || "{}"
+      );
+      if (_data && _data.filePath) {
+        filePath = _data.filePath;
+        fs.writeFileSync(path.join(dirPath, "log.json"), "");
+      }
+    }
+
     event.returnValue = filePath;
     filePath = null;
   });

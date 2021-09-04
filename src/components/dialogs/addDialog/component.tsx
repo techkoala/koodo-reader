@@ -1,4 +1,3 @@
-//添加图书到书架的对话框
 import React, { Component } from "react";
 import ShelfUtil from "../../../utils/readUtils/shelfUtil";
 import { Trans } from "react-i18next";
@@ -47,8 +46,14 @@ class AddDialog extends Component<AddDialogProps, AddDialogState> {
       this.props.handleMessageBox(true);
       return;
     }
+    if (this.props.isSelectBook) {
+      this.props.selectedBooks.forEach((item) => {
+        ShelfUtil.setShelf(shelfTitle, item);
+      });
+    } else {
+      ShelfUtil.setShelf(shelfTitle, this.props.currentBook.key);
+    }
 
-    ShelfUtil.setShelf(shelfTitle, this.props.currentBook.key);
     this.props.handleAddDialog(false);
     this.props.handleMessage("Add Successfully");
     this.props.handleMessageBox(true);
