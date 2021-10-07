@@ -3,7 +3,6 @@ import {
   handleFetchBooks,
   handleFetchBookSortCode,
   handleFetchList,
-  handleMessageBox,
   handleTipDialog,
   handleLoadingDialog,
   handleNewDialog,
@@ -15,6 +14,7 @@ import {
   handleDeleteDialog,
   handleAddDialog,
 } from "../../store/actions";
+import { withTranslation } from "react-i18next";
 
 import "./manager.css";
 import { stateType } from "../../store";
@@ -40,7 +40,6 @@ const mapStateToProps = (state: stateType) => {
     isShowLoading: state.manager.isShowLoading,
     isShowNew: state.manager.isShowNew,
     isTipDialog: state.manager.isTipDialog,
-    isMessage: state.manager.isMessage,
     isBackup: state.backupPage.isBackup,
   };
 };
@@ -51,7 +50,6 @@ const actionCreator = {
   handleFetchBookmarks,
   handleFetchBookSortCode,
   handleFetchList,
-  handleMessageBox,
   handleEditDialog,
   handleDeleteDialog,
   handleAddDialog,
@@ -60,4 +58,7 @@ const actionCreator = {
   handleNewDialog,
   handleBackupDialog,
 };
-export default connect(mapStateToProps, actionCreator)(withRouter(Manager));
+export default connect(
+  mapStateToProps,
+  actionCreator
+)(withTranslation()(withRouter(Manager)));

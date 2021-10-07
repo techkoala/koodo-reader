@@ -4,10 +4,9 @@ import {
   handleFetchBookmarks,
   handleFetchNotes,
   handleShowBookmark,
-  handleMessageBox,
-  handleMessage,
 } from "../../store/actions";
 import DeleteIcon from "./component";
+import { withTranslation } from "react-i18next";
 const mapStateToProps = (state: stateType) => {
   return {
     digests: state.reader.digests,
@@ -19,8 +18,9 @@ const mapStateToProps = (state: stateType) => {
 const actionCreator = {
   handleFetchBookmarks,
   handleFetchNotes,
-  handleMessageBox,
-  handleMessage,
   handleShowBookmark,
 };
-export default connect(mapStateToProps, actionCreator)(DeleteIcon as any);
+export default connect(
+  mapStateToProps,
+  actionCreator
+)(withTranslation()(DeleteIcon as any));

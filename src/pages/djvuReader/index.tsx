@@ -4,11 +4,10 @@ import {
   handleReadingState,
   handleReadingBook,
   handleReadingEpub,
-  handleMessageBox,
-  handleMessage,
 } from "../../store/actions";
 import Viewer from "./component";
 import { stateType } from "../../store";
+import { withTranslation } from "react-i18next";
 
 const mapStateToProps = (state: stateType) => {
   return {
@@ -22,7 +21,8 @@ const actionCreator = {
   handleReadingBook,
   handleReadingEpub,
   handleActionDialog,
-  handleMessageBox,
-  handleMessage,
 };
-export default connect(mapStateToProps, actionCreator)(Viewer as any);
+export default connect(
+  mapStateToProps,
+  actionCreator
+)(withTranslation()(Viewer as any));

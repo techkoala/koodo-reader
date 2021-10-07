@@ -8,7 +8,7 @@ body:
       label: 我已经阅读了Koodo的开发计划，没有找到类似的需求
       description: https://www.notion.so/troyeguo/215baeda57804fd29dbb0e91d1e6a021?v=360c00183d944b598668f34c255edfd7
       options:
-        - label: "是"
+        - label: "Yes"
     validations:
       required: true
 
@@ -17,7 +17,7 @@ body:
     attributes:
       label: 这个Issue没有同时提多个需求.
       options:
-        - label: "是"
+        - label: "Yes"
     validations:
       required: true
 

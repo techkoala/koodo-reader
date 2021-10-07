@@ -10,6 +10,7 @@ import animationSuccess from "../../../assets/lotties/success.json";
 import copy from "copy-text-to-clipboard";
 import OtherUtil from "../../../utils/otherUtil";
 import { isElectron } from "react-device-detect";
+import toast from "react-hot-toast";
 const newOptions = {
   loop: false,
   autoplay: true,
@@ -87,8 +88,8 @@ class UpdateInfo extends React.Component<UpdateInfoProps, UpdateInfoState> {
         .require("electron")
         .shell.openExternal(
           this.state.isUpdated
-            ? "https://koodo.960960.xyz/log"
-            : "https://koodo.960960.xyz/download"
+            ? "https://koodo.960960.xyz/en/log"
+            : "https://koodo.960960.xyz/en/download"
         );
   };
   handleClose = () => {
@@ -166,9 +167,8 @@ class UpdateInfo extends React.Component<UpdateInfoProps, UpdateInfoState> {
                     <div
                       className="new-version-copy"
                       onClick={() => {
-                        copy("https://koodo.960960.xyz/download");
-                        this.props.handleMessage("Copy Successfully");
-                        this.props.handleMessageBox(true);
+                        copy("https://koodo.960960.xyz/en/download");
+                        toast.success(this.props.t("Copy Successfully"));
                       }}
                     >
                       <Trans>Copy Link</Trans>

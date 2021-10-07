@@ -8,7 +8,7 @@ import {
   htmlSettingList,
 } from "../../../constants/settingList";
 import { isElectron } from "react-device-detect";
-
+import toast from "react-hot-toast";
 class SettingSwitch extends React.Component<
   SettingSwitchProps,
   SettingSwitchState
@@ -17,11 +17,12 @@ class SettingSwitch extends React.Component<
     super(props);
     this.state = {
       isBold: OtherUtil.getReaderConfig("isBold") === "yes",
+      isIndent: OtherUtil.getReaderConfig("isIndent") === "yes",
       isUnderline: OtherUtil.getReaderConfig("isUnderline") === "yes",
       isShadow: OtherUtil.getReaderConfig("isShadow") === "yes",
       isItalic: OtherUtil.getReaderConfig("isItalic") === "yes",
       isInvert: OtherUtil.getReaderConfig("isInvert") === "yes",
-      isUseBackground: OtherUtil.getReaderConfig("isUseBackground") === "yes",
+      isHideBackground: OtherUtil.getReaderConfig("isHideBackground") === "yes",
       isHideFooter: OtherUtil.getReaderConfig("isHideFooter") === "yes",
       isHideHeader: OtherUtil.getReaderConfig("isHideHeader") === "yes",
       isHidePageButton: OtherUtil.getReaderConfig("isHidePageButton") === "yes",
@@ -32,8 +33,7 @@ class SettingSwitch extends React.Component<
   };
   _handleRest = () => {
     if (isElectron) {
-      this.props.handleMessage("Take effect at next startup");
-      this.props.handleMessageBox(true);
+      toast(this.props.t("Take effect at next startup"));
     } else {
       window.location.reload();
     }
@@ -55,8 +55,7 @@ class SettingSwitch extends React.Component<
     this.setState({ [stateName]: !this.state[stateName] } as any);
     OtherUtil.setReaderConfig(stateName, this.state[stateName] ? "no" : "yes");
 
-    this.props.handleMessage("Change Successfully");
-    this.props.handleMessageBox(true);
+    toast(this.props.t("Change Successfully"));
     setTimeout(() => {
       this._handleRest();
     }, 500);
@@ -65,7 +64,7 @@ class SettingSwitch extends React.Component<
     return (
       <>
         {Object.keys(this.props.currentEpub).length !== 0 && <TextToSpeech />}
-        {(this.props.currentEpub.rendition
+        {(this.props.currentEpub.archived
           ? readerSettingList
           : htmlSettingList
         ).map((item) => (
@@ -80,6 +79,9 @@ class SettingSwitch extends React.Component<
                 switch (item.propName) {
                   case "isBold":
                     this._handleChange("isBold");
+                    break;
+                  case "isIndent":
+                    this._handleChange("isIndent");
                     break;
                   case "isItalic":
                     this._handleChange("isItalic");
@@ -99,8 +101,8 @@ class SettingSwitch extends React.Component<
                   case "isHideHeader":
                     this.handleChange("isHideHeader");
                     break;
-                  case "isUseBackground":
-                    this.handleChange("isUseBackground");
+                  case "isHideBackground":
+                    this.handleChange("isHideBackground");
                     break;
                   case "isHidePageButton":
                     this.handleChange("isHidePageButton");

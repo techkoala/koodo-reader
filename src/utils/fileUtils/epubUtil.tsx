@@ -10,7 +10,6 @@ export const addEpub = (file: any, md5: string) => {
         reject(false);
         throw new Error();
       }
-
       let cover: any = "";
       const epub = window.ePub(e.target.result);
       epub.loaded.metadata
@@ -57,7 +56,8 @@ export const addEpub = (file: any, md5: string) => {
                     cover,
                     format,
                     publisher,
-                    file.size
+                    file.size,
+                    file.path
                   );
                   resolve(book);
                 };
@@ -92,7 +92,8 @@ export const addEpub = (file: any, md5: string) => {
                   cover,
                   format,
                   publisher,
-                  file.size
+                  file.size,
+                  file.path
                 );
 
                 resolve(book);

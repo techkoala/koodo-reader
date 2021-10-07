@@ -5,7 +5,6 @@
 </div>
 
 <div align="center">
-
   <img src="https://i.loli.net/2021/07/30/ZKNMmz54Q3uqlrW.png" width="96px" height="96px"/>
 </div>
 
@@ -19,7 +18,7 @@
 
 <div align="center">
 
-[下载](https://koodo.960960.xyz/download) | [预览](https://koodo-reader.vercel.app/) | [反馈](https://koodo.960960.xyz/support) | [文档](https://www.notion.so/troyeguo/e9c4e5755d564b0db6340eeba6d9ece9?v=7c8fcbed9adf4592ada95cfd593868c9)
+[下载](https://koodo.960960.xyz/zh/download) | [预览](https://koodo-reader.vercel.app/) | [反馈](https://koodo.960960.xyz/zh/support) | [文档](https://www.notion.so/troyeguo/e9c4e5755d564b0db6340eeba6d9ece9?v=7c8fcbed9adf4592ada95cfd593868c9)
 
 </div>
 
@@ -100,7 +99,6 @@ docker-compose up -d
     <img src="https://i.loli.net/2021/08/09/sARQBoefvGklHwC.png" >
   </a>
 </div>
-
 ## 运行源码
 
 请确保您电脑的 node 的版本大于 10.0.0，已配置好 yarn，git 的运行环境。

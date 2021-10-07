@@ -13,15 +13,15 @@ import { isElectron } from "react-device-detect";
 import { dropdownList } from "./constants/dropdownList";
 import OtherUtil from "./utils/otherUtil";
 import ga from "./utils/analytics";
-let coverLoading: any = document.querySelector(".loading-cover");
-coverLoading && coverLoading.parentNode.removeChild(coverLoading);
-
 ReactDOM.render(
   <Provider store={store}>
     <Router />
   </Provider>,
   document.getElementById("root")
 );
+
+let coverLoading: any = document.querySelector(".loading-cover");
+coverLoading && coverLoading.parentNode.removeChild(coverLoading);
 
 if (isElectron && OtherUtil.getReaderConfig("isDisableAnalytics") !== "yes") {
   ga.event("Client", "show", {
@@ -34,17 +34,10 @@ if (
   navigator.appVersion.indexOf("NT 5.1") === -1 &&
   navigator.appVersion.indexOf("NT 6.0") === -1
 ) {
-  const { ipcRenderer } = window.require("electron");
-  ipcRenderer.invoke("fonts-ready", "ping").then((result) => {
+  const fontList = window.require("font-list");
+  fontList.getFonts({ disableQuoting: true }).then((result) => {
     dropdownList[0].option = result;
     dropdownList[0].option.push("Built-in font");
   });
 }
 StyleUtil.applyTheme();
-
-ReactDOM.render(
-  <Provider store={store}>
-    <Router />
-  </Provider>,
-  document.getElementById("root")
-);

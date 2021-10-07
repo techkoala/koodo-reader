@@ -12,7 +12,7 @@ import EmptyCover from "../emptyCover";
 import Parser from "html-react-parser";
 import { Trans } from "react-i18next";
 import BookUtil from "../../utils/fileUtils/bookUtil";
-
+import toast from "react-hot-toast";
 declare var window: any;
 
 class BookCoverItem extends React.Component<BookCoverProps, BookCoverState> {
@@ -75,20 +75,28 @@ class BookCoverItem extends React.Component<BookCoverProps, BookCoverState> {
   handleLoveBook = () => {
     AddFavorite.setFavorite(this.props.book.key);
     this.setState({ isFavorite: true });
-    this.props.handleMessage("Add Successfully");
-    this.props.handleMessageBox(true);
+    toast.success(this.props.t("Add Successfully"));
   };
   handleCancelLoveBook = () => {
     AddFavorite.clear(this.props.book.key);
     this.setState({ isFavorite: false });
-    this.props.handleMessage("Cancel Successfully");
-    this.props.handleMessageBox(true);
+    toast.success(this.props.t("Cancel Successfully"));
   };
   //控制按钮的弹出
   handleConfig = (mode: boolean) => {
     this.setState({ isOpenConfig: mode });
   };
   handleJump = () => {
+    if (this.props.isSelectBook) {
+      this.props.handleSelectedBooks(
+        this.props.isSelected
+          ? this.props.selectedBooks.filter(
+              (item) => item !== this.props.book.key
+            )
+          : [...this.props.selectedBooks, this.props.book.key]
+      );
+      return;
+    }
     RecentBooks.setRecent(this.props.book.key);
 
     BookUtil.RedirectBook(this.props.book);
@@ -119,16 +127,6 @@ class BookCoverItem extends React.Component<BookCoverProps, BookCoverState> {
               src={this.props.book.cover}
               alt=""
               onClick={() => {
-                if (this.props.isSelectBook) {
-                  this.props.handleSelectedBooks(
-                    this.props.isSelected
-                      ? this.props.selectedBooks.filter(
-                          (item) => item !== this.props.book.key
-                        )
-                      : [...this.props.selectedBooks, this.props.book.key]
-                  );
-                  return;
-                }
                 this.handleJump();
               }}
             />
@@ -136,16 +134,6 @@ class BookCoverItem extends React.Component<BookCoverProps, BookCoverState> {
             <div
               className="book-cover-item-cover"
               onClick={() => {
-                if (this.props.isSelectBook) {
-                  this.props.handleSelectedBooks(
-                    this.props.isSelected
-                      ? this.props.selectedBooks.filter(
-                          (item) => item !== this.props.book.key
-                        )
-                      : [...this.props.selectedBooks, this.props.book.key]
-                  );
-                  return;
-                }
                 this.handleJump();
               }}
             >

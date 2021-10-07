@@ -17,6 +17,7 @@ import {
 } from "../../../constants/settingList";
 import { themeList } from "../../../constants/themeList";
 import _ from "underscore";
+import toast from "react-hot-toast";
 class SettingDialog extends React.Component<
   SettingInfoProps,
   SettingInfoState
@@ -25,6 +26,9 @@ class SettingDialog extends React.Component<
     super(props);
     this.state = {
       isTouch: OtherUtil.getReaderConfig("isTouch") === "yes",
+      isImportPath: OtherUtil.getReaderConfig("isImportPath") === "yes",
+      isMergeWord: OtherUtil.getReaderConfig("isMergeWord") === "yes",
+      isPreventTrigger: OtherUtil.getReaderConfig("isPreventTrigger") === "yes",
       isAutoFullscreen: OtherUtil.getReaderConfig("isAutoFullscreen") === "yes",
       isOpenBook: OtherUtil.getReaderConfig("isOpenBook") === "yes",
       isExpandContent: OtherUtil.getReaderConfig("isExpandContent") === "yes",
@@ -63,8 +67,7 @@ class SettingDialog extends React.Component<
     ].setAttribute("selected", "selected");
   }
   handleRest = (bool: boolean) => {
-    this.props.handleMessage("Change Successfully");
-    this.props.handleMessageBox(true);
+    toast.success(this.props.t("Change Successfully"));
   };
   changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
@@ -111,11 +114,9 @@ class SettingDialog extends React.Component<
 
     let result = await restore(fileTemp, true);
     if (result) {
-      this.props.handleMessage("Change Successfully");
-      this.props.handleMessageBox(true);
+      toast.success(this.props.t("Change Successfully"));
     } else {
-      this.props.handleMessage("Change Failed");
-      this.props.handleMessageBox(true);
+      toast.error(this.props.t("Change Failed"));
     }
   };
   handleChangeLocation = async () => {
@@ -136,11 +137,9 @@ class SettingDialog extends React.Component<
     if (result === 1) {
       this.syncFromLocation();
     } else if (result === 2) {
-      this.props.handleMessage("Change Successfully");
-      this.props.handleMessageBox(true);
+      toast.success(this.props.t("Change Successfully"));
     } else {
-      this.props.handleMessage("Change Failed");
-      this.props.handleMessageBox(true);
+      toast.error(this.props.t("Change Failed"));
     }
     localStorage.setItem("storageLocation", path.filePaths[0]);
     document.getElementsByClassName(
@@ -157,8 +156,7 @@ class SettingDialog extends React.Component<
       this.state.isDisplayDark ? "no" : "yes"
     );
     if (isElectron) {
-      this.props.handleMessage("Try refresh or restart");
-      this.props.handleMessageBox(true);
+      toast(this.props.t("Try refresh or restart"));
     } else {
       window.location.reload();
     }
@@ -168,11 +166,21 @@ class SettingDialog extends React.Component<
     this.setState({ currentThemeIndex: index });
     OtherUtil.setReaderConfig("themeColor", name);
     if (isElectron) {
-      this.props.handleMessage("Try refresh or restart");
-      this.props.handleMessageBox(true);
+      toast(this.props.t("Try refresh or restart"));
     } else {
       window.location.reload();
     }
+  };
+  handleMergeWord = () => {
+    this.handleSetting("isMergeWord");
+    OtherUtil.setReaderConfig("readerMode", "single");
+    OtherUtil.setReaderConfig("textColor", "rgba(0,0,0,1)");
+    OtherUtil.setReaderConfig("backgroundColor", "rgba(255,255,255,1)");
+    OtherUtil.setReaderConfig("isAutoFullscreen", "no");
+    OtherUtil.setReaderConfig("isHideBackground", "yes");
+    OtherUtil.setReaderConfig("isHidePageButton", "yes");
+    OtherUtil.setReaderConfig("isHideHeader", "yes");
+    OtherUtil.setReaderConfig("isHideFooter", "yes");
   };
   render() {
     return (
@@ -207,19 +215,15 @@ class SettingDialog extends React.Component<
                   <span
                     className="single-control-switch"
                     onClick={() => {
-                      switch (index) {
-                        case 0:
-                        case 1:
-                        case 2:
-                        case 3:
-                        case 4:
-                        case 5:
-                          this.handleSetting(item.propName);
+                      switch (item.propName) {
+                        case "isMergeWord":
+                          this.handleMergeWord();
                           break;
-                        case 6:
+                        case "isDisplayDark":
                           this.handleDisplayDark();
                           break;
                         default:
+                          this.handleSetting(item.propName);
                           break;
                       }
                     }}

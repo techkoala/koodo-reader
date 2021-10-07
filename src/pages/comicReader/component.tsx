@@ -11,6 +11,7 @@ import OtherUtil from "../../utils/otherUtil";
 import { mimetype } from "../../constants/mimetype";
 import RecordLocation from "../../utils/readUtils/recordLocation";
 import { isElectron } from "react-device-detect";
+import { toast } from "react-hot-toast";
 
 declare var window: any;
 
@@ -55,7 +56,11 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
   handleRender = (key: string) => {
     localforage.getItem("books").then((result: any) => {
       let book = result[_.findIndex(result, { key })];
-      BookUtil.fetchBook(key, true).then((result) => {
+      BookUtil.fetchBook(key, true, book.path).then((result) => {
+        if (!result) {
+          toast.error(this.props.t("Book not exsits"));
+          return;
+        }
         this.props.handleReadingBook(book);
         if (book.format === "CBR") {
           this.handleCbr(result as ArrayBuffer);
@@ -75,8 +80,8 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
     this.props.handleReadingState(false);
 
     if (isElectron) {
-      const { remote } = window.require("electron");
-      let bounds = remote.getCurrentWindow().getBounds();
+      const { ipcRenderer } = window.require("electron");
+      let bounds = ipcRenderer.sendSync("reader-bounds", "ping");
       OtherUtil.setReaderConfig("windowWidth", bounds.width);
       OtherUtil.setReaderConfig("windowHeight", bounds.height);
       OtherUtil.setReaderConfig("windowX", bounds.x);

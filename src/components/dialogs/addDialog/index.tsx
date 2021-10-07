@@ -1,11 +1,9 @@
 import { connect } from "react-redux";
 import {
-  handleMessageBox,
-  handleMessage,
   handleAddDialog,
   handleActionDialog,
   handleMode,
-  handleShelfIndex,
+  handleShelfIndex,handleSelectBook,
   handleSelectedBooks,
 } from "../../../store/actions";
 import { stateType } from "../../../store";
@@ -26,9 +24,7 @@ const mapStateToProps = (state: stateType) => {
 };
 const actionCreator = {
   handleAddDialog,
-  handleActionDialog,
-  handleMessageBox,
-  handleMessage,
+  handleActionDialog,handleSelectBook,
   handleMode,
   handleShelfIndex,
   handleSelectedBooks,

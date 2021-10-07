@@ -49,11 +49,10 @@ export const moveData = (
   });
   const fs = window.require("fs");
   const path = window.require("path");
-  const { remote, app } = window.require("electron");
   const AdmZip = window.require("adm-zip");
 
-  const configDir = (app || remote.app).getPath("userData");
-  const dirPath = path.join(configDir, "uploads");
+  const { ipcRenderer } = window.require("electron");
+  const dirPath = ipcRenderer.sendSync("user-data", "ping");
   const dataPath = localStorage.getItem("storageLocation")
     ? localStorage.getItem("storageLocation")
     : window
@@ -62,32 +61,29 @@ export const moveData = (
   var reader = new FileReader();
   reader.readAsArrayBuffer(file);
   reader.onload = async (event) => {
-    fs.writeFile(
+    fs.writeFileSync(
       path.join(dirPath, file.name),
-      Buffer.from(event.target!.result as any),
-      async (err: any) => {
-        if (err) throw err;
-        var zip = new AdmZip(path.join(dirPath, file.name));
-        zip.extractAllTo(/*target path*/ dataPath, /*overwrite*/ true);
-        const fs_extra = window.require("fs-extra");
-        fs_extra.copy(
-          path.join(dirPath, file.name),
-          path.join(dataPath, file.name),
-          function (err) {
-            if (err) return;
-          }
-        );
-        if (driveIndex === 4) {
-          let deleteBooks = books.map((item) => {
-            return localforage.removeItem(item.key);
-          });
-          await Promise.all(deleteBooks);
-        }
-        if (driveIndex === 5) {
-          handleFinish();
-        }
+      Buffer.from(event.target!.result as any)
+    );
+    var zip = new AdmZip(path.join(dirPath, file.name));
+    zip.extractAllTo(/*target path*/ dataPath, /*overwrite*/ true);
+    const fs_extra = window.require("fs-extra");
+    fs_extra.copy(
+      path.join(dirPath, file.name),
+      path.join(dataPath, file.name),
+      function (err) {
+        if (err) return;
       }
     );
+    if (driveIndex === 4) {
+      let deleteBooks = books.map((item) => {
+        return localforage.removeItem(item.key);
+      });
+      await Promise.all(deleteBooks);
+    }
+    if (driveIndex === 5) {
+      handleFinish();
+    }
   };
 };
 //改变数据存储路径
@@ -136,27 +132,22 @@ export const syncData = (blob: Blob, books: BookModel[] = [], isSync: true) => {
     var reader = new FileReader();
     reader.readAsArrayBuffer(file);
     reader.onload = async (event) => {
-      fs.writeFile(
+      fs.writeFileSync(
         path.join(dataPath, file.name),
-        Buffer.from(event.target!.result as any),
-        async (err: any) => {
-          if (err) {
-            throw err;
-          }
-          var zip = new AdmZip(path.join(dataPath, file.name));
-          zip.extractAllTo(/*target path*/ dataPath, /*overwrite*/ true);
-
-          if (!isSync) {
-            let deleteBooks = books.map((item) => {
-              return localforage.removeItem(item.key);
-            });
-            await Promise.all(deleteBooks);
-            resolve(true);
-          } else {
-            resolve(true);
-          }
-        }
+        Buffer.from(event.target!.result as any)
       );
+      var zip = new AdmZip(path.join(dataPath, file.name));
+      zip.extractAllTo(/*target path*/ dataPath, /*overwrite*/ true);
+
+      if (!isSync) {
+        let deleteBooks = books.map((item) => {
+          return localforage.removeItem(item.key);
+        });
+        await Promise.all(deleteBooks);
+        resolve(true);
+      } else {
+        resolve(true);
+      }
     };
   });
 };
@@ -170,13 +161,13 @@ export const zipBook = (zip: any, books: BookModel[]) => {
         data.push(
           !isElectron
             ? localforage.getItem(item.key)
-            : BookUtil.fetchBook(item.key)
+            : BookUtil.fetchBook(item.key, false, item.path)
         );
       });
     try {
       let results = await Promise.all(data);
       for (let i = 0; i < books.length; i++) {
-        bookZip.file(`${books[i].key}`, results[i]);
+        results[i] && bookZip.file(`${books[i].key}`, results[i]);
       }
       resolve(true);
     } catch (error) {

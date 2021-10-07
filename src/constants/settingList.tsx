@@ -2,9 +2,29 @@ export const settingList = [
   {
     isElectron: false,
     title: "Turn on touch screen mode",
+    desc: "Gesture and UI optimization for touch screen",
+    propName: "isTouch",
+  },
+  {
+    isElectron: false,
+    title: "Prevent accidental trigger",
     desc:
       "Reader menu will not be triggered by hovering but clicking on the area",
-    propName: "isTouch",
+    propName: "isPreventTrigger",
+  },
+  {
+    isElectron: true,
+    title: "Import books as referrence",
+    desc:
+      "The imported books will not be copied to library, only linked to the original book path",
+    propName: "isImportPath",
+  },
+  {
+    isElectron: true,
+    title: "Merge reader into Word",
+    desc:
+      "Get rid of window Frame and mimical background, make reader hide into Word or any text editor, and can't be detected",
+    propName: "isMergeWord",
   },
   {
     isElectron: false,
@@ -59,6 +79,10 @@ export const searchList = [
 ];
 export const readerSettingList = [
   {
+    title: "Text Indent",
+    propName: "isIndent",
+  },
+  {
     title: "Bold Font",
     propName: "isBold",
   },
@@ -88,7 +112,7 @@ export const readerSettingList = [
   },
   {
     title: "Dont't use mimical background",
-    propName: "isUseBackground",
+    propName: "isHideBackground",
   },
   {
     title: "Hide navigation button",
@@ -96,6 +120,10 @@ export const readerSettingList = [
   },
 ];
 export const htmlSettingList = [
+  {
+    title: "Text Indent",
+    propName: "isIndent",
+  },
   {
     title: "Bold Font",
     propName: "isBold",
@@ -111,5 +139,9 @@ export const htmlSettingList = [
   {
     title: "Text Shadow",
     propName: "isShadow",
+  },
+  {
+    title: "Dont't use mimical background",
+    propName: "isHideBackground",
   },
 ];

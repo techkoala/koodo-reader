@@ -27,11 +27,11 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
         }}
         style={
           this.props.isNewWarning
-            ? { left: "525px", height: "225px", width: "120px" }
+            ? { left: "5100px", height: "275px", width: "150px" }
             : {
-                left: "525px",
-                height: "200px",
-                width: "120px",
+                left: "510px",
+                height: "250px",
+                width: "150px",
               }
         }
       >
@@ -65,7 +65,7 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
           <li
             className="sort-by-category-list"
             onClick={() => {
-              this.handleJump("https://koodo.960960.xyz/support");
+              this.handleJump(`https://koodo.960960.xyz/en/support`);
             }}
           >
             <Trans>Feedback</Trans>
@@ -122,7 +122,7 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
             <li
               className="sort-by-category-list"
               onClick={() => {
-                this.handleJump("https://koodo.960960.xyz/download");
+                this.handleJump("https://koodo.960960.xyz/en/download");
               }}
               style={{ color: "rgb(35, 170, 242)" }}
             >

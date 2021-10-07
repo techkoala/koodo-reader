@@ -11,7 +11,7 @@ import { backup } from "../../utils/syncUtils/backupUtil";
 import { Tooltip } from "react-tippy";
 import { isElectron } from "react-device-detect";
 import { syncData } from "../../utils/syncUtils/common";
-
+import toast from "react-hot-toast";
 class Header extends React.Component<HeaderProps, HeaderState> {
   constructor(props: HeaderProps) {
     super(props);
@@ -29,9 +29,8 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       const fs = window.require("fs");
       const path = window.require("path");
       const request = window.require("request");
-      const { remote, app } = window.require("electron");
-      const configDir = (app || remote.app).getPath("userData");
-      const dirPath = path.join(configDir, "uploads");
+      const { ipcRenderer } = window.require("electron");
+      const dirPath = ipcRenderer.sendSync("user-data", "ping");
       if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath);
         fs.mkdirSync(path.join(dirPath, "data"));
@@ -142,11 +141,10 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       });
     }
     if (!result) {
-      this.props.handleMessage("Sync Failed");
+      toast.error(this.props.t("Sync Failed"));
     } else {
-      this.props.handleMessage("Sync Successfully");
+      toast.success(this.props.t("Sync Successfully"));
     }
-    this.props.handleMessageBox(true);
   };
   handleSync = () => {
     if (OtherUtil.getReaderConfig("isFirst") !== "no") {
@@ -195,12 +193,11 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       true
     );
     if (!result) {
-      this.props.handleMessage("Sync Failed");
+      toast.error(this.props.t("Sync Failed"));
     } else {
       syncData(result as Blob, this.props.books, true);
-      this.props.handleMessage("Sync Successfully");
+      toast.success(this.props.t("Sync Successfully"));
     }
-    this.props.handleMessageBox(true);
   };
 
   render() {
