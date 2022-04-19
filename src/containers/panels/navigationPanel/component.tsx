@@ -7,26 +7,24 @@ import { NavigationPanelProps, NavigationPanelState } from "./interface";
 import SearchBox from "../../../components/searchBox";
 import Parser from "html-react-parser";
 import EmptyCover from "../../../components/emptyCover";
-import OtherUtil from "../../../utils/otherUtil";
+import StorageUtil from "../../../utils/serviceUtils/storageUtil";
 import { Tooltip } from "react-tippy";
 
 class NavigationPanel extends React.Component<
   NavigationPanelProps,
   NavigationPanelState
 > {
-  timer: any;
   constructor(props: NavigationPanelProps) {
     super(props);
     this.state = {
       currentTab: "contents",
       chapters: [],
-      cover: this.props.currentBook.cover,
       isSearch: false,
       searchList: null,
       startIndex: 0,
       currentIndex: 0,
       isNavLocked:
-        OtherUtil.getReaderConfig("isNavLocked") === "yes" ? true : false,
+        StorageUtil.getReaderConfig("isNavLocked") === "yes" ? true : false,
     };
   }
   handleSearchState = (isSearch: boolean) => {
@@ -44,7 +42,7 @@ class NavigationPanel extends React.Component<
   };
   handleLock = () => {
     this.setState({ isNavLocked: !this.state.isNavLocked }, () => {
-      OtherUtil.setReaderConfig(
+      StorageUtil.setReaderConfig(
         "isNavLocked",
         this.state.isNavLocked ? "yes" : "no"
       );
@@ -70,8 +68,17 @@ class NavigationPanel extends React.Component<
           <li
             className="nav-search-list-item"
             key={index}
-            onClick={() => {
-              this.props.currentEpub.rendition.display(item.cfi);
+            onClick={async () => {
+              let bookLocation = JSON.parse(item.cfi) || {};
+              await this.props.htmlBook.rendition.goToPosition(
+                JSON.stringify({
+                  text: bookLocation.text,
+                  chapterTitle: bookLocation.chapterTitle,
+                  count: bookLocation.count,
+                  percentage: bookLocation.percentage,
+                  cfi: bookLocation.cfi,
+                })
+              );
             }}
           >
             {Parser(item.excerpt)}
@@ -103,7 +110,11 @@ class NavigationPanel extends React.Component<
         );
       }
     } else {
-      for (let i = 0; i < 5; i++) {
+      for (
+        let i = 0;
+        i < (total - startIndex < 5 ? total - startIndex : 5);
+        i++
+      ) {
         let isShow = currentIndex > 2 ? i === 2 : currentIndex === i;
         pageList.push(
           <li
@@ -129,6 +140,11 @@ class NavigationPanel extends React.Component<
             {i + startIndex + 1}
           </li>
         );
+      }
+      if (total - startIndex < 5) {
+        for (let i = 0; i < 6 - pageList.length; i++) {
+          pageList.push(<li className="nav-search-page-item">EOF</li>);
+        }
       }
     }
     return pageList;
@@ -168,7 +184,7 @@ class NavigationPanel extends React.Component<
                 className="navigation-search-title"
                 style={{ height: "20px", margin: "0px 25px 13px" }}
               >
-                <Trans>Search the book</Trans>
+                <Trans>Search in the book</Trans>
               </div>
               <SearchBox {...searchProps} />
             </div>
@@ -205,12 +221,13 @@ class NavigationPanel extends React.Component<
                 ></span>
               </Tooltip>
 
-              {this.state.cover &&
-              this.props.currentBook.cover !== "noCover" &&
-              this.props.currentBook.publisher !== "mobi" &&
-              this.props.currentBook.publisher !== "azw3" &&
-              this.props.currentBook.publisher !== "txt" ? (
-                <img className="book-cover" src={this.state.cover} alt="" />
+              {this.props.currentBook.cover &&
+              this.props.currentBook.cover !== "noCover" ? (
+                <img
+                  className="book-cover"
+                  src={this.props.currentBook.cover}
+                  alt=""
+                />
               ) : (
                 <div className="book-cover">
                   <EmptyCover
@@ -234,14 +251,11 @@ class NavigationPanel extends React.Component<
               </p>
               <span className="reading-duration">
                 <Trans>Reading Time</Trans>: {Math.floor(this.props.time / 60)}
-                &nbsp;
-                <Trans>Minute</Trans>
+                &nbsp; min
               </span>
-              {Object.keys(this.props.currentEpub).length !== 0 && (
-                <div className="navigation-search-box">
-                  <SearchBox {...searchProps} />
-                </div>
-              )}
+              <div className="navigation-search-box">
+                <SearchBox {...searchProps} />
+              </div>
 
               <div className="navigation-navigation">
                 <span

@@ -1,7 +1,7 @@
 import React from "react";
 import "./modeControl.css";
 import { ModeControlProps, ModeControlState } from "./interface";
-import OtherUtil from "../../../utils/otherUtil";
+import StorageUtil from "../../../utils/serviceUtils/storageUtil";
 import { Trans } from "react-i18next";
 import { Tooltip } from "react-tippy";
 import { isElectron } from "react-device-detect";
@@ -11,13 +11,13 @@ class ModeControl extends React.Component<ModeControlProps, ModeControlState> {
   constructor(props: ModeControlProps) {
     super(props);
     this.state = {
-      readerMode: OtherUtil.getReaderConfig("readerMode") || "double",
+      readerMode: StorageUtil.getReaderConfig("readerMode") || "double",
     };
   }
 
   handleChangeMode = (mode: string) => {
     this.setState({ readerMode: mode });
-    OtherUtil.setReaderConfig("readerMode", mode);
+    StorageUtil.setReaderConfig("readerMode", mode);
     if (isElectron) {
       toast(this.props.t("Take effect at next startup"));
     } else {
@@ -72,11 +72,9 @@ class ModeControl extends React.Component<ModeControlProps, ModeControlState> {
             <div
               className="double-mode-container"
               onClick={() => {
-                this.handleChangeMode("continuous");
+                this.handleChangeMode("scroll");
               }}
-              style={
-                this.state.readerMode === "continuous" ? {} : { opacity: 0.4 }
-              }
+              style={this.state.readerMode === "scroll" ? {} : { opacity: 0.4 }}
             >
               <span className="icon-scroll two-page-icon"></span>
             </div>

@@ -28,8 +28,9 @@
   cursor: pointer;
 }
 .line-option {
-  width: 30px;
-  height: 30px;
+  width: 25px;
+  margin-right: 5px;
+  height: 25px;
   border-radius: 50%;
   opacity: 1;
   box-sizing: border-box;
@@ -62,6 +63,6 @@
   }
 }
 .demo-line {
-  width: 100%;
+  width: 80%;
   height: 0px;
 }

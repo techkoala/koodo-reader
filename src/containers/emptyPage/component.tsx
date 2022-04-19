@@ -3,7 +3,7 @@ import "./emptyPage.css";
 import { emptyList } from "../../constants/emptyList";
 import { Trans } from "react-i18next";
 import { EmptyPageProps, EmptyPageState } from "./interface";
-import OtherUtil from "../../utils/otherUtil";
+import StorageUtil from "../../utils/serviceUtils/storageUtil";
 
 class EmptyPage extends React.Component<EmptyPageProps, EmptyPageState> {
   render() {
@@ -42,7 +42,9 @@ class EmptyPage extends React.Component<EmptyPageProps, EmptyPageState> {
         >
           <img
             src={
-              OtherUtil.getReaderConfig("isDisplayDark") === "yes"
+              StorageUtil.getReaderConfig("appSkin") === "night" ||
+              (StorageUtil.getReaderConfig("appSkin") === "system" &&
+                StorageUtil.getReaderConfig("isOSNight") === "yes")
                 ? "./assets/empty_light.svg"
                 : "./assets/empty.svg"
             }

@@ -4,8 +4,8 @@ import SearchBox from "../../components/searchBox";
 import ImportLocal from "../../components/importLocal";
 import { Trans } from "react-i18next";
 import { HeaderProps, HeaderState } from "./interface";
-import OtherUtil from "../../utils/otherUtil";
-import UpdateInfo from "../../components/dialogs/updateInfo";
+import StorageUtil from "../../utils/serviceUtils/storageUtil";
+import UpdateInfo from "../../components/dialogs/updateDialog";
 import { restore } from "../../utils/syncUtils/restoreUtil";
 import { backup } from "../../utils/syncUtils/backupUtil";
 import { Tooltip } from "react-tippy";
@@ -18,7 +18,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
 
     this.state = {
       isOnlyLocal: false,
-      language: OtherUtil.getReaderConfig("lang"),
+      language: StorageUtil.getReaderConfig("lang"),
       isNewVersion: false,
       width: document.body.clientWidth,
       isdataChange: false,
@@ -28,7 +28,6 @@ class Header extends React.Component<HeaderProps, HeaderState> {
     if (isElectron) {
       const fs = window.require("fs");
       const path = window.require("path");
-      const request = window.require("request");
       const { ipcRenderer } = window.require("electron");
       const dirPath = ipcRenderer.sendSync("user-data", "ping");
       if (!fs.existsSync(dirPath)) {
@@ -41,26 +40,15 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       }
 
       if (
-        OtherUtil.getReaderConfig("storageLocation") &&
+        StorageUtil.getReaderConfig("storageLocation") &&
         !localStorage.getItem("storageLocation")
       ) {
         localStorage.setItem(
           "storageLocation",
-          OtherUtil.getReaderConfig("storageLocation")
+          StorageUtil.getReaderConfig("storageLocation")
         );
       }
-      if (!fs.existsSync(path.join(dirPath, `cover.png`))) {
-        let stream = fs.createWriteStream(path.join(dirPath, `cover.png`));
-        request(`https://koodo.960960.xyz/images/splash.png`)
-          .pipe(stream)
-          .on("close", function (err) {
-            if (err) {
-              console.log(err);
-            } else {
-              console.log("文件下载完毕");
-            }
-          });
-      }
+
       //Check for data update
       let storageLocation = localStorage.getItem("storageLocation")
         ? localStorage.getItem("storageLocation")
@@ -91,6 +79,11 @@ class Header extends React.Component<HeaderProps, HeaderState> {
 
     window.addEventListener("resize", () => {
       this.setState({ width: document.body.clientWidth });
+    });
+    window.addEventListener("focus", () => {
+      this.props.handleFetchBooks();
+      this.props.handleFetchNotes();
+      this.props.handleFetchBookmarks();
     });
   }
 
@@ -147,12 +140,12 @@ class Header extends React.Component<HeaderProps, HeaderState> {
     }
   };
   handleSync = () => {
-    if (OtherUtil.getReaderConfig("isFirst") !== "no") {
+    if (StorageUtil.getReaderConfig("isFirst") !== "no") {
       this.props.handleTipDialog(true);
       this.props.handleTip(
         "You need to manually change the storage location to the same sync folder on different computers. When you click the sync button, Koodo Reader will automatically upload or download the data from this folder according the timestamp."
       );
-      OtherUtil.setReaderConfig("isFirst", "no");
+      StorageUtil.setReaderConfig("isFirst", "no");
       return;
     }
     const fs = window.require("fs");
@@ -184,7 +177,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
   };
   syncToLocation = async () => {
     let timestamp = new Date().getTime().toString();
-    OtherUtil.setReaderConfig("lastSyncTime", timestamp);
+    StorageUtil.setReaderConfig("lastSyncTime", timestamp);
     localStorage.setItem("lastSyncTime", timestamp);
     let result = await backup(
       this.props.books,
@@ -219,7 +212,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
             style={{ left: "490px", top: "18px" }}
           >
             <Tooltip
-              title={this.props.t("Sort")}
+              title={this.props.t("Sort by")}
               position="top"
               trigger="mouseenter"
               distance={20}
@@ -294,7 +287,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
           <div className="animation-mask"></div>
           {this.props.isCollapsed && this.state.width < 950 ? (
             <Tooltip
-              title={this.props.t("Backup and Restore")}
+              title={this.props.t("Backup")}
               position="top"
               trigger="mouseenter"
             >
@@ -304,7 +297,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
               ></span>
             </Tooltip>
           ) : (
-            <Trans>Backup and Restore</Trans>
+            <Trans>Backup</Trans>
           )}
         </div>
         <ImportLocal

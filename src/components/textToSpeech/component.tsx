@@ -2,8 +2,7 @@ import React from "react";
 import { TextToSpeechProps, TextToSpeechState } from "./interface";
 import { Trans } from "react-i18next";
 import { speedList } from "../../constants/dropdownList";
-import OtherUtil from "../../utils/otherUtil";
-import toast from "react-hot-toast";
+import StorageUtil from "../../utils/serviceUtils/storageUtil";
 
 class TextToSpeech extends React.Component<
   TextToSpeechProps,
@@ -53,6 +52,8 @@ class TextToSpeech extends React.Component<
           this.setState({ isAudioOn: true }, () => {
             this.handleAudio();
             if (
+              document.querySelector("#text-speech-speed") &&
+              document.querySelector("#text-speech-voice") &&
               document.querySelector("#text-speech-speed")!.children[0] &&
               document.querySelector("#text-speech-voice")!.children[0]
             ) {
@@ -60,44 +61,35 @@ class TextToSpeech extends React.Component<
                 .querySelector("#text-speech-speed")!
                 .children[
                   speedList.option.indexOf(
-                    OtherUtil.getReaderConfig("voiceSpeed") || "1"
+                    StorageUtil.getReaderConfig("voiceSpeed") || "1"
                   )
-                ].setAttribute("selected", "selected");
+                ]?.setAttribute("selected", "selected");
               document
                 .querySelector("#text-speech-voice")!
                 .children[
-                  OtherUtil.getReaderConfig("voiceIndex") || 0
-                ].setAttribute("selected", "selected");
+                  StorageUtil.getReaderConfig("voiceIndex") || 0
+                ]?.setAttribute("selected", "selected");
             }
           });
         });
       });
     }
   };
-  handleAudio = () => {
-    const currentLocation = this.props.currentEpub.rendition.currentLocation();
-    const cfibase = currentLocation.start.cfi
-      .replace(/!.*/, "")
-      .replace("epubcfi(", "");
-    const cfistart = currentLocation.start.cfi
-      .replace(/.*!/, "")
-      .replace(/\)/, "");
-    const cfiend = currentLocation.end.cfi.replace(/.*!/, "").replace(/\)/, "");
-    const cfiRange = `epubcfi(${cfibase}!,${cfistart},${cfiend})`;
-    this.props.currentEpub.getRange(cfiRange).then((range: any) => {
-      let text = range.toString();
-      text = text
-        .replace(/\s\s/g, "")
-        .replace(/\r/g, "")
-        .replace(/\n/g, "")
-        .replace(/\t/g, "")
-        .replace(/\f/g, "");
-      this.handleSpeech(
-        text,
-        OtherUtil.getReaderConfig("voiceIndex") || 0,
-        OtherUtil.getReaderConfig("voiceSpeed") || 1
-      );
-    });
+  handleAudio = async () => {
+    let text = "";
+
+    text = await this.props.htmlBook.rendition.visibleText();
+    text = text
+      .replace(/\s\s/g, "")
+      .replace(/\r/g, "")
+      .replace(/\n/g, "")
+      .replace(/\t/g, "")
+      .replace(/\f/g, "");
+    this.handleSpeech(
+      text,
+      StorageUtil.getReaderConfig("voiceIndex") || 0,
+      StorageUtil.getReaderConfig("voiceSpeed") || 1
+    );
   };
   handleSpeech = (text: string, voiceIndex: number, speed: number) => {
     var msg = new SpeechSynthesisUtterance();
@@ -113,9 +105,8 @@ class TextToSpeech extends React.Component<
       if (!(this.state.isAudioOn && this.props.isReading)) {
         return;
       }
-      this.props.currentEpub.rendition.next().then(() => {
-        this.handleAudio();
-      });
+      this.props.htmlBook.rendition.next();
+      this.handleAudio();
     };
   };
 
@@ -126,23 +117,15 @@ class TextToSpeech extends React.Component<
           <>
             <div className="single-control-switch-container">
               <span className="single-control-switch-title">
-                <Trans>Turn on audio</Trans>
+                <Trans>Turn on text-to-speech</Trans>
               </span>
 
               <span
                 className="single-control-switch"
                 onClick={() => {
-                  if (this.props.locations) {
-                    this.handleChangeAudio();
-                  } else {
-                    toast(this.props.t("Audio is not ready yet"));
-                  }
+                  this.handleChangeAudio();
                 }}
-                style={
-                  this.props.locations && this.state.isAudioOn
-                    ? {}
-                    : { opacity: 0.6 }
-                }
+                style={this.state.isAudioOn ? {} : { opacity: 0.6 }}
               >
                 <span
                   className="single-control-button"
@@ -176,13 +159,20 @@ class TextToSpeech extends React.Component<
                   className="lang-setting-dropdown"
                   id="text-speech-voice"
                   onChange={(event) => {
-                    OtherUtil.setReaderConfig("voiceIndex", event.target.value);
+                    StorageUtil.setReaderConfig(
+                      "voiceIndex",
+                      event.target.value
+                    );
                     window.speechSynthesis.cancel();
                   }}
                 >
                   {this.state.voices.map((item, index) => {
                     return (
-                      <option value={index} className="lang-setting-option">
+                      <option
+                        value={index}
+                        key={item.name}
+                        className="lang-setting-option"
+                      >
                         {item.name}
                       </option>
                     );
@@ -201,7 +191,10 @@ class TextToSpeech extends React.Component<
                   id="text-speech-speed"
                   className="lang-setting-dropdown"
                   onChange={(event) => {
-                    OtherUtil.setReaderConfig("voiceSpeed", event.target.value);
+                    StorageUtil.setReaderConfig(
+                      "voiceSpeed",
+                      event.target.value
+                    );
                     window.speechSynthesis.cancel();
                   }}
                 >

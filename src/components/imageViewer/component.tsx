@@ -1,11 +1,9 @@
 import React from "react";
 import "./imageViewer.css";
 import { ImageViewerProps, ImageViewerStates } from "./interface";
-import StyleUtil from "../../utils/readUtils/styleUtil";
 import FileSaver from "file-saver";
-import { isElectron } from "react-device-detect";
-
-declare var window: any;
+import { handleLinkJump } from "../../utils/readUtils/linkUtil";
+import { getIframeDoc } from "../../utils/serviceUtils/docUtil";
 
 class ImageViewer extends React.Component<ImageViewerProps, ImageViewerStates> {
   constructor(props: ImageViewerProps) {
@@ -20,61 +18,22 @@ class ImageViewer extends React.Component<ImageViewerProps, ImageViewerStates> {
 
   componentDidMount() {
     this.props.rendition.on("rendered", () => {
-      let iframe = document.getElementsByTagName("iframe")[0];
-      if (!iframe) return;
-      let doc = iframe.contentDocument;
-      if (!doc) {
-        return;
-      }
-      StyleUtil.addDefaultCss();
-      doc.addEventListener("click", this.showImage, false);
+      let doc = getIframeDoc();
+      if (!doc) return;
+      // StyleUtil.addDefaultCss();
+      doc.addEventListener("click", this.showImage);
     });
   }
 
   showImage = (event: any) => {
+    event.preventDefault();
     if (this.props.isShow) {
       this.props.handleLeaveReader("left");
       this.props.handleLeaveReader("right");
       this.props.handleLeaveReader("top");
       this.props.handleLeaveReader("bottom");
     }
-    let href;
-    if (
-      event.target &&
-      event.target.parentNode &&
-      event.target.parentNode.parentNode
-    ) {
-      href =
-        event.target.src ||
-        event.target.href ||
-        event.target.parentNode.href ||
-        event.target.parentNode.parentNode.href ||
-        "";
-    }
-    if (
-      isElectron &&
-      href &&
-      href.indexOf("OEBPF") === -1 &&
-      href.indexOf("OEBPS") === -1 &&
-      href.indexOf("footnote") === -1 &&
-      href.indexOf("blob") === -1 &&
-      href.indexOf("data:application") === -1 &&
-      href.indexOf(".htm") === -1
-    ) {
-      event.preventDefault();
-      const { shell } = window.require("electron");
-      const { dialog } = window.require("electron").remote;
-      dialog
-        .showMessageBox({
-          type: "question",
-          title: this.props.t("Open link in browser"),
-          message: this.props.t("Do you want to open this link in browser"),
-          buttons: [this.props.t("Confirm"), this.props.t("Cancel")],
-        })
-        .then((result) => {
-          result.response === 0 && shell.openExternal(href);
-        });
-    }
+    handleLinkJump(event);
     if (!event.target.src) {
       return;
     }
@@ -99,7 +58,7 @@ class ImageViewer extends React.Component<ImageViewerProps, ImageViewerStates> {
     img.src = event.target.src;
     let image: HTMLImageElement | null = document.querySelector(".image");
     if (image) {
-      image.src = event.target.src;
+      image!.src = event.target.src;
       this.setState({ isShowImage: true });
     }
   };
@@ -118,7 +77,8 @@ class ImageViewer extends React.Component<ImageViewerProps, ImageViewerStates> {
       if (this.state.imageRatio === "horizontal") {
         image.style.width = `${60 + this.state.zoomIndex * 10}vw`;
       } else {
-        image.style.height = `${90 + 10 * this.state.zoomIndex}vh`;
+        image.style.height = `${100 + 10 * this.state.zoomIndex}vh`;
+        image.style.marginTop = `${10 * this.state.zoomIndex}vh`;
       }
     });
   };
@@ -129,7 +89,7 @@ class ImageViewer extends React.Component<ImageViewerProps, ImageViewerStates> {
       if (this.state.imageRatio === "horizontal") {
         image.style.width = `${60 + this.state.zoomIndex * 10}vw`;
       } else {
-        image.style.height = `${90 + 10 * this.state.zoomIndex}vh`;
+        image.style.height = `${100 + 10 * this.state.zoomIndex}vh`;
       }
     });
   };
@@ -174,7 +134,7 @@ class ImageViewer extends React.Component<ImageViewerProps, ImageViewerStates> {
           style={
             this.state.imageRatio === "horizontal"
               ? { width: "60vw" }
-              : { height: "90vh" }
+              : { height: "100vh" }
           }
         />
         <div className="image-operation">

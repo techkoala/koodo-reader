@@ -1,8 +1,10 @@
 //搜索框
 import React from "react";
 import "./searchBox.css";
-import SearchUtil from "../../utils/searchUtil";
+import SearchUtil from "../../utils/serviceUtils/searchUtil";
 import { SearchBoxProps } from "./interface";
+import StorageUtil from "../../utils/serviceUtils/storageUtil";
+
 class SearchBox extends React.Component<SearchBoxProps> {
   componentDidMount() {
     if (this.props.isNavSearch) {
@@ -53,28 +55,20 @@ class SearchBox extends React.Component<SearchBoxProps> {
       this.props.handleSearch(true);
     }
   };
-  search = (q: string) => {
-    this.doSearch(q).then((result) => {
-      let searchList = result.map((item: any) => {
+  search = async (q: string) => {
+    let searchList = await this.props.htmlBook.rendition.doSearch(q);
+
+    this.props.handleSearchList(
+      searchList.map((item: any) => {
         item.excerpt = item.excerpt.replace(
           q,
           `<span class="content-search-text">${q}</span>`
         );
         return item;
-      });
-      this.props.handleSearchList(searchList);
-    });
+      })
+    );
   };
-  doSearch = (q: string) => {
-    return Promise.all(
-      this.props.currentEpub.spine.spineItems.map((item: any) =>
-        item
-          .load(this.props.currentEpub.load.bind(this.props.currentEpub))
-          .then(item.find.bind(item, q))
-          .finally(item.unload.bind(item))
-      )
-    ).then((results: any) => Promise.resolve([].concat.apply([], results)));
-  };
+
   handleCancel = () => {
     if (this.props.isNavSearch) {
       this.props.handleSearchList(null);
@@ -99,7 +93,7 @@ class SearchBox extends React.Component<SearchBoxProps> {
           }}
           placeholder={
             this.props.isNavSearch || this.props.mode === "nav"
-              ? this.props.t("Search the book")
+              ? this.props.t("Search in the book")
               : this.props.tabMode === "note"
               ? this.props.t("Search my notes")
               : this.props.tabMode === "digest"
@@ -111,6 +105,20 @@ class SearchBox extends React.Component<SearchBoxProps> {
               ? { width: this.props.width, height: this.props.height }
               : { paddingRight: "50px" }
           }
+          onCompositionStart={() => {
+            if (StorageUtil.getReaderConfig("isNavLocked") === "yes") {
+              return;
+            } else {
+              StorageUtil.setReaderConfig("isTempLocked", "yes");
+              StorageUtil.setReaderConfig("isNavLocked", "yes");
+            }
+          }}
+          onCompositionEnd={() => {
+            if (StorageUtil.getReaderConfig("isTempLocked") === "yes") {
+              StorageUtil.setReaderConfig("isNavLocked", "");
+              StorageUtil.setReaderConfig("isTempLocked", "");
+            }
+          }}
         />
         {this.props.isSearch ? (
           <span

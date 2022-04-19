@@ -6,7 +6,7 @@ import { Trans } from "react-i18next";
 import AddFavorite from "../../utils/readUtils/addFavorite";
 import { withRouter } from "react-router-dom";
 import RecentBooks from "../../utils/readUtils/recordRecent";
-import OtherUtil from "../../utils/otherUtil";
+import StorageUtil from "../../utils/serviceUtils/storageUtil";
 import AddTrash from "../../utils/readUtils/addTrash";
 import EmptyCover from "../emptyCover";
 import BookUtil from "../../utils/fileUtils/bookUtil";
@@ -15,7 +15,6 @@ import localforage from "localforage";
 import { isElectron } from "react-device-detect";
 import toast from "react-hot-toast";
 class BookListItem extends React.Component<BookItemProps, BookItemState> {
-  epub: any;
   constructor(props: BookItemProps) {
     super(props);
     this.state = {
@@ -31,14 +30,18 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
       filePath = ipcRenderer.sendSync("get-file-data");
     }
     if (
-      OtherUtil.getReaderConfig("isOpenBook") === "yes" &&
+      StorageUtil.getReaderConfig("isOpenBook") === "yes" &&
       RecentBooks.getAllRecent()[0] === this.props.book.key &&
       !this.props.currentBook.key &&
       !filePath
     ) {
-      BookUtil.RedirectBook(this.props.book);
+      this.props.handleReadingBook(this.props.book);
+      if (StorageUtil.getReaderConfig("isOpenInMain") === "yes") {
+        this.props.history.push(BookUtil.getBookUrl(this.props.book));
+      } else {
+        BookUtil.RedirectBook(this.props.book);
+      }
     }
-    this.props.handleReadingBook(this.props.book);
   }
 
   handleDeleteBook = () => {
@@ -80,29 +83,24 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
       return;
     }
     RecentBooks.setRecent(this.props.book.key);
-    BookUtil.RedirectBook(this.props.book);
+    this.props.handleReadingBook(this.props.book);
+    if (StorageUtil.getReaderConfig("isOpenInMain") === "yes") {
+      this.props.history.push(BookUtil.getBookUrl(this.props.book));
+    } else {
+      BookUtil.RedirectBook(this.props.book);
+    }
   };
   render() {
-    let percentage = RecordLocation.getCfi(this.props.book.key)
-      ? RecordLocation.getCfi(this.props.book.key).percentage
+    let percentage = RecordLocation.getHtmlLocation(this.props.book.key)
+      ? RecordLocation.getHtmlLocation(this.props.book.key).percentage
       : 0;
 
     return (
       <div className="book-list-item-container">
-        {this.props.book.cover &&
-        this.props.book.cover !== "noCover" &&
-        this.props.book.publisher !== "mobi" &&
-        this.props.book.publisher !== "azw3" &&
-        this.props.book.publisher !== "txt" ? (
-          <img
-            className="book-item-list-cover"
-            src={this.props.book.cover}
-            alt=""
-            onClick={() => {
-              this.handleJump();
-            }}
-          />
-        ) : (
+        {!this.props.book.cover ||
+        this.props.book.cover === "noCover" ||
+        (this.props.book.format === "PDF" &&
+          StorageUtil.getReaderConfig("isPDFCover") !== "yes") ? (
           <div
             className="book-item-list-cover"
             onClick={() => {
@@ -114,6 +112,17 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
                 format: this.props.book.format,
                 title: this.props.book.name,
                 scale: 0.54,
+              }}
+            />
+          </div>
+        ) : (
+          <div className="book-item-list-cover">
+            <img
+              className="book-item-list-cover-item"
+              src={this.props.book.cover}
+              alt=""
+              onClick={() => {
+                this.handleJump();
               }}
             />
           </div>
@@ -130,13 +139,19 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
             this.handleJump();
           }}
         >
-          {this.props.book.name}
+          <span className="book-item-list-subtitle">
+            {this.props.book.name}
+          </span>
         </p>
 
         <p className="book-item-list-author">
-          <Trans>
-            {this.props.book.author ? this.props.book.author : "Unknown Authur"}
-          </Trans>
+          <span className="book-item-list-subtitle">
+            <Trans>
+              {this.props.book.author
+                ? this.props.book.author
+                : "Unknown Authur"}
+            </Trans>
+          </span>
         </p>
         <p className="book-item-list-percentage">
           {percentage ? Math.round(percentage * 100) : 0}%

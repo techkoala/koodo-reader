@@ -2,6 +2,7 @@ import { connect } from "react-redux";
 import {
   handleFetchBooks,
   handleFetchBookSortCode,
+  handleFetchNoteSortCode,
   handleFetchList,
   handleTipDialog,
   handleLoadingDialog,
@@ -13,6 +14,7 @@ import {
   handleEditDialog,
   handleDeleteDialog,
   handleAddDialog,
+  handleReadingState,
 } from "../../store/actions";
 import { withTranslation } from "react-i18next";
 
@@ -49,6 +51,7 @@ const actionCreator = {
   handleSetting,
   handleFetchBookmarks,
   handleFetchBookSortCode,
+  handleFetchNoteSortCode,
   handleFetchList,
   handleEditDialog,
   handleDeleteDialog,
@@ -57,6 +60,7 @@ const actionCreator = {
   handleLoadingDialog,
   handleNewDialog,
   handleBackupDialog,
+  handleReadingState,
 };
 export default connect(
   mapStateToProps,

@@ -10,38 +10,42 @@ body:
       description: https://github.com/troyeguo/koodo-reader/releases/latest
       options:
         - label: "Yes"
-    validations:
-      required: true
+          required: true
 
   - type: checkboxes
     id: testing2
     attributes:
       label: There are no similar issues on the issue list
+      description: https://github.com/troyeguo/koodo-reader/issues
       options:
         - label: "Yes"
-    validations:
-      required: true
+          required: true
 
   - type: checkboxes
     id: testing3
     attributes:
-      label: I've already read the Q&A document, still can't solve it.
-      description: https://www.notion.so/troyeguo/01aaa516687c418499f713d34793b9ad?v=54d51fe1688a4f8ab5784b17e4df3308
+      label: I've already read the document, still can't solve it.
+      description: https://troyeguo.notion.site/Koodo-Reader-Document-9c767af3d66c459db996bdd08a34c34b
       options:
         - label: "Yes"
-    validations:
-      required: true
+          required: true
 
   - type: dropdown
     id: os
     attributes:
-      label: Operating System
+      label: Operating system or browser
       description: which OS you are using ?
       options:
-        - Windows
-        - macOS
-        - Linux
-        - Web
+        - Windows 10 and below
+        - Windows 11
+        - macOS 10 and below
+        - macOS 11
+        - macOS 12
+        - Ubuntu
+        - Other Linux distribution
+        - Chrome/Edge
+        - Firefox
+        - IE
     validations:
       required: true
 
@@ -65,14 +69,14 @@ body:
     id: screenshot
     attributes:
       label: Screenshots (Optional)
-      placeholder: If applicable, add screenshots to help explain your problem.
+      placeholder: Clicking on this box and drag your screenshots or videos here to upload them
     validations:
       required: false
 
   - type: textarea
     id: download
     attributes:
-      label: Download link (Optional)
-      placeholder: Attach your book if you think it's helpful
+      label: Files (Optional)
+      placeholder: 1. Compress your files into a zip file; 2. Clicking on this box; 3. Drag and drop here
     validations:
       required: false

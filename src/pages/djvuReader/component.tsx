@@ -5,15 +5,13 @@ import localforage from "localforage";
 import { withRouter } from "react-router-dom";
 import _ from "underscore";
 import BookUtil from "../../utils/fileUtils/bookUtil";
-import "./viewer.css";
-import OtherUtil from "../../utils/otherUtil";
-import { isElectron } from "react-device-detect";
 import { toast } from "react-hot-toast";
+import BackToMain from "../../components/backToMain";
+import { djvuMouseEvent } from "../../utils/serviceUtils/mouseEvent";
 
 declare var window: any;
 
 class Viewer extends React.Component<ViewerProps, ViewerState> {
-  epub: any;
   constructor(props: ViewerProps) {
     super(props);
     this.state = {};
@@ -24,7 +22,15 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
     let key = url[url.length - 1].split("?")[0];
 
     localforage.getItem("books").then((result: any) => {
-      let book = result[_.findIndex(result, { key })];
+      let book;
+      //兼容在主窗口打开
+      if (this.props.currentBook.key) {
+        book = this.props.currentBook;
+      } else {
+        book =
+          result[_.findIndex(result, { key })] ||
+          JSON.parse(localStorage.getItem("tempBook") || "{}");
+      }
       BookUtil.fetchBook(key, true, book.path).then((result) => {
         if (!result) {
           toast.error(this.props.t("Book not exsits"));
@@ -39,23 +45,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
     });
     document
       .querySelector(".ebook-viewer")
-      ?.setAttribute("style", "height:100%");
-    window.onbeforeunload = () => {
-      this.handleExit();
-    };
-  }
-  // 点击退出按钮的处理程序
-  handleExit() {
-    this.props.handleReadingState(false);
-
-    if (isElectron) {
-      const { ipcRenderer } = window.require("electron");
-      let bounds = ipcRenderer.sendSync("reader-bounds", "ping");
-      OtherUtil.setReaderConfig("windowWidth", bounds.width);
-      OtherUtil.setReaderConfig("windowHeight", bounds.height);
-      OtherUtil.setReaderConfig("windowX", bounds.x);
-      OtherUtil.setReaderConfig("windowY", bounds.y);
-    }
+      ?.setAttribute("style", "height:100vh");
   }
 
   handleDjvu = async (result: ArrayBuffer) => {
@@ -63,11 +53,19 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
       var ViewerInstance = new window.DjVu.Viewer();
       ViewerInstance.render(document.querySelector(".ebook-viewer"));
       ViewerInstance.loadDocument(result);
+      djvuMouseEvent();
     }, 100);
   };
 
   render() {
-    return <div className="ebook-viewer">Loading</div>;
+    return (
+      <div>
+        <div className="ebook-viewer" id="page-area">
+          Loading
+        </div>
+        <BackToMain />
+      </div>
+    );
   }
 }
 export default withRouter(Viewer as any);

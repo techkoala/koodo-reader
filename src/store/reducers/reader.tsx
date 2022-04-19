@@ -1,20 +1,22 @@
-import OtherUtil from "../../utils/otherUtil";
+import StorageUtil from "../../utils/serviceUtils/storageUtil";
 const initState = {
   bookmarks: [],
   notes: [],
   digests: [],
   chapters: null,
   currentChapter: "",
-  flattenChapters: null,
-  color: parseInt(OtherUtil.getReaderConfig("highlightIndex"))
-    ? parseInt(OtherUtil.getReaderConfig("highlightIndex"))
-    : OtherUtil.getReaderConfig("isDisplayDark") === "yes"
+
+  color: parseInt(StorageUtil.getReaderConfig("highlightIndex"))
+    ? parseInt(StorageUtil.getReaderConfig("highlightIndex"))
+    : StorageUtil.getReaderConfig("appSkin") === "night" ||
+      (StorageUtil.getReaderConfig("appSkin") === "system" &&
+        StorageUtil.getReaderConfig("isOSNight") === "yes")
     ? 3
     : 0,
   noteKey: "",
   originalText: "",
   htmlBook: null,
-  readerMode: OtherUtil.getReaderConfig("readerMode") || "double",
+  readerMode: StorageUtil.getReaderConfig("readerMode") || "double",
 };
 export function reader(
   state = initState,
@@ -31,6 +33,11 @@ export function reader(
         ...state,
         notes: action.payload,
       };
+    case "HANDLE_CURRENT_CHAPTER":
+      return {
+        ...state,
+        currentChapter: action.payload,
+      };
     case "HANDLE_ORIGINAL_TEXT":
       return {
         ...state,
@@ -46,6 +53,7 @@ export function reader(
         ...state,
         color: action.payload,
       };
+
     case "HANDLE_NOTE_KEY":
       return {
         ...state,
@@ -65,11 +73,6 @@ export function reader(
       return {
         ...state,
         chapters: action.payload,
-      };
-    case "HANDLE_FLATTEN_CHAPTERS":
-      return {
-        ...state,
-        flattenChapters: action.payload,
       };
     default:
       return state;

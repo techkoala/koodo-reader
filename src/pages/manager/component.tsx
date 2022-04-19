@@ -10,10 +10,10 @@ import BackupDialog from "../../components/dialogs/backupDialog";
 import "./manager.css";
 import { ManagerProps, ManagerState } from "./interface";
 import { Trans } from "react-i18next";
-import OtherUtil from "../../utils/otherUtil";
+import StorageUtil from "../../utils/serviceUtils/storageUtil";
 import AddFavorite from "../../utils/readUtils/addFavorite";
 import SettingDialog from "../../components/dialogs/settingDialog";
-import { isMobileOnly } from "react-device-detect";
+import { isMobile } from "react-device-detect";
 import { Route, Switch, Redirect } from "react-router-dom";
 import { routes } from "../../router/routes";
 import Arrow from "../../components/arrow";
@@ -31,7 +31,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
   constructor(props: ManagerProps) {
     super(props);
     this.state = {
-      totalBooks: parseInt(OtherUtil.getReaderConfig("totalBooks") || "0") || 0,
+      totalBooks: parseInt(StorageUtil.getReaderConfig("totalBooks")) || 0,
       favoriteBooks: Object.keys(AddFavorite.getAllFavorite()).length,
       isAuthed: false,
       isError: false,
@@ -49,7 +49,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
           totalBooks: nextProps.books.length,
         },
         () => {
-          OtherUtil.setReaderConfig(
+          StorageUtil.setReaderConfig(
             "totalBooks",
             this.state.totalBooks.toString()
           );
@@ -70,12 +70,14 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
     this.props.handleFetchNotes();
     this.props.handleFetchBookmarks();
     this.props.handleFetchBookSortCode();
+    this.props.handleFetchNoteSortCode();
     this.props.handleFetchList();
   }
   componentDidMount() {
-    if (is_touch_device() && !OtherUtil.getReaderConfig("isTouch")) {
-      OtherUtil.setReaderConfig("isTouch", "yes");
+    if (is_touch_device() && !StorageUtil.getReaderConfig("isTouch")) {
+      StorageUtil.setReaderConfig("isTouch", "yes");
     }
+    this.props.handleReadingState(false);
   }
 
   handleDrag = (isDrag: boolean) => {
@@ -83,7 +85,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
   };
   render() {
     let { books } = this.props;
-    if (isMobileOnly) {
+    if (isMobile) {
       return (
         <>
           <p className="waring-title">
@@ -99,7 +101,9 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
           <div>
             <img
               src={
-                OtherUtil.getReaderConfig("isDisplayDark") === "yes"
+                StorageUtil.getReaderConfig("appSkin") === "night" ||
+                (StorageUtil.getReaderConfig("appSkin") === "system" &&
+                  StorageUtil.getReaderConfig("isOSNight") === "yes")
                   ? "./assets/empty_light.svg"
                   : "./assets/empty.svg"
               }
@@ -115,9 +119,9 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
         className="manager"
         onDragEnter={() => {
           !this.props.dragItem && this.handleDrag(true);
-          (document.getElementsByClassName(
-            "import-from-local"
-          )[0] as any).style.zIndex = "50";
+          (
+            document.getElementsByClassName("import-from-local")[0] as any
+          ).style.zIndex = "50";
         }}
       >
         {!this.props.dragItem && (

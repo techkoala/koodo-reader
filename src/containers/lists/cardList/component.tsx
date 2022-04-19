@@ -11,6 +11,8 @@ import { Redirect } from "react-router-dom";
 import NoteTag from "../../../components/noteTag";
 import BookUtil from "../../../utils/fileUtils/bookUtil";
 import toast from "react-hot-toast";
+import StorageUtil from "../../../utils/serviceUtils/storageUtil";
+import BookModel from "../../../model/Book";
 class CardList extends React.Component<CardListProps, CardListStates> {
   constructor(props: CardListProps) {
     super(props);
@@ -33,7 +35,7 @@ class CardList extends React.Component<CardListProps, CardListStates> {
   };
   handleJump = (cfi: string, bookKey: string, percentage: number) => {
     let { books } = this.props;
-    let book: any;
+    let book: BookModel | null = null;
     //根据bookKey获取指定的book和epub
     for (let i = 0; i < books.length; i++) {
       if (books[i].key === bookKey) {
@@ -45,8 +47,27 @@ class CardList extends React.Component<CardListProps, CardListStates> {
       toast(this.props.t("Book not exist"));
       return;
     }
-    RecordLocation.recordCfi(bookKey, cfi, percentage);
-    BookUtil.RedirectBook(book);
+
+    if (book.format === "PDF") {
+      let bookLocation = JSON.parse(cfi) || {};
+      RecordLocation.recordPDFLocation(book.md5, bookLocation);
+    } else {
+      let bookLocation = JSON.parse(cfi) || {};
+      RecordLocation.recordHtmlLocation(
+        bookKey,
+        bookLocation.text,
+        bookLocation.chapterTitle,
+        bookLocation.count,
+        bookLocation.percentage,
+        bookLocation.cfi
+      );
+    }
+
+    if (StorageUtil.getReaderConfig("isOpenInMain") === "yes") {
+      this.props.history.push(BookUtil.getBookUrl(book));
+    } else {
+      BookUtil.RedirectBook(book);
+    }
   };
   render() {
     let { cards } = this.props;
@@ -110,7 +131,7 @@ class CardList extends React.Component<CardListProps, CardListStates> {
                   {this.handleBookName(item.bookKey)}
                 </div>
                 <div className="card-list-item-chapter card-list-item-title">
-                  》<Trans>{item.chapter}</Trans>
+                  》{item.chapter}
                 </div>
               </div>
               <div
@@ -142,7 +163,7 @@ class CardList extends React.Component<CardListProps, CardListStates> {
                   {this.props.mode === "note" ? (
                     <Trans>{"More Notes"}</Trans>
                   ) : (
-                    <Trans>{"More Highlights"}</Trans>
+                    <Trans>{"Show in the book"}</Trans>
                   )}
 
                   <span className="icon-dropdown icon-card-right"></span>

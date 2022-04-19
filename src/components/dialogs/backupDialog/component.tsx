@@ -8,11 +8,12 @@ import DropboxUtil from "../../../utils/syncUtils/dropbox";
 import WebdavUtil from "../../../utils/syncUtils/webdav";
 import { BackupDialogProps, BackupDialogState } from "./interface";
 import TokenDialog from "../tokenDialog";
-import OtherUtil from "../../../utils/otherUtil";
+import StorageUtil from "../../../utils/serviceUtils/storageUtil";
 import Lottie from "react-lottie";
 import animationSuccess from "../../../assets/lotties/success.json";
 import FileSaver from "file-saver";
 import toast from "react-hot-toast";
+import { isElectron } from "react-device-detect";
 const successOptions = {
   loop: false,
   autoplay: true,
@@ -41,9 +42,11 @@ class BackupDialog extends React.Component<
     this.setState({ currentStep: 2 });
     this.props.handleLoadingDialog(false);
     this.showMessage("Excute Successfully");
+    this.props.handleFetchBooks();
   };
   handleRestoreToLocal = async (event: any) => {
     event.preventDefault();
+    this.props.handleLoadingDialog(true);
     let result = await restore(event.target.files[0]);
     if (result) {
       this.handleFinish();
@@ -77,13 +80,13 @@ class BackupDialog extends React.Component<
           this.handleFinish();
           break;
         case 1:
-          if (!OtherUtil.getReaderConfig("dropbox_token")) {
+          if (!StorageUtil.getReaderConfig("dropbox_token")) {
             this.props.handleTokenDialog(true);
             break;
           }
 
           if (this.state.isBackup === "yes") {
-            this.showMessage("Uploading");
+            this.showMessage("Uploading, please wait");
             this.props.handleLoadingDialog(true);
 
             let blob: Blob | boolean = await backup(
@@ -104,7 +107,7 @@ class BackupDialog extends React.Component<
             }
           } else {
             this.props.handleLoadingDialog(true);
-            this.showMessage("Downloading");
+            this.showMessage("Downloading, please wait");
             let result = await DropboxUtil.DownloadFile();
             if (result) {
               this.handleFinish();
@@ -120,12 +123,12 @@ class BackupDialog extends React.Component<
           break;
 
         case 3:
-          if (!OtherUtil.getReaderConfig("webdav_token")) {
+          if (!StorageUtil.getReaderConfig("webdav_token")) {
             this.props.handleTokenDialog(true);
             break;
           }
           if (this.state.isBackup === "yes") {
-            this.showMessage("Uploading");
+            this.showMessage("Uploading, please wait");
             this.props.handleLoadingDialog(true);
 
             let blob: any = await backup(
@@ -152,7 +155,7 @@ class BackupDialog extends React.Component<
               this.props.handleLoadingDialog(false);
             }
           } else {
-            this.showMessage("Downloading");
+            this.showMessage("Downloading, please wait");
             this.props.handleLoadingDialog(true);
 
             let result = await WebdavUtil.DownloadFile();
@@ -176,6 +179,15 @@ class BackupDialog extends React.Component<
             key={item.id}
             className="backup-page-list-item"
             onClick={() => {
+              //webdav is avavilible on desktop
+              if (index === 3 && !isElectron) {
+                toast(
+                  this.props.t(
+                    "Koodo Reader's web version are limited by the browser, for more powerful features, please download the desktop version."
+                  )
+                );
+                return;
+              }
               this.handleDrive(index);
             }}
             style={index !== 2 ? { opacity: 1 } : {}}
@@ -184,22 +196,22 @@ class BackupDialog extends React.Component<
               <span
                 className={`icon-${item.icon} backup-page-list-icon`}
               ></span>
-              {OtherUtil.getReaderConfig("dropbox_token") && index === 1 ? (
+              {StorageUtil.getReaderConfig("dropbox_token") && index === 1 ? (
                 <div
                   className="backup-page-list-title"
                   onClick={() => {
-                    OtherUtil.setReaderConfig("dropbox_token", "");
+                    StorageUtil.setReaderConfig("dropbox_token", "");
                     this.showMessage("Unauthorize Successfully");
                   }}
                   style={{ color: "rgb(0, 120, 212)" }}
                 >
                   <Trans>Unauthorize</Trans>
                 </div>
-              ) : OtherUtil.getReaderConfig("webdav_token") && index === 3 ? (
+              ) : StorageUtil.getReaderConfig("webdav_token") && index === 3 ? (
                 <div
                   className="backup-page-list-title"
                   onClick={() => {
-                    OtherUtil.setReaderConfig("webdav_token", "");
+                    StorageUtil.setReaderConfig("webdav_token", "");
                     this.showMessage("Unauthorize Successfully");
                   }}
                   style={{ color: "rgb(0, 120, 212)" }}
@@ -227,7 +239,7 @@ class BackupDialog extends React.Component<
         {this.props.isOpenTokenDialog ? <TokenDialog {...dialogProps} /> : null}
         {this.state.currentStep === 0 ? (
           <div className="backup-page-title">
-            <Trans>Do you want to backup or restore?</Trans>
+            <Trans>Choose your operation</Trans>
           </div>
         ) : this.state.currentStep === 1 && this.state.isBackup === "yes" ? (
           <div className="backup-page-title">
@@ -251,8 +263,8 @@ class BackupDialog extends React.Component<
               }}
             >
               <span className="icon-backup"></span>
-              <div>
-                <Trans>I want to backup</Trans>
+              <div style={{ lineHeight: 1.25 }}>
+                <Trans>Backup</Trans>
               </div>
             </div>
 
@@ -268,7 +280,7 @@ class BackupDialog extends React.Component<
             >
               <span className="icon-restore"></span>
               <div>
-                <Trans>I want to restore</Trans>
+                <Trans>Restore</Trans>
               </div>
             </div>
           </div>

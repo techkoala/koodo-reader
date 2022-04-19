@@ -10,11 +10,9 @@ import { withTranslation } from "react-i18next";
 import PopupNote from "./component";
 const mapStateToProps = (state: stateType) => {
   return {
-    currentEpub: state.book.currentEpub,
     currentBook: state.book.currentBook,
     notes: state.reader.notes,
     color: state.reader.color,
-    flattenChapters: state.reader.flattenChapters,
     noteKey: state.reader.noteKey,
   };
 };

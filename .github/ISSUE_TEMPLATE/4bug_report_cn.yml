@@ -1,5 +1,5 @@
-name: 问题反馈
-description: 我在使用 Koodo Reader 时遇到了问题
+name: 提交Bug
+description: 我在使用 Koodo Reader 时遇到了Bug
 labels: "bug"
 body:
   - type: checkboxes
@@ -9,37 +9,41 @@ body:
       description: https://github.com/troyeguo/koodo-reader/releases/latest
       options:
         - label: "Yes"
-    validations:
-      required: true
+          required: true
 
   - type: checkboxes
     id: testing2
     attributes:
-      label: 我已经搜索了已有的 Issues列表，没有找到类似的issue
+      label: 我已经搜索了已有的 issue 列表，没有找到类似的 issue
+      description: https://github.com/troyeguo/koodo-reader/issues
       options:
         - label: "Yes"
-    validations:
-      required: true
+          required: true
 
   - type: checkboxes
     id: testing3
     attributes:
       label: 我已经阅读了 Koodo Reader 的帮助文档，仍然无法解决
-      description: https://www.notion.so/troyeguo/e9c4e5755d564b0db6340eeba6d9ece9?v=7c8fcbed9adf4592ada95cfd593868c9
+      description: https://troyeguo.notion.site/Koodo-Reader-0c9c7ccdc5104a54825dfc72f1c84bea
       options:
         - label: "Yes"
-    validations:
-      required: true
+          required: true
 
   - type: dropdown
     id: os
     attributes:
-      label: 操作系统
+      label: 操作系统或浏览器
       options:
-        - Windows
-        - macOS
-        - Linux
-        - 网页版
+        - Windows 10 及以下
+        - Windows 11
+        - macOS 10 及以下
+        - macOS 11
+        - macOS 12
+        - Ubuntu
+        - 其他 Linux 发行版
+        - Chrome 及其他 Chromium 浏览器(包括 Edge 和所有国产浏览器)
+        - Firefox
+        - IE
     validations:
       required: true
 
@@ -63,14 +67,14 @@ body:
     id: screenshot
     attributes:
       label: 截图或录像(可选的)
-      placeholder: 截图和录像会帮助开发者定位问题
+      placeholder: 点击此对话框，将截图或录像文件拖动到这里上传
     validations:
       required: false
 
   - type: textarea
     id: download
     attributes:
-      label: 图书的下载链接(可选的)
-      placeholder: 您遇到问题时正在阅读的图书
+      label: 图书文件(可选的)
+      placeholder: 将文件压缩为zip包后，点击此对话框，拖拽到此处上传
     validations:
       required: false

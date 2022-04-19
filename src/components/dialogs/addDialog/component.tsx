@@ -18,6 +18,10 @@ class AddDialog extends Component<AddDialogProps, AddDialogState> {
     const inputElement: HTMLInputElement = document.querySelector(
       ".add-dialog-new-shelf-box"
     ) as HTMLInputElement;
+    if (!isNaN(parseInt(inputElement.value))) {
+      toast(this.props.t("Shelf title can't be pure number"));
+      return;
+    }
     let shelfTitle: string = this.state.shelfTitle;
     let shelfList = ShelfUtil.getShelf();
     let shelfTitles = Object.keys(ShelfUtil.getShelf());
@@ -33,7 +37,7 @@ class AddDialog extends Component<AddDialogProps, AddDialogState> {
     }
     //未填书架名提醒
     if (!shelfTitle) {
-      toast(this.props.t("Empty Shelf Title"));
+      toast(this.props.t("Shelf Title is Empty"));
       return;
     }
     //判断书架中是否已有该图书

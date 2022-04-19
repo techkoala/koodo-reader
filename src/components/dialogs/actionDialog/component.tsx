@@ -4,10 +4,10 @@ import { Trans } from "react-i18next";
 import { ActionDialogProps } from "./interface";
 import AddTrash from "../../../utils/readUtils/addTrash";
 import FileSaver from "file-saver";
-import localforage from "localforage";
 import Parser from "html-react-parser";
 import ShelfUtil from "../../../utils/readUtils/shelfUtil";
 import toast from "react-hot-toast";
+import BookUtil from "../../../utils/fileUtils/bookUtil";
 class ActionDialog extends React.Component<ActionDialogProps> {
   handleDeleteBook = () => {
     this.props.handleReadingBook(this.props.currentBook);
@@ -41,7 +41,7 @@ class ActionDialog extends React.Component<ActionDialogProps> {
           style={{
             left: this.props.left,
             top: this.props.top,
-            maxHeight: "37px",
+            maxHeight: "45px",
             paddingTop: "3px",
           }}
         >
@@ -67,6 +67,9 @@ class ActionDialog extends React.Component<ActionDialogProps> {
         className="action-dialog-container"
         onMouseLeave={() => {
           this.props.handleActionDialog(false);
+        }}
+        onMouseEnter={() => {
+          this.props.handleActionDialog(true);
         }}
         style={{ left: this.props.left, top: this.props.top }}
       >
@@ -110,21 +113,18 @@ class ActionDialog extends React.Component<ActionDialogProps> {
           <div
             className="action-dialog-edit"
             onClick={() => {
-              localforage
-                .getItem(this.props.currentBook.key)
-                .then((result: any) => {
-                  toast.success(this.props.t("Export Successfully"));
-                  FileSaver.saveAs(
-                    new Blob([result]),
-                    this.props.currentBook.name +
-                      `.${
-                        this.props.currentBook.format !== "EPUB" &&
-                        this.props.currentBook.cover !== "noCover"
-                          ? "epub"
-                          : this.props.currentBook.format.toLocaleLowerCase()
-                      }`
-                  );
-                });
+              BookUtil.fetchBook(
+                this.props.currentBook.key,
+                true,
+                this.props.currentBook.path
+              ).then((result: any) => {
+                toast.success(this.props.t("Export Successfully"));
+                FileSaver.saveAs(
+                  new Blob([result]),
+                  this.props.currentBook.name +
+                    `.${this.props.currentBook.format.toLocaleLowerCase()}`
+                );
+              });
             }}
           >
             <span className="icon-export view-icon"></span>
@@ -186,7 +186,7 @@ class ActionDialog extends React.Component<ActionDialogProps> {
           </div>
           <div>
             <p className="action-dialog-book-publisher">
-              <Trans>My Shelves</Trans>:
+              <Trans>Shelf</Trans>:
             </p>
             <p className="action-dialog-book-title">
               {ShelfUtil.getBookPosition(this.props.currentBook.key).map(

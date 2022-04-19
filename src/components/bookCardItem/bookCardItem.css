@@ -136,6 +136,7 @@
   cursor: pointer;
   z-index: 2;
 }
+
 .action-dialog-parent {
   position: fixed;
   top: 0px;

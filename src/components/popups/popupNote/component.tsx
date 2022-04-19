@@ -9,8 +9,19 @@ import NoteTag from "../../noteTag";
 import NoteModel from "../../../model/Note";
 import { Trans } from "react-i18next";
 import toast from "react-hot-toast";
+import { getHightlightCoords } from "../../../utils/fileUtils/pdfUtil";
+import { getPDFIframeDoc } from "../../../utils/serviceUtils/docUtil";
 declare var window: any;
-
+let classes = [
+  "color-0",
+  "color-1",
+  "color-2",
+  "color-3",
+  "line-0",
+  "line-1",
+  "line-2",
+  "line-3",
+];
 class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
   constructor(props: PopupNoteProps) {
     super(props);
@@ -23,10 +34,28 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
   handleTag = (tag: string[]) => {
     this.setState({ tag });
   };
+  removePDFHighlight = (selected: any, colorCode: string, noteKey: string) => {
+    let iWin = getPDFIframeDoc();
+    if (!iWin) return;
+    var pageIndex = selected.page;
+    if (!iWin.PDFViewerApplication.pdfViewer) return;
+    var page = iWin.PDFViewerApplication.pdfViewer.getPageView(pageIndex);
+    if (page && page.div && page.textLayer && page.textLayer.textLayerDiv) {
+      var pageElement =
+        colorCode.indexOf("color") > -1
+          ? page.textLayer.textLayerDiv
+          : page.div;
+      let noteElements = pageElement.querySelectorAll(".pdf-note");
+      noteElements.forEach((item: Element) => {
+        if (item.getAttribute("key") === noteKey) {
+          item.parentNode?.removeChild(item);
+        }
+      });
+    }
+  };
   createNote() {
     let notes = (document.querySelector(".editor-box") as HTMLInputElement)
       .value;
-
     if (this.props.noteKey) {
       //编辑笔记
       this.props.notes.forEach((item) => {
@@ -45,27 +74,36 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
     } else {
       //创建笔记
       let bookKey = this.props.currentBook.key;
-      const currentLocation = this.props.currentEpub.rendition.currentLocation();
-      let chapterHref = currentLocation.start.href;
-      let chapterIndex = currentLocation.start.index;
-      let chapter = "Unknown Chapter";
-      let currentChapter = this.props.flattenChapters.filter(
-        (item: any) => item.href.split("#")[0] === chapterHref
-      )[0];
-      if (currentChapter) {
-        chapter = currentChapter.label.trim(" ");
+      let cfi = "";
+      if (this.props.currentBook.format === "PDF") {
+        cfi = JSON.stringify(
+          RecordLocation.getPDFLocation(this.props.currentBook.md5)
+        );
+      } else {
+        cfi = JSON.stringify(
+          RecordLocation.getHtmlLocation(this.props.currentBook.key)
+        );
       }
-      const cfi = RecordLocation.getCfi(this.props.currentBook.key).cfi;
-      let iframe = document.getElementsByTagName("iframe")[0];
+
+      let pageArea = document.getElementById("page-area");
+      if (!pageArea) return;
+      let iframe = pageArea.getElementsByTagName("iframe")[0];
       if (!iframe) return;
       let doc = iframe.contentDocument;
       if (!doc) {
         return;
       }
-      let charRange = window.rangy
-        .getSelection(iframe)
-        .saveCharacterRanges(doc.body)[0];
-      let range = JSON.stringify(charRange);
+      let charRange;
+      if (this.props.currentBook.format !== "PDF") {
+        charRange = window.rangy
+          .getSelection(iframe)
+          .saveCharacterRanges(doc.body)[0];
+      }
+
+      let range =
+        this.props.currentBook.format === "PDF"
+          ? JSON.stringify(getHightlightCoords())
+          : JSON.stringify(charRange);
       let text = doc.getSelection()?.toString();
       if (!text) {
         return;
@@ -75,17 +113,15 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
       text = text.replace(/\n/g, "");
       text = text.replace(/\t/g, "");
       text = text.replace(/\f/g, "");
-      let percentage = RecordLocation.getCfi(this.props.currentBook.key)
-        .percentage
-        ? RecordLocation.getCfi(this.props.currentBook.key).percentage
-        : 0;
+      let percentage = 0;
 
       let color = this.props.color || 0;
       let tag = this.state.tag;
+
       let note = new Note(
         bookKey,
-        chapter,
-        chapterIndex,
+        this.props.chapter,
+        this.props.chapterIndex,
         text,
         cfi,
         range,
@@ -94,6 +130,7 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
         color,
         tag
       );
+
       let noteArr = this.props.notes;
       noteArr.push(note);
       localforage.setItem("notes", noteArr).then(() => {
@@ -106,10 +143,12 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
   }
   handleClose = () => {
     let noteIndex = -1;
+    let note: NoteModel;
     if (this.props.noteKey) {
       this.props.notes.forEach((item, index) => {
         if (item.key === this.props.noteKey) {
           noteIndex = index;
+          note = item;
         }
       });
       if (noteIndex > -1) {
@@ -117,6 +156,14 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
         localforage.setItem("notes", this.props.notes).then(() => {
           this.props.handleOpenMenu(false);
           this.props.handleMenuMode("menu");
+          if (this.props.currentBook.format === "PDF") {
+            this.removePDFHighlight(
+              JSON.parse(note.range),
+              classes[note.color],
+              note.key
+            );
+          }
+
           toast.success(this.props.t("Delete Successfully"));
           this.props.handleMenuMode("highlight");
           this.props.handleFetchNotes();
@@ -160,7 +207,7 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
 
           <div className="note-button-container">
             <span
-              className="cancel-button"
+              className="book-manage-title"
               onClick={() => {
                 this.handleClose();
               }}
@@ -172,7 +219,7 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
               )}
             </span>
             <span
-              className="confirm-button"
+              className="book-manage-title"
               onClick={() => {
                 this.createNote();
               }}

@@ -1,7 +1,9 @@
 import React from "react";
 import "./contentList.css";
 import { ContentListProps, ContentListState } from "./interface";
-import OtherUtil from "../../../utils/otherUtil";
+import StorageUtil from "../../../utils/serviceUtils/storageUtil";
+import _ from "underscore";
+import RecordLocation from "../../../utils/readUtils/recordLocation";
 class ContentList extends React.Component<ContentListProps, ContentListState> {
   constructor(props: ContentListProps) {
     super(props);
@@ -9,22 +11,10 @@ class ContentList extends React.Component<ContentListProps, ContentListState> {
       chapters: [],
       isCollapsed: true,
       currentIndex: -1,
-      isExpandContent: OtherUtil.getReaderConfig("isExpandContent") === "yes",
+      currentChapter: "",
+      isExpandContent: StorageUtil.getReaderConfig("isExpandContent") === "yes",
     };
     this.handleJump = this.handleJump.bind(this);
-  }
-
-  componentWillMount() {
-    //获取目录
-    if (this.props.currentEpub.loaded) {
-      this.props.currentEpub.loaded.navigation
-        .then((chapters: any) => {
-          this.setState({ chapters: chapters.toc });
-        })
-        .catch(() => {
-          console.log("Error occurs");
-        });
-    }
   }
   componentDidMount() {
     this.props.htmlBook &&
@@ -32,21 +22,38 @@ class ContentList extends React.Component<ContentListProps, ContentListState> {
         chapters: this.props.htmlBook.chapters,
       });
   }
+  flatChapter(chapters: any) {
+    let newChapter: any = [];
+    for (let i = 0; i < chapters.length; i++) {
+      if (chapters[i].subitems[0]) {
+        newChapter.push(chapters[i]);
+        newChapter = newChapter.concat(this.flatChapter(chapters[i].subitems));
+      } else {
+        newChapter.push(chapters[i]);
+      }
+    }
+    return newChapter;
+  }
   handleJump(event: any) {
     event.preventDefault();
     let href = event.target.getAttribute("href");
-    if (this.props.currentEpub.rendition) {
-      this.props.currentEpub.rendition.display(href);
-    } else {
-      let id = href.substr(1);
-
-      var top = window.frames[0].document.getElementById(id)?.offsetTop;
-      if (!top) return;
-      document.getElementsByClassName("ebook-viewer")[0].scrollTo(0, top);
-    }
+    let title =
+      this.props.htmlBook.flattenChapters[
+        _.findIndex(this.props.htmlBook.flattenChapters, { href })
+      ].label;
+    RecordLocation.recordHtmlLocation(
+      this.props.currentBook.key,
+      "test",
+      title,
+      "test",
+      "0",
+      ""
+    );
+    this.props.htmlBook.rendition.goToChapter(title);
+    this.props.handleCurrentChapter(title);
   }
   UNSAFE_componentWillReceiveProps(nextProps: ContentListProps) {
-    if (nextProps.htmlBook !== this.props.htmlBook) {
+    if (nextProps.htmlBook && nextProps.htmlBook !== this.props.htmlBook) {
       this.setState({ chapters: nextProps.htmlBook.chapters });
     }
   }
@@ -80,7 +87,9 @@ class ContentList extends React.Component<ContentListProps, ContentListState> {
               onClick={this.handleJump}
               className="book-content-name"
             >
-              {item.label}
+              {item.label.indexOf("#") > -1
+                ? item.label.split("#")[0]
+                : item.label}
             </a>
             {item.subitems.length > 0 &&
             (this.state.currentIndex === index ||

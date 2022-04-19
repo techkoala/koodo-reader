@@ -6,6 +6,7 @@ export interface SettingInfoProps {
   handleTipDialog: (isTipDialog: boolean) => void;
   handleTip: (tip: string) => void;
   t: (title: string) => string;
+  handleFetchBooks: () => void;
   bookmarks: BookmarkModel[];
   notes: NoteModel[];
   books: BookModel[];
@@ -14,12 +15,17 @@ export interface SettingInfoState {
   isTouch: boolean;
   isPreventTrigger: boolean;
   isMergeWord: boolean;
+  appSkin: string;
   isImportPath: boolean;
   isOpenBook: boolean;
-  isDisplayDark: boolean;
   isExpandContent: boolean;
+  isPreventSleep: boolean;
+  isOpenInMain: boolean;
   isDisableUpdate: boolean;
   isDisableAnalytics: boolean;
+  isUseBuiltIn: boolean;
+  isPDFCover: boolean;
   isAutoFullscreen: boolean;
+  isPreventAdd: boolean;
   currentThemeIndex: number;
 }

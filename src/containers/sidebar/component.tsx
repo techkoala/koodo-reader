@@ -3,9 +3,9 @@ import "./sidebar.css";
 import { sideMenu } from "../../constants/sideMenu";
 import { SidebarProps, SidebarState } from "./interface";
 import { withRouter } from "react-router-dom";
-import OtherUtil from "../../utils/otherUtil";
+import StorageUtil from "../../utils/serviceUtils/storageUtil";
 import { Tooltip } from "react-tippy";
-import { isElectron } from "react-device-detect";
+import { openExternalUrl } from "../../utils/serviceUtils/urlUtil";
 
 class Sidebar extends React.Component<SidebarProps, SidebarState> {
   constructor(props: SidebarProps) {
@@ -13,7 +13,8 @@ class Sidebar extends React.Component<SidebarProps, SidebarState> {
     this.state = {
       index: 0,
       hoverIndex: -1,
-      isCollapsed: OtherUtil.getReaderConfig("isCollapsed") === "yes" || false,
+      isCollapsed:
+        StorageUtil.getReaderConfig("isCollapsed") === "yes" || false,
     };
   }
   componentDidMount() {
@@ -25,8 +26,10 @@ class Sidebar extends React.Component<SidebarProps, SidebarState> {
   }
   handleSidebar = (mode: string, index: number) => {
     this.setState({ index: index });
+    this.props.handleSelectBook(false);
     this.props.history.push(`/manager/${mode}`);
     this.props.handleMode(mode);
+    this.props.handleShelfIndex(-1);
     this.props.handleSearch(false);
     this.props.handleSortDisplay(false);
   };
@@ -36,12 +39,10 @@ class Sidebar extends React.Component<SidebarProps, SidebarState> {
   handleCollapse = (isCollapsed: boolean) => {
     this.setState({ isCollapsed });
     this.props.handleCollapse(isCollapsed);
-    OtherUtil.setReaderConfig("isCollapsed", isCollapsed ? "yes" : "no");
+    StorageUtil.setReaderConfig("isCollapsed", isCollapsed ? "yes" : "no");
   };
   handleJump = (url: string) => {
-    isElectron
-      ? window.require("electron").shell.openExternal(url)
-      : window.open(url);
+    openExternalUrl(url);
   };
   render() {
     const renderSideMenu = () => {
@@ -130,7 +131,9 @@ class Sidebar extends React.Component<SidebarProps, SidebarState> {
 
         <img
           src={
-            OtherUtil.getReaderConfig("isDisplayDark") === "yes"
+            StorageUtil.getReaderConfig("appSkin") === "night" ||
+            (StorageUtil.getReaderConfig("appSkin") === "system" &&
+              StorageUtil.getReaderConfig("isOSNight") === "yes")
               ? "./assets/label_light.png"
               : "./assets/label.png"
           }

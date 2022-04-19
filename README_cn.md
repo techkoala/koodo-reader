@@ -18,19 +18,15 @@
 
 <div align="center">
 
-[下载](https://koodo.960960.xyz/zh/download) | [预览](https://koodo-reader.vercel.app/) | [反馈](https://koodo.960960.xyz/zh/support) | [文档](https://www.notion.so/troyeguo/e9c4e5755d564b0db6340eeba6d9ece9?v=7c8fcbed9adf4592ada95cfd593868c9)
+[下载客户端](https://koodo.960960.xyz/zh) | [在线预览](https://reader.960960.xyz) | [开发计划](https://troyeguo.notion.site/215baeda57804fd29dbb0e91d1e6a021?v=360c00183d944b598668f34c255edfd7) | [帮助文档](https://troyeguo.notion.site/Koodo-Reader-0c9c7ccdc5104a54825dfc72f1c84bea)
 
 </div>
 
 ## 预览
 
 <div align="center">
-  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
-    <img src="https://i.loli.net/2021/08/08/I37WPYFJcC1jltn.png" >
-  </a>
-  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
-    <img src="https://i.loli.net/2021/08/08/G7WvUQFTrEpSCKg.png" >
-  </a>
+  <img src="https://i.loli.net/2021/08/08/I37WPYFJcC1jltn.png" >
+  <img src="https://i.loli.net/2021/08/08/G7WvUQFTrEpSCKg.png" >
 </div>
 
 ## 特色
@@ -42,8 +38,8 @@
   - 纯文本 (**.txt**)
   - 漫画 (**.cbr**, **.cbz**, **.cbt**)
   - 富文本 (**.md**, **.docx**, **.rtf**)
-  - 超文本 (**.html**, **.xml**)
   - FB2 (**.fb2**)
+  - 超文本 (**.html**, **.xml**, **.xhtml**, **.htm**)
 - 支持 **Windows**，**macOS**，**Linux** 和 **网页版**
 - 备份数据到 **Dropbox** 和 **Webdav**
 - 自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步
@@ -56,9 +52,16 @@
 ## 使用方法
 
 - 桌面端：
-  - 稳定版 (推荐下载)：[蓝奏云](https://wwa.lanzoui.com/b0c90cieb) 密码：1234 | [历史版本](https://wwa.lanzoui.com/b0c97tupi) 密码：1234
+  - 稳定版 (推荐下载)：[官网](https://koodo.960960.xyz/zh)（感谢 [@Stille](https://www.ioiox.com/donate.html) 提供下载加速服务）
   - 开发版：[Github Release](https://github.com/troyeguo/koodo-reader/releases/latest) （包含新功能和 bug 修复，但也可能引入更多未知 bug）
-- 网页版：[前往](https://koodo-reader.vercel.app/)
+- 网页版：[前往](https://reader.960960.xyz)
+- 使用 Scoop 安装：
+
+```shell
+scoop bucket add dorado https://github.com/chawyehsu/dorado
+scoop install dorado/koodo-reader
+```
+
 - 使用 Homebrew 安装：
 
 ```shell
@@ -75,30 +78,19 @@ docker-compose up -d
 
 <div align="center">
   <b>列表模式</b>
-  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
-    <img src="https://i.loli.net/2021/08/08/JyNHfThMs184Um2.png" >
-  </a>
+  <img src="https://i.loli.net/2021/08/08/JyNHfThMs184Um2.png" >
   <b>封面模式</b>
-  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
-    <img src="https://i.loli.net/2021/08/08/76zkDEAobd4qsmR.png" >
-  </a>
+  <img src="https://i.loli.net/2021/08/08/76zkDEAobd4qsmR.png" >
   <b>阅读菜单</b>
-  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
-    <img src="https://i.loli.net/2021/08/08/LeEN9gnOvFmfVWA.png" >
-  </a>
+  <img src="https://i.loli.net/2021/08/08/LeEN9gnOvFmfVWA.png" >
   <b>备份和恢复</b>
-  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
-    <img src="https://i.loli.net/2021/08/08/aRIAiYT2dGJQhC1.png" >
-  </a>
+  <img src="https://i.loli.net/2021/08/08/aRIAiYT2dGJQhC1.png" >
   <b>黑夜模式和主题色</b>
-  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
-    <img src="https://i.loli.net/2021/08/08/ynqUNpX93xZefdw.png" >
-  </a>
+  <img src="https://i.loli.net/2021/08/08/ynqUNpX93xZefdw.png" >
   <b>笔记管理</b>
-  <a href="https://github.com/troyeguo/koodo-reader/releases/latest">
-    <img src="https://i.loli.net/2021/08/09/sARQBoefvGklHwC.png" >
-  </a>
+  <img src="https://i.loli.net/2021/08/09/sARQBoefvGklHwC.png" >
 </div>
+
 ## 运行源码
 
 请确保您电脑的 node 的版本大于 10.0.0，已配置好 yarn，git 的运行环境。
@@ -123,6 +115,6 @@ docker-compose up -d
    yarn start
    ```
 
-## 许可说明
+## 贡献翻译
 
-本项目禁止任何商业项目二开使用，任何组织和个人不得修改本软件名字和 logo 后重新分发。在不违背上述条件的前提下，本项目采用 AGPL3.0 协议。
+您可以通过 Koodo Reader 的[在线翻译工具](https://poeditor.com/join/project?hash=fk4qbQTlsk)，完善现有翻译，也可以添加新的语言。

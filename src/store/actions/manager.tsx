@@ -1,5 +1,5 @@
 import localforage from "localforage";
-import OtherUtil from "../../utils/otherUtil";
+import StorageUtil from "../../utils/serviceUtils/storageUtil";
 import SortUtil from "../../utils/readUtils/sortUtil";
 import BookModel from "../../model/Book";
 import { Dispatch } from "redux";
@@ -73,7 +73,7 @@ export function handleNoteSortCode(noteSortCode: {
 
 export function handleFetchBooks(isTrash = false) {
   return (dispatch: Dispatch) => {
-    localforage.getItem("books", async (err, value) => {
+    localforage.getItem("books", (err, value) => {
       let bookArr: any = value;
       let keyArr = AddTrash.getAllTrash();
       if (isTrash) {
@@ -90,9 +90,15 @@ export function handleFetchBookSortCode() {
     dispatch(handleBookSortCode(bookSortCode));
   };
 }
+export function handleFetchNoteSortCode() {
+  return (dispatch: Dispatch) => {
+    let noteSortCode = SortUtil.getNoteSortCode();
+    dispatch(handleNoteSortCode(noteSortCode));
+  };
+}
 export function handleFetchList() {
   return (dispatch: Dispatch) => {
-    let viewMode = OtherUtil.getReaderConfig("viewMode") || "card";
+    let viewMode = StorageUtil.getReaderConfig("viewMode") || "card";
     dispatch(handleViewMode(viewMode));
   };
 }

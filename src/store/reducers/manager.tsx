@@ -1,11 +1,10 @@
-import SortUtil from "../../utils/readUtils/sortUtil";
 const initState = {
   books: null,
   deletedBooks: [],
   searchResults: [],
   isSearch: false,
   isAboutOpen: false,
-  isBookSort: false,
+  isBookSort: localStorage.getItem("bookSortCode") ? true : false,
   isNoteSort: false,
   isSettingOpen: false,
   viewMode: "card",
@@ -15,7 +14,7 @@ const initState = {
   isTipDialog: false,
   isShowNew: false,
   bookSortCode: { sort: 0, order: 1 },
-  noteSortCode: SortUtil.getNoteSortCode(),
+  noteSortCode: { sort: 2, order: 1 },
   isSelectBook: false,
   message: "Add Successfully",
   tip: "",

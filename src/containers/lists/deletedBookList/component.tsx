@@ -18,7 +18,7 @@ class BookList extends React.Component<BookListProps, BookListState> {
     super(props);
     this.state = {};
   }
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this.props.handleFetchBooks(true);
   }
   handleKeyFilter = (items: any[], arr: string[]) => {
@@ -119,6 +119,7 @@ class BookList extends React.Component<BookListProps, BookListState> {
           onClick={() => {
             this.props.handleDeleteDialog(true);
           }}
+          style={this.props.isCollapsed ? { left: "calc(50% - 60px)" } : {}}
         >
           <Trans>Delete All Books</Trans>
         </div>

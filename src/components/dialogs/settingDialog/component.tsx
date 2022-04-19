@@ -4,7 +4,7 @@ import { SettingInfoProps, SettingInfoState } from "./interface";
 import { Trans } from "react-i18next";
 import i18n from "../../../i18n";
 import { version } from "../../../../package.json";
-import OtherUtil from "../../../utils/otherUtil";
+import StorageUtil from "../../../utils/serviceUtils/storageUtil";
 import { changePath } from "../../../utils/syncUtils/common";
 import { isElectron } from "react-device-detect";
 import { dropdownList } from "../../../constants/dropdownList";
@@ -14,10 +14,12 @@ import {
   settingList,
   langList,
   searchList,
+  skinList,
 } from "../../../constants/settingList";
 import { themeList } from "../../../constants/themeList";
 import _ from "underscore";
 import toast from "react-hot-toast";
+import { openExternalUrl } from "../../../utils/serviceUtils/urlUtil";
 class SettingDialog extends React.Component<
   SettingInfoProps,
   SettingInfoState
@@ -25,70 +27,110 @@ class SettingDialog extends React.Component<
   constructor(props: SettingInfoProps) {
     super(props);
     this.state = {
-      isTouch: OtherUtil.getReaderConfig("isTouch") === "yes",
-      isImportPath: OtherUtil.getReaderConfig("isImportPath") === "yes",
-      isMergeWord: OtherUtil.getReaderConfig("isMergeWord") === "yes",
-      isPreventTrigger: OtherUtil.getReaderConfig("isPreventTrigger") === "yes",
-      isAutoFullscreen: OtherUtil.getReaderConfig("isAutoFullscreen") === "yes",
-      isOpenBook: OtherUtil.getReaderConfig("isOpenBook") === "yes",
-      isExpandContent: OtherUtil.getReaderConfig("isExpandContent") === "yes",
-      isDisableUpdate: OtherUtil.getReaderConfig("isDisableUpdate") === "yes",
-      isDisplayDark: OtherUtil.getReaderConfig("isDisplayDark") === "yes",
+      isTouch: StorageUtil.getReaderConfig("isTouch") === "yes",
+      isImportPath: StorageUtil.getReaderConfig("isImportPath") === "yes",
+      isMergeWord: StorageUtil.getReaderConfig("isMergeWord") === "yes",
+      isPreventTrigger:
+        StorageUtil.getReaderConfig("isPreventTrigger") === "yes",
+      isAutoFullscreen:
+        StorageUtil.getReaderConfig("isAutoFullscreen") === "yes",
+      isPreventAdd: StorageUtil.getReaderConfig("isPreventAdd") === "yes",
+      isOpenBook: StorageUtil.getReaderConfig("isOpenBook") === "yes",
+      isExpandContent: StorageUtil.getReaderConfig("isExpandContent") === "yes",
+      isPreventSleep: StorageUtil.getReaderConfig("isPreventSleep") === "yes",
+      isOpenInMain: StorageUtil.getReaderConfig("isOpenInMain") === "yes",
+      isDisableUpdate: StorageUtil.getReaderConfig("isDisableUpdate") === "yes",
+      appSkin: StorageUtil.getReaderConfig("appSkin"),
       isDisableAnalytics:
-        OtherUtil.getReaderConfig("isDisableAnalytics") === "yes",
+        StorageUtil.getReaderConfig("isDisableAnalytics") === "yes",
+      isUseBuiltIn: StorageUtil.getReaderConfig("isUseBuiltIn") === "yes",
+      isPDFCover: StorageUtil.getReaderConfig("isPDFCover") === "yes",
       currentThemeIndex: _.findLastIndex(themeList, {
-        name: OtherUtil.getReaderConfig("themeColor"),
+        name: StorageUtil.getReaderConfig("themeColor"),
       }),
     };
   }
   componentDidMount() {
-    OtherUtil.getReaderConfig("systemFont") &&
+    StorageUtil.getReaderConfig("systemFont") &&
       document
         .getElementsByClassName("lang-setting-dropdown")[0]
         ?.children[
           dropdownList[0].option.indexOf(
-            OtherUtil.getReaderConfig("systemFont")
+            StorageUtil.getReaderConfig("systemFont")
           )
-        ].setAttribute("selected", "selected");
+        ]?.setAttribute("selected", "selected");
     document
       .getElementsByClassName("lang-setting-dropdown")[1]
       ?.children[
-        ["zh", "cht", "en", "ru"].indexOf(
-          OtherUtil.getReaderConfig("lang") ||
-            (navigator.language.indexOf("zh") > -1 ? "zh" : "en")
-        )
-      ].setAttribute("selected", "selected");
+        langList
+          .map((item) => item.value)
+          .indexOf(
+            StorageUtil.getReaderConfig("lang") ||
+              (navigator.language.indexOf("zh") > -1 ? "zh" : "en")
+          )
+      ]?.setAttribute("selected", "selected");
     document.getElementsByClassName("lang-setting-dropdown")[2]?.children[
       _.findLastIndex(searchList, {
         value:
-          OtherUtil.getReaderConfig("searchEngine") ||
+          StorageUtil.getReaderConfig("searchEngine") ||
           (navigator.language === "zh-CN" ? "baidu" : "google"),
       })
-    ].setAttribute("selected", "selected");
+    ]?.setAttribute("selected", "selected");
+    document.getElementsByClassName("lang-setting-dropdown")[3]?.children[
+      _.findLastIndex(skinList, {
+        value: StorageUtil.getReaderConfig("appSkin") || "light",
+      })
+    ]?.setAttribute("selected", "selected");
   }
   handleRest = (bool: boolean) => {
     toast.success(this.props.t("Change Successfully"));
   };
   changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
-    OtherUtil.setReaderConfig("lang", lng);
+    StorageUtil.setReaderConfig("lang", lng);
   };
   changeSearch = (searchEngine: string) => {
-    OtherUtil.setReaderConfig("searchEngine", searchEngine);
+    StorageUtil.setReaderConfig("searchEngine", searchEngine);
+  };
+  changeSkin = (skin: string) => {
+    StorageUtil.setReaderConfig("appSkin", skin);
+
+    if (
+      skin === "night" ||
+      (StorageUtil.getReaderConfig("appSkin") === "system" &&
+        StorageUtil.getReaderConfig("isOSNight") === "yes")
+    ) {
+      StorageUtil.setReaderConfig("backgroundColor", "rgba(44,47,49,1)");
+      StorageUtil.setReaderConfig("textColor", "rgba(255,255,255,1)");
+    } else if (
+      skin === "light" ||
+      (StorageUtil.getReaderConfig("appSkin") === "system" &&
+        StorageUtil.getReaderConfig("isOSNight") !== "yes")
+    ) {
+      StorageUtil.setReaderConfig("backgroundColor", "rgba(255,255,255,1)");
+      StorageUtil.setReaderConfig("textColor", "rgba(0,0,0,1)");
+    }
+
+    if (isElectron) {
+      toast(this.props.t("Try refresh or restart"));
+    } else {
+      window.location.reload();
+    }
   };
   changeFont = (font: string) => {
     let body = document.getElementsByTagName("body")[0];
-    body.setAttribute("style", "font-family:" + font + "!important");
-    OtherUtil.setReaderConfig("systemFont", font);
+    body?.setAttribute("style", "font-family:" + font + "!important");
+    StorageUtil.setReaderConfig("systemFont", font);
   };
   handleJump = (url: string) => {
-    isElectron
-      ? window.require("electron").shell.openExternal(url)
-      : window.open(url);
+    openExternalUrl(url);
   };
   handleSetting = (stateName: string) => {
     this.setState({ [stateName]: !this.state[stateName] } as any);
-    OtherUtil.setReaderConfig(stateName, this.state[stateName] ? "no" : "yes");
+    StorageUtil.setReaderConfig(
+      stateName,
+      this.state[stateName] ? "no" : "yes"
+    );
     this.handleRest(this.state[stateName]);
   };
   syncFromLocation = async () => {
@@ -120,11 +162,8 @@ class SettingDialog extends React.Component<
     }
   };
   handleChangeLocation = async () => {
-    const { dialog } = window.require("electron").remote;
-    var path = await dialog.showOpenDialog({
-      properties: ["openDirectory"],
-    });
     const { ipcRenderer } = window.require("electron");
+    const path = await ipcRenderer.invoke("change-path");
     if (!path.filePaths[0]) {
       return;
     }
@@ -137,6 +176,7 @@ class SettingDialog extends React.Component<
     if (result === 1) {
       this.syncFromLocation();
     } else if (result === 2) {
+      this.props.handleFetchBooks();
       toast.success(this.props.t("Change Successfully"));
     } else {
       toast.error(this.props.t("Change Failed"));
@@ -149,22 +189,10 @@ class SettingDialog extends React.Component<
       localStorage.getItem("storageLocation") ||
       ipcRenderer.sendSync("storage-location", "ping");
   };
-  handleDisplayDark = () => {
-    this.setState({ isDisplayDark: !this.state.isDisplayDark });
-    OtherUtil.setReaderConfig(
-      "isDisplayDark",
-      this.state.isDisplayDark ? "no" : "yes"
-    );
-    if (isElectron) {
-      toast(this.props.t("Try refresh or restart"));
-    } else {
-      window.location.reload();
-    }
-  };
 
   handleTheme = (name: string, index: number) => {
     this.setState({ currentThemeIndex: index });
-    OtherUtil.setReaderConfig("themeColor", name);
+    StorageUtil.setReaderConfig("themeColor", name);
     if (isElectron) {
       toast(this.props.t("Try refresh or restart"));
     } else {
@@ -172,15 +200,18 @@ class SettingDialog extends React.Component<
     }
   };
   handleMergeWord = () => {
+    if (this.state.isOpenInMain && !this.state.isMergeWord) {
+      toast(this.props.t("Please turn off open books in the main window"));
+      return;
+    }
     this.handleSetting("isMergeWord");
-    OtherUtil.setReaderConfig("readerMode", "single");
-    OtherUtil.setReaderConfig("textColor", "rgba(0,0,0,1)");
-    OtherUtil.setReaderConfig("backgroundColor", "rgba(255,255,255,1)");
-    OtherUtil.setReaderConfig("isAutoFullscreen", "no");
-    OtherUtil.setReaderConfig("isHideBackground", "yes");
-    OtherUtil.setReaderConfig("isHidePageButton", "yes");
-    OtherUtil.setReaderConfig("isHideHeader", "yes");
-    OtherUtil.setReaderConfig("isHideFooter", "yes");
+  };
+  handleOpenInMain = () => {
+    if (this.state.isMergeWord && !this.state.isOpenInMain) {
+      toast(this.props.t("Please turn off merge with word first"));
+      return;
+    }
+    this.handleSetting("isOpenInMain");
   };
   render() {
     return (
@@ -191,6 +222,16 @@ class SettingDialog extends React.Component<
         <p className="setting-subtitle">
           <Trans>Version</Trans>
           {version}
+          &nbsp;&nbsp;
+          <Trans>
+            {StorageUtil.getReaderConfig("appInfo") === "new"
+              ? "New Version Available"
+              : StorageUtil.getReaderConfig("appInfo") === "stable"
+              ? "Latest Stable Version"
+              : StorageUtil.getReaderConfig("appInfo") === "dev"
+              ? "Developer Version"
+              : ""}
+          </Trans>
         </p>
         <div
           className="setting-close-container"
@@ -211,7 +252,10 @@ class SettingDialog extends React.Component<
                 key={item.propName}
               >
                 <div className="setting-dialog-new-title" key={item.title}>
-                  <Trans>{item.title}</Trans>
+                  <span style={{ width: "250px" }}>
+                    <Trans>{item.title}</Trans>
+                  </span>
+
                   <span
                     className="single-control-switch"
                     onClick={() => {
@@ -219,8 +263,8 @@ class SettingDialog extends React.Component<
                         case "isMergeWord":
                           this.handleMergeWord();
                           break;
-                        case "isDisplayDark":
-                          this.handleDisplayDark();
+                        case "isOpenInMain":
+                          this.handleOpenInMain();
                           break;
                         default:
                           this.handleSetting(item.propName);
@@ -300,6 +344,7 @@ class SettingDialog extends React.Component<
               </div>
             </>
           )}
+
           <div className="setting-dialog-new-title">
             <Trans>System Font</Trans>
             <select
@@ -352,7 +397,27 @@ class SettingDialog extends React.Component<
                   key={item.value}
                   className="lang-setting-option"
                 >
-                  {item.label}
+                  {this.props.t(item.label)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="setting-dialog-new-title">
+            <Trans>Appearance</Trans>
+            <select
+              name=""
+              className="lang-setting-dropdown"
+              onChange={(event) => {
+                this.changeSkin(event.target.value);
+              }}
+            >
+              {skinList.map((item) => (
+                <option
+                  value={item.value}
+                  key={item.value}
+                  className="lang-setting-option"
+                >
+                  {this.props.t(item.label)}
                 </option>
               ))}
             </select>

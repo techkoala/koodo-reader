@@ -11,12 +11,6 @@ image:
 
 stack: node 14
 
-cache:
-  - node_modules
-  - '%APPDATA%\npm-cache'
-  - '%USERPROFILE%\.electron'
-  - '%USERPROFILE%\AppData\Local\Yarn\cache'
-
 init:
   - git config --global core.autocrlf input
   - sh: |
@@ -30,8 +24,9 @@ init:
 
 install:
   - git reset --hard HEAD
-  - npm install
+  - npm install node-sass@4.14.1
   - node --version
+  - npm install
 
 build_script:
   - npm run release

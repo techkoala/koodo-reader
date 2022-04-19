@@ -4,12 +4,11 @@ import BookCardItem from "../../../components/bookCardItem";
 import BookListItem from "../../../components/bookListItem";
 import BookCoverItem from "../../../components/bookCoverItem";
 import AddFavorite from "../../../utils/readUtils/addFavorite";
-import RecordRecent from "../../../utils/readUtils/recordRecent";
 import ShelfUtil from "../../../utils/readUtils/shelfUtil";
 import SortUtil from "../../../utils/readUtils/sortUtil";
 import BookModel from "../../../model/Book";
 import { BookListProps, BookListState } from "./interface";
-import OtherUtil from "../../../utils/otherUtil";
+import StorageUtil from "../../../utils/serviceUtils/storageUtil";
 import localforage from "localforage";
 import Empty from "../../emptyPage";
 import { Redirect, withRouter } from "react-router-dom";
@@ -17,7 +16,7 @@ import ViewMode from "../../../components/viewMode";
 import { backup } from "../../../utils/syncUtils/backupUtil";
 import { isElectron } from "react-device-detect";
 import SelectBook from "../../../components/selectBook";
-import ShelfChooser from "../../../components/ShelfChooser";
+import ShelfSelector from "../../../components/shelfSelector";
 class BookList extends React.Component<BookListProps, BookListState> {
   constructor(props: BookListProps) {
     super(props);
@@ -25,7 +24,7 @@ class BookList extends React.Component<BookListProps, BookListState> {
       favoriteBooks: Object.keys(AddFavorite.getAllFavorite()).length,
     };
   }
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     if (this.props.mode === "trash") {
       this.props.handleFetchBooks(true);
     } else {
@@ -73,15 +72,19 @@ class BookList extends React.Component<BookListProps, BookListState> {
     arr.forEach((item) => {
       items[item] && itemArr.push(items[item]);
     });
-
     return itemArr;
   };
   renderBookList = () => {
     //根据不同的场景获取不同的图书数据
-    let books = this.props.isSearch
+
+    let books = this.props.isSearch //搜索图书
       ? this.handleIndexFilter(this.props.books, this.props.searchResults)
-      : this.props.shelfIndex > 0
-      ? this.handleShelf(this.props.books, this.props.shelfIndex)
+      : this.props.shelfIndex > 0 //展示书架
+      ? this.handleIndexFilter(
+          this.handleShelf(this.props.books, this.props.shelfIndex),
+          //返回排序后的图书index
+          SortUtil.sortBooks(this.props.books, this.props.bookSortCode) || []
+        )
       : this.props.mode === "favorite" && !this.props.isBookSort
       ? this.handleKeyFilter(this.props.books, AddFavorite.getAllFavorite())
       : this.props.mode === "favorite" && this.props.isBookSort
@@ -90,18 +93,14 @@ class BookList extends React.Component<BookListProps, BookListState> {
           //返回排序后的图书index
           SortUtil.sortBooks(this.props.books, this.props.bookSortCode) || []
         )
-      : this.props.isBookSort && this.props.bookSortCode.sort !== 0
+      : this.props.isBookSort
       ? this.handleIndexFilter(
           this.props.books,
           //返回排序后的图书index
           SortUtil.sortBooks(this.props.books, this.props.bookSortCode) || []
         )
-      : this.handleKeyFilter(
-          this.props.books,
-          this.props.bookSortCode.order === 1
-            ? RecordRecent.getAllRecent()
-            : RecordRecent.getAllRecent().reverse()
-        );
+      : this.props.books;
+
     if (this.props.mode === "shelf" && books.length === 0) {
       return (
         <div
@@ -167,12 +166,15 @@ class BookList extends React.Component<BookListProps, BookListState> {
       });
     }
 
-    OtherUtil.setReaderConfig("totalBooks", this.props.books.length.toString());
+    StorageUtil.setReaderConfig(
+      "totalBooks",
+      this.props.books.length.toString()
+    );
     return (
       <>
         <ViewMode />
         <SelectBook />
-        <ShelfChooser />
+        {!this.props.isSelectBook && <ShelfSelector />}
         <div
           className="book-list-container-parent"
           style={

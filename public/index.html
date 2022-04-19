@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.png" />
-    <link rel="dns-prefetch" href="https://koodo-reader.vercel.app/" />
+    <link rel="dns-prefetch" href="https://reader.960960.xyz" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="keywords" content="epub reader free koodo" />
     <meta
@@ -27,10 +27,12 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
 
     <div id="root"></div>
+    <canvas id="the-canvas"></canvas>
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script
       async
-      src="https://www.googletagmanager.com/gtag/js?id=UA-149740367-3"
+      src="https://www.googletagmanager.com/gtag/js?id=G-LW49EYTQWY"
+      id="analytic"
     ></script>
     <script>
       if (
@@ -43,54 +45,7 @@
         }
         gtag("js", new Date());
 
-        gtag("config", "UA-149740367-3");
-      }
-    </script>
-
-    <script>
-      const style = document.createElement("link");
-      style.rel = "stylesheet";
-      if (
-        JSON.parse(localStorage.getItem("readerConfig") || "{}")
-          .isDisplayDark === "yes"
-      ) {
-        style.href = "./assets/styles/dark.css";
-      } else {
-        style.href = "./assets/styles/default.css";
-      }
-      document.head.appendChild(style);
-      if (JSON.parse(localStorage.getItem("readerConfig") || "{}").systemFont) {
-        let body = document.getElementsByTagName("body")[0];
-        body.setAttribute(
-          "style",
-          "font-family:" +
-            JSON.parse(localStorage.getItem("readerConfig") || "{}")
-              .systemFont +
-            "!important"
-        );
-      }
-      document.head.appendChild(style);
-      if (
-        document.location.href.indexOf("epub") > -1 ||
-        document.location.href.indexOf("pdf") > -1 ||
-        document.location.href.indexOf("mobi") > -1 ||
-        document.location.href.indexOf("txt") > -1 ||
-        document.location.href.indexOf("djvu") > -1 ||
-        document.location.href.indexOf("rtf") > -1 ||
-        document.location.href.indexOf("docx") > -1 ||
-        document.location.href.indexOf("fb2") > -1 ||
-        document.location.href.indexOf("cbr") > -1 ||
-        document.location.href.indexOf("cbt") > -1 ||
-        document.location.href.indexOf("cbz") > -1 ||
-        document.location.href.indexOf("md") > -1 ||
-        document.location.href.indexOf("html") > -1 ||
-        document.location.href.indexOf("htm") > -1 ||
-        document.location.href.indexOf("xml") > -1 ||
-        document.location.href.indexOf("xhtml") > -1 ||
-        document.location.href.indexOf("azw3") > -1
-      ) {
-        let coverLoading = document.querySelector(".loading-cover");
-        coverLoading && coverLoading.parentNode.removeChild(coverLoading);
+        gtag("config", "G-LW49EYTQWY");
       }
     </script>
     <script
@@ -99,11 +54,19 @@
     ></script>
     <script
       type="text/javascript"
-      src="%PUBLIC_URL%/lib/pdf/build/pdf.js"
+      src="%PUBLIC_URL%/lib/kookit/kookit.umd.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="%PUBLIC_URL%/lib/marked/marked.js"
     ></script>
     <script
       type="text/javascript"
       src="%PUBLIC_URL%/lib/EpubJS/epub.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="%PUBLIC_URL%/lib/pdf/build/pdf.js"
     ></script>
     <script
       type="text/javascript"
@@ -137,10 +100,7 @@
       type="text/javascript"
       src="%PUBLIC_URL%/lib/unrar/unrar.js"
     ></script>
-    <script
-      type="text/javascript"
-      src="%PUBLIC_URL%/lib/djvu/djvu.min.js"
-    ></script>
+    <script type="text/javascript" src="%PUBLIC_URL%/lib/djvu/djvu.js"></script>
     <script
       type="text/javascript"
       src="%PUBLIC_URL%/lib/djvu/djvu_viewer.js"

@@ -5,7 +5,7 @@ import { Trans } from "react-i18next";
 import { getParamsFromUrl } from "../../utils/syncUtils/common";
 import copy from "copy-text-to-clipboard";
 import { withRouter } from "react-router-dom";
-import OtherUtil from "../../utils/otherUtil";
+import StorageUtil from "../../utils/serviceUtils/storageUtil";
 import Lottie from "react-lottie";
 import animationSuccess from "../../assets/lotties/success.json";
 import toast, { Toaster } from "react-hot-toast";
@@ -116,7 +116,9 @@ class Redirect extends React.Component<RedirectProps, RedirectState> {
         </div>
         <img
           src={
-            OtherUtil.getReaderConfig("isDisplayDark") === "yes"
+            StorageUtil.getReaderConfig("appSkin") === "night" ||
+            (StorageUtil.getReaderConfig("appSkin") === "system" &&
+              StorageUtil.getReaderConfig("isOSNight") === "yes")
               ? "./assets/empty_light.svg"
               : "./assets/empty.svg"
           }

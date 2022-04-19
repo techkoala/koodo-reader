@@ -2,6 +2,7 @@ import React from "react";
 import { Trans } from "react-i18next";
 import { AboutDialogProps, AboutDialogState } from "./interface";
 import { isElectron } from "react-device-detect";
+import { openExternalUrl } from "../../../utils/serviceUtils/urlUtil";
 
 class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
   constructor(props: AboutDialogProps) {
@@ -9,9 +10,7 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
     this.state = {};
   }
   handleJump = (url: string) => {
-    isElectron
-      ? window.require("electron").shell.openExternal(url)
-      : window.open(url);
+    openExternalUrl(url);
     this.props.handleAbout(false);
   };
 
@@ -27,10 +26,10 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
         }}
         style={
           this.props.isNewWarning
-            ? { left: "5100px", height: "275px", width: "150px" }
+            ? { left: "510px", width: "150px" }
             : {
                 left: "510px",
-                height: "250px",
+
                 width: "150px",
               }
         }
@@ -51,11 +50,11 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
             onClick={() => {
               if (navigator.language.indexOf("zh") > -1) {
                 this.handleJump(
-                  "https://www.notion.so/troyeguo/e9c4e5755d564b0db6340eeba6d9ece9?v=7c8fcbed9adf4592ada95cfd593868c9"
+                  "https://troyeguo.notion.site/Koodo-Reader-0c9c7ccdc5104a54825dfc72f1c84bea"
                 );
               } else {
                 this.handleJump(
-                  "https://www.notion.so/troyeguo/01aaa516687c418499f713d34793b9ad?v=54d51fe1688a4f8ab5784b17e4df3308"
+                  "https://troyeguo.notion.site/Koodo-Reader-Document-9c767af3d66c459db996bdd08a34c34b"
                 );
               }
             }}
@@ -69,14 +68,6 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
             }}
           >
             <Trans>Feedback</Trans>
-          </li>
-          <li
-            className="sort-by-category-list"
-            onClick={() => {
-              this.handleJump("https://forms.office.com/r/tgD1ZizHB2");
-            }}
-          >
-            <Trans>Survey</Trans>
           </li>
           <li
             className="sort-by-category-list"
@@ -105,10 +96,12 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
           <li
             className="sort-by-category-list"
             onClick={() => {
-              this.handleJump("https://960960.xyz");
+              this.handleJump(
+                "https://poeditor.com/join/project?hash=fk4qbQTlsk"
+              );
             }}
           >
-            <Trans>About developer</Trans>
+            <Trans>Translation</Trans>
           </li>
           <li
             className="sort-by-category-list"
@@ -118,11 +111,23 @@ class AboutDialog extends React.Component<AboutDialogProps, AboutDialogState> {
           >
             <Trans>Github Repo</Trans>
           </li>
+          {isElectron && (
+            <li
+              className="sort-by-category-list"
+              onClick={() => {
+                window
+                  .require("electron")
+                  .ipcRenderer.invoke("open-console", "ping");
+              }}
+            >
+              <Trans>Open Console</Trans>
+            </li>
+          )}
           {this.props.isNewWarning && (
             <li
               className="sort-by-category-list"
               onClick={() => {
-                this.handleJump("https://koodo.960960.xyz/en/download");
+                this.handleJump("https://koodo.960960.xyz/en");
               }}
               style={{ color: "rgb(35, 170, 242)" }}
             >

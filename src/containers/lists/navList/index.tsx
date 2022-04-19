@@ -5,7 +5,8 @@ import NavList from "./component";
 const mapStateToProps = (state: stateType) => {
   return {
     currentBook: state.book.currentBook,
-    currentEpub: state.book.currentEpub,
+    htmlBook: state.reader.htmlBook,
+
     bookmarks: state.reader.bookmarks,
     notes: state.reader.notes,
     digests: state.reader.digests,

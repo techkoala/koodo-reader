@@ -1,8 +1,9 @@
 import {
   handleFetchNotes,
   handleFetchBookmarks,
-  handleFetchChapters,
   handleFetchBooks,
+  handleReadingBook,
+  handleFetchPercentage,
 } from "../../store/actions";
 import { connect } from "react-redux";
 import { stateType } from "../../store";
@@ -11,16 +12,17 @@ import { withTranslation } from "react-i18next";
 
 const mapStateToProps = (state: stateType) => {
   return {
-    currentEpub: state.book.currentEpub,
     currentBook: state.book.currentBook,
     percentage: state.progressPanel.percentage,
+    htmlBook: state.reader.htmlBook,
   };
 };
 const actionCreator = {
   handleFetchNotes,
   handleFetchBookmarks,
-  handleFetchChapters,
   handleFetchBooks,
+  handleReadingBook,
+  handleFetchPercentage,
 };
 export default connect(
   mapStateToProps,

@@ -11,7 +11,6 @@ class SelectBook extends React.Component<BookListProps, BookListState> {
   constructor(props: BookListProps) {
     super(props);
     this.state = {
-      shelfIndex: 0,
       isOpenDelete: false,
       favoriteBooks: Object.keys(AddFavorite.getAllFavorite()).length,
     };
@@ -65,12 +64,7 @@ class SelectBook extends React.Component<BookListProps, BookListState> {
 
                     FileSaver.saveAs(
                       new Blob([result]),
-                      item.name +
-                        `.${
-                          item.format !== "EPUB" && item.cover !== "noCover"
-                            ? "epub"
-                            : item.format.toLocaleLowerCase()
-                        }`
+                      item.name + `.${item.format.toLocaleLowerCase()}`
                     );
                   });
                 this.props.handleSelectBook(!this.props.isSelectBook);
@@ -82,6 +76,26 @@ class SelectBook extends React.Component<BookListProps, BookListState> {
             >
               <Trans>Export</Trans>
             </span>
+            <span
+              className="book-manage-title"
+              onClick={() => {
+                if (
+                  this.props.selectedBooks.length === this.props.books.length
+                ) {
+                  this.props.handleSelectedBooks([]);
+                } else {
+                  this.props.handleSelectedBooks(
+                    this.props.books.map((item) => item.key)
+                  );
+                }
+              }}
+            >
+              {this.props.selectedBooks.length === this.props.books.length ? (
+                <Trans>Deselect All</Trans>
+              ) : (
+                <Trans>Select All</Trans>
+              )}
+            </span>{" "}
           </>
         )}
       </div>

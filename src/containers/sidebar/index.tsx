@@ -3,6 +3,8 @@ import {
   handleSearch,
   handleSortDisplay,
   handleCollapse,
+  handleSelectBook,
+  handleShelfIndex,
 } from "../../store/actions";
 import { connect } from "react-redux";
 import { stateType } from "../../store";
@@ -17,6 +19,8 @@ const actionCreator = {
   handleSearch,
   handleSortDisplay,
   handleCollapse,
+  handleSelectBook,
+  handleShelfIndex,
 };
 
 export default connect(
