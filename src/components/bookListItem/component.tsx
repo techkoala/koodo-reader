@@ -11,7 +11,6 @@ import AddTrash from "../../utils/readUtils/addTrash";
 import EmptyCover from "../emptyCover";
 import BookUtil from "../../utils/fileUtils/bookUtil";
 import FileSaver from "file-saver";
-import localforage from "localforage";
 import { isElectron } from "react-device-detect";
 import toast from "react-hot-toast";
 class BookListItem extends React.Component<BookItemProps, BookItemState> {
@@ -19,7 +18,9 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
     super(props);
     this.state = {
       isDeleteDialog: false,
-      isFavorite: AddFavorite.getAllFavorite().indexOf(this.props.book.key) > 1,
+      isFavorite:
+        AddFavorite.getAllFavorite().indexOf(this.props.book.key) > -1,
+      direction: "horizontal",
     };
   }
   componentDidMount() {
@@ -66,8 +67,8 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
     this.setState({ isFavorite: false });
     toast.success(this.props.t("Cancel Successfully"));
   };
-  handleResoreBook = () => {
-    AddTrash.clear(this.props.currentBook.key);
+  handleRestoreBook = () => {
+    AddTrash.clear(this.props.book.key);
     toast.success(this.props.t("Restore Successfully"));
     this.props.handleFetchBooks();
   };
@@ -90,6 +91,18 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
       BookUtil.RedirectBook(this.props.book);
     }
   };
+  handleExportBook() {
+    BookUtil.fetchBook(this.props.book.key, true, this.props.book.path).then(
+      (result: any) => {
+        toast.success(this.props.t("Export Successfully"));
+        FileSaver.saveAs(
+          new Blob([result]),
+          this.props.book.name +
+            `.${this.props.book.format.toLocaleLowerCase()}`
+        );
+      }
+    );
+  }
   render() {
     let percentage = RecordLocation.getHtmlLocation(this.props.book.key)
       ? RecordLocation.getHtmlLocation(this.props.book.key).percentage
@@ -106,6 +119,7 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
             onClick={() => {
               this.handleJump();
             }}
+            style={{ display: "block" }}
           >
             <EmptyCover
               {...{
@@ -116,21 +130,44 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
             />
           </div>
         ) : (
-          <div className="book-item-list-cover">
+          <div
+            className="book-item-list-cover"
+            onClick={() => {
+              this.handleJump();
+            }}
+          >
             <img
-              className="book-item-list-cover-item"
               src={this.props.book.cover}
               alt=""
-              onClick={() => {
-                this.handleJump();
+              style={
+                this.state.direction === "horizontal"
+                  ? { width: "100%" }
+                  : { height: "100%" }
+              }
+              onLoad={(res: any) => {
+                console.log(res.target.naturalHeight / res.target.naturalWidth);
+                if (
+                  res.target.naturalHeight / res.target.naturalWidth >
+                  74 / 57
+                ) {
+                  console.log("horizontal");
+                  this.setState({ direction: "horizontal" });
+                } else {
+                  console.log("vertical");
+                  this.setState({ direction: "vertical" });
+                }
               }}
             />
           </div>
         )}
-        {this.props.isSelectBook && this.props.isSelected ? (
+        {this.props.isSelectBook ? (
           <span
             className="icon-message book-selected-icon"
-            style={{ left: "35px", bottom: "5px" }}
+            style={
+              this.props.isSelected
+                ? { left: "35px", bottom: "5px" }
+                : { left: "35px", bottom: "5px", color: "#eee" }
+            }
           ></span>
         ) : null}
         <p
@@ -149,7 +186,7 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
             <Trans>
               {this.props.book.author
                 ? this.props.book.author
-                : "Unknown Authur"}
+                : "Unknown Author"}
             </Trans>
           </span>
         </p>
@@ -161,7 +198,7 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
             <span
               className="icon-clockwise list-icon"
               onClick={() => {
-                this.handleResoreBook();
+                this.handleRestoreBook();
               }}
             ></span>
           </div>
@@ -205,17 +242,7 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
             <span
               className="icon-export list-icon"
               onClick={() => {
-                localforage
-                  .getItem(this.props.currentBook.key)
-                  .then((result: any) => {
-                    toast.success(this.props.t("Export Successfully"));
-
-                    FileSaver.saveAs(
-                      new Blob([result]),
-                      this.props.currentBook.name +
-                        `.${this.props.currentBook.format.toLocaleLowerCase()}`
-                    );
-                  });
+                this.handleExportBook();
               }}
             ></span>
           </div>
@@ -225,4 +252,4 @@ class BookListItem extends React.Component<BookItemProps, BookItemState> {
   }
 }
 
-export default withRouter(BookListItem);
+export default withRouter(BookListItem as any);

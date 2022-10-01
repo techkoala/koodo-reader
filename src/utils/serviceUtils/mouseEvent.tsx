@@ -51,9 +51,9 @@ const arrowKeys = (rendition: any, keyCode: number, event: any) => {
   handleShortcut(event, keyCode);
 };
 
-const mouseChrome = (rendition: any, wheelDelta: number) => {
+const mouseChrome = (rendition: any, deltaY: number) => {
   if (lock) return;
-  if (wheelDelta > 0) {
+  if (deltaY < 0) {
     rendition.prev();
     lock = true;
     setTimeout(function () {
@@ -61,7 +61,7 @@ const mouseChrome = (rendition: any, wheelDelta: number) => {
     }, throttleTime);
     return false;
   }
-  if (wheelDelta < 0) {
+  if (deltaY > 0) {
     rendition.next();
     lock = true;
     setTimeout(function () {
@@ -136,20 +136,18 @@ const gesture = (rendition: any, type: string) => {
   }
 };
 
-const handleLocation = (key: string, rendition: any) => {
-  setTimeout(async () => {
-    let position = await rendition.getPosition();
-    RecordLocation.recordHtmlLocation(
-      key,
-      position.text,
-      position.chapterTitle,
-      position.count,
-      position.percentage,
-      position.cfi
-    );
-  }, 500);
+const handleLocation = async (key: string, rendition: any) => {
+  let position = await rendition.getPosition();
+  RecordLocation.recordHtmlLocation(
+    key,
+    position.text,
+    position.chapterTitle,
+    position.count,
+    position.percentage,
+    position.cfi
+  );
 };
-const bindHtmlEvent = (
+export const bindHtmlEvent = (
   rendition: any,
   doc: any,
   key: string = "",
@@ -157,19 +155,21 @@ const bindHtmlEvent = (
 ) => {
   doc.addEventListener("keydown", async (event) => {
     arrowKeys(rendition, event.keyCode, event);
-    handleLocation(key, rendition);
+    await handleLocation(key, rendition);
   });
+  //判断是否正在使用笔记本电脑的的触控板
+
   doc.addEventListener(
-    "mousewheel",
+    "wheel",
     async (event) => {
       if (readerMode === "scroll") {
         await sleep(200);
         rendition.record();
       } else {
-        mouseChrome(rendition, event.wheelDelta);
+        Math.abs(event.deltaX) === 0 && mouseChrome(rendition, event.deltaY);
       }
 
-      handleLocation(key, rendition);
+      await handleLocation(key, rendition);
     },
     false
   );
@@ -178,7 +178,7 @@ const bindHtmlEvent = (
     arrowKeys(rendition, event.keyCode, event);
     //使用Key判断是否是htmlBook
 
-    handleLocation(key, rendition);
+    await handleLocation(key, rendition);
   });
 
   if (StorageUtil.getReaderConfig("isTouch") === "yes") {
@@ -186,7 +186,7 @@ const bindHtmlEvent = (
     mc.on("panleft panright panup pandown", async (event: any) => {
       gesture(rendition, event.type);
 
-      handleLocation(key, rendition);
+      await handleLocation(key, rendition);
     });
   }
 };

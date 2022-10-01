@@ -21,6 +21,8 @@ const Router = () => {
         navigator.language === "zh-HK"
       ) {
         i18n.changeLanguage("cht");
+      } else if (navigator.language.startsWith("ro")) {
+        i18n.changeLanguage("ro");
       } else if (navigator.language.startsWith("ru")) {
         i18n.changeLanguage("ru");
       } else if (navigator.language.startsWith("jp")) {
@@ -33,6 +35,12 @@ const Router = () => {
         i18n.changeLanguage("ptBR");
       } else if (navigator.language.startsWith("fa")) {
         i18n.changeLanguage("fa");
+      } else if (navigator.language.startsWith("cs")) {
+        i18n.changeLanguage("cs");
+      } else if (navigator.language.startsWith("de")) {
+        i18n.changeLanguage("de");
+      } else if (navigator.language.startsWith("pl")) {
+        i18n.changeLanguage("pl");
       } else {
         i18n.changeLanguage("en");
       }

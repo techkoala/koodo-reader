@@ -4,11 +4,13 @@ import {
   handleReadingState,
   handleReadingBook,
   handleHtmlBook,
-  handleRenderFunc,
+  handleRenderBookFunc,
   handleFetchBooks,
   handleCurrentChapter,
+  handleCurrentChapterIndex,
   handleFetchNotes,
   handleFetchBookmarks,
+  handlePercentage,
   handleFetchPercentage,
 } from "../../store/actions";
 import Viewer from "./component";
@@ -20,6 +22,7 @@ const mapStateToProps = (state: stateType) => {
     isOpenActionDialog: state.book.isOpenActionDialog,
     currentBook: state.book.currentBook,
     isReading: state.book.isReading,
+    renderNoteFunc: state.book.renderNoteFunc,
     htmlBook: state.reader.htmlBook,
     books: state.manager.books,
   };
@@ -29,12 +32,14 @@ const actionCreator = {
   handleReadingBook,
   handleActionDialog,
   handleHtmlBook,
-  handleRenderFunc,
+  handleRenderBookFunc,
   handleFetchBooks,
   handleCurrentChapter,
+  handleCurrentChapterIndex,
   handleFetchNotes,
   handleFetchBookmarks,
   handleFetchPercentage,
+  handlePercentage,
 };
 export default connect(
   mapStateToProps,

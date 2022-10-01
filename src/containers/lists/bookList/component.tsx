@@ -85,21 +85,17 @@ class BookList extends React.Component<BookListProps, BookListState> {
           //返回排序后的图书index
           SortUtil.sortBooks(this.props.books, this.props.bookSortCode) || []
         )
-      : this.props.mode === "favorite" && !this.props.isBookSort
-      ? this.handleKeyFilter(this.props.books, AddFavorite.getAllFavorite())
-      : this.props.mode === "favorite" && this.props.isBookSort
+      : this.props.mode === "favorite"
       ? this.handleIndexFilter(
           this.handleKeyFilter(this.props.books, AddFavorite.getAllFavorite()),
           //返回排序后的图书index
           SortUtil.sortBooks(this.props.books, this.props.bookSortCode) || []
         )
-      : this.props.isBookSort
-      ? this.handleIndexFilter(
+      : this.handleIndexFilter(
           this.props.books,
           //返回排序后的图书index
           SortUtil.sortBooks(this.props.books, this.props.bookSortCode) || []
-        )
-      : this.props.books;
+        );
 
     if (this.props.mode === "shelf" && books.length === 0) {
       return (
@@ -121,21 +117,23 @@ class BookList extends React.Component<BookListProps, BookListState> {
       return this.props.viewMode === "list" ? (
         <BookListItem
           {...{
-            key: item.key,
+            key: index,
             book: item,
             isSelected: this.props.selectedBooks.indexOf(item.key) > -1,
           }}
         />
       ) : this.props.viewMode === "card" ? (
         <BookCardItem
-          key={item.key}
-          book={item}
-          isSelected={this.props.selectedBooks.indexOf(item.key) > -1}
+          {...{
+            key: index,
+            book: item,
+            isSelected: this.props.selectedBooks.indexOf(item.key) > -1,
+          }}
         />
       ) : (
         <BookCoverItem
           {...{
-            key: item.key,
+            key: index,
             book: item,
             isSelected: this.props.selectedBooks.indexOf(item.key) > -1,
           }}

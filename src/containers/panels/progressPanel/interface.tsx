@@ -5,15 +5,14 @@ export interface ProgressPanelProps {
   currentBook: BookModel;
   isReading: boolean;
   currentChapter: string;
+  currentChapterIndex: number;
   t: (title: string) => string;
   percentage: number;
   htmlBook: HtmlBookModel;
-  renderFunc: (id: string) => void;
+  renderBookFunc: (id: string) => void;
 }
 export interface ProgressPanelState {
-  displayPercentage: number;
-  currentChapter: string;
-  currentChapterIndex: number;
   currentPage: number;
   totalPage: number;
+  isSingle: boolean;
 }

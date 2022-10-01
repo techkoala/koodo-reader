@@ -3,6 +3,7 @@ import { TextToSpeechProps, TextToSpeechState } from "./interface";
 import { Trans } from "react-i18next";
 import { speedList } from "../../constants/dropdownList";
 import StorageUtil from "../../utils/serviceUtils/storageUtil";
+import { sleep } from "../../utils/commonUtil";
 
 class TextToSpeech extends React.Component<
   TextToSpeechProps,
@@ -24,6 +25,8 @@ class TextToSpeech extends React.Component<
       window.speechSynthesis && window.speechSynthesis.cancel();
       this.setState({ isAudioOn: false });
     }
+    let synth = window.speechSynthesis;
+    synth.getVoices();
   }
   handleChangeAudio = () => {
     if (this.state.isAudioOn) {
@@ -77,7 +80,9 @@ class TextToSpeech extends React.Component<
   };
   handleAudio = async () => {
     let text = "";
-
+    if (StorageUtil.getReaderConfig("isSliding") === "yes") {
+      await sleep(1000);
+    }
     text = await this.props.htmlBook.rendition.visibleText();
     text = text
       .replace(/\s\s/g, "")

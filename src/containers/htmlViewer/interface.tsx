@@ -9,7 +9,8 @@ export interface ViewerProps {
   isReading: boolean;
   htmlBook: HtmlBookModel;
   isShow: boolean;
-  handleRenderFunc: (renderFunc: () => void) => void;
+  handleRenderBookFunc: (renderBookFunc: () => void) => void;
+  renderNoteFunc: () => void;
   t: (title: string) => string;
   handleReadingState: (isReading: boolean) => void;
   handleReadingBook: (book: BookModel) => void;
@@ -20,6 +21,9 @@ export interface ViewerProps {
   handleFetchNotes: () => void;
   handleFetchBookmarks: () => void;
   handleCurrentChapter: (currentChapter: string) => void;
+  handleCurrentChapterIndex: (currentChapterIndex: number) => void;
+  handlePercentage: (percentage: number) => void;
+  handleFetchPercentage: (book: BookModel) => void;
 }
 export interface ViewerState {
   key: string;
@@ -27,6 +31,7 @@ export interface ViewerState {
   isFirst: boolean;
   chapterTitle: string;
   margin: number;
+  extraMargin: number;
   readerMode: string;
   chapter: string;
   chapterIndex: number;

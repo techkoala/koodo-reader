@@ -28,6 +28,9 @@ class BookUtil {
         reader.onload = async (event) => {
           if (!event.target) return;
           try {
+            if (!fs.existsSync(path.join(dataPath, "book"))) {
+              fs.mkdirSync(path.join(dataPath, "book"));
+            }
             fs.writeFileSync(
               path.join(dataPath, "book", key),
               Buffer.from(event.target.result as any)
@@ -219,7 +222,7 @@ class BookUtil {
         charset: string;
       [name, author, description, publisher, charset] = [
         bookName,
-        "Unknown Authur",
+        "Unknown Author",
         "",
         "",
         "",
@@ -243,6 +246,9 @@ class BookUtil {
             metadata.publisher,
             metadata.cover,
           ];
+          if (cover.indexOf("image") === -1) {
+            cover = "";
+          }
           break;
         case "mobi":
           let mobiRendition = new MobiRender(

@@ -41,7 +41,8 @@ if (!singleInstance) {
   if (filePath) {
     fs.writeFileSync(
       path.join(dirPath, "log.json"),
-      JSON.stringify({ filePath })
+      JSON.stringify({ filePath }),
+      "utf-8"
     );
   }
 } else {
@@ -69,6 +70,9 @@ const createMainWin = () => {
 
   ipcMain.handle("open-book", (event, config) => {
     let { url, isMergeWord, isFullscreen, isPreventSleep } = config;
+    if (url.indexOf("/epub/") > -1) {
+      options.webPreferences.nodeIntegrationInSubFrames = false;
+    }
     store.set({
       url,
       isMergeWord: isMergeWord ? isMergeWord : "no",
@@ -88,8 +92,8 @@ const createMainWin = () => {
     } else {
       readerWindow = new BrowserWindow({
         ...options,
-        width: parseInt(store.get("windowWidth")),
-        height: parseInt(store.get("windowHeight")),
+        width: parseInt(store.get("windowWidth") || 1050),
+        height: parseInt(store.get("windowHeight") || 660),
         x: parseInt(store.get("windowX")),
         y: parseInt(store.get("windowY")),
         frame: isMergeWord === "yes" ? false : true,
@@ -178,14 +182,17 @@ const createMainWin = () => {
     if (readerWindow) {
       readerWindow.close();
       Object.assign(options, {
-        width: parseInt(store.get("windowWidth")),
-        height: parseInt(store.get("windowHeight")),
+        width: parseInt(store.get("windowWidth") || 1050),
+        height: parseInt(store.get("windowHeight") || 660),
         x: parseInt(store.get("windowX")),
         y: parseInt(store.get("windowY")),
         frame: store.get("isMergeWord") !== "yes" ? false : true,
         hasShadow: store.get("isMergeWord") !== "yes" ? false : true,
         transparent: store.get("isMergeWord") !== "yes" ? true : false,
       });
+      if (store.get("url").indexOf("/epub/") > -1) {
+        options.webPreferences.nodeIntegrationInSubFrames = false;
+      }
       store.set(
         "isMergeWord",
         store.get("isMergeWord") !== "yes" ? "yes" : "no"
@@ -223,11 +230,11 @@ const createMainWin = () => {
   ipcMain.on("get-file-data", function (event) {
     if (fs.existsSync(path.join(dirPath, "log.json"))) {
       const _data = JSON.parse(
-        fs.readFileSync(path.join(dirPath, "log.json"), "utf8") || "{}"
+        fs.readFileSync(path.join(dirPath, "log.json"), "utf-8") || "{}"
       );
       if (_data && _data.filePath) {
         filePath = _data.filePath;
-        fs.writeFileSync(path.join(dirPath, "log.json"), "");
+        fs.writeFileSync(path.join(dirPath, "log.json"), "", "utf-8");
       }
     }
 

@@ -18,13 +18,14 @@ class DeleteDialog extends React.Component<DeleteDialogProps> {
   };
   handleDeleteOther = (key: string) => {
     return new Promise<void>(async (resolve, reject) => {
-      if (this.props.bookmarks[0]) {
+      if (this.props.bookmarks) {
         let bookmarkArr = DeleteUtil.deleteBookmarks(this.props.bookmarks, key);
         if (bookmarkArr.length === 0) {
           await localforage.removeItem("bookmarks");
         } else {
           await localforage.setItem("bookmarks", bookmarkArr);
         }
+        this.props.handleFetchBookmarks();
       }
       if (this.props.notes) {
         let noteArr = DeleteUtil.deleteNotes(this.props.notes, key);
@@ -35,6 +36,7 @@ class DeleteDialog extends React.Component<DeleteDialogProps> {
           await localforage.setItem("notes", noteArr);
           resolve();
         }
+        this.props.handleFetchNotes();
       }
     });
   };
@@ -185,4 +187,4 @@ class DeleteDialog extends React.Component<DeleteDialogProps> {
   }
 }
 
-export default withRouter(DeleteDialog);
+export default withRouter(DeleteDialog as any);
