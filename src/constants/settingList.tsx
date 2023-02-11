@@ -66,11 +66,6 @@ export const settingList = [
   },
   {
     isElectron: false,
-    title: "Disable analytics service",
-    propName: "isDisableAnalytics",
-  },
-  {
-    isElectron: false,
     title: "Use first page as PDF cover",
     propName: "isPDFCover",
   },
@@ -109,9 +104,9 @@ export const searchList = [
   { label: "Wikipedia", value: "wiki" },
 ];
 export const skinList = [
+  { label: "Follow OS", value: "system" },
   { label: "Light Mode", value: "light" },
   { label: "Night Mode", value: "night" },
-  { label: "Follow OS", value: "system" },
 ];
 
 export const readerSettingList = [

@@ -72,6 +72,8 @@ const createMainWin = () => {
     let { url, isMergeWord, isFullscreen, isPreventSleep } = config;
     if (url.indexOf("/epub/") > -1) {
       options.webPreferences.nodeIntegrationInSubFrames = false;
+    } else {
+      options.webPreferences.nodeIntegrationInSubFrames = true;
     }
     store.set({
       url,
@@ -126,7 +128,6 @@ const createMainWin = () => {
     var path = await dialog.showOpenDialog({
       properties: ["openDirectory"],
     });
-
     return path;
   });
   ipcMain.on("storage-location", (event, arg) => {
@@ -192,6 +193,8 @@ const createMainWin = () => {
       });
       if (store.get("url").indexOf("/epub/") > -1) {
         options.webPreferences.nodeIntegrationInSubFrames = false;
+      } else {
+        options.webPreferences.nodeIntegrationInSubFrames = true;
       }
       store.set(
         "isMergeWord",
