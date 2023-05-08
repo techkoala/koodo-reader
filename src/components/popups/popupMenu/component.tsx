@@ -237,8 +237,7 @@ class PopupMenu extends React.Component<PopupMenuProps, PopupMenuStates> {
     if (!highlighters) return;
     let highlightersByChapter = highlighters.filter((item: any) => {
       return (
-        (item.chapterIndex === this.props.chapterIndex ||
-          item.chapter === this.props.chapter) &&
+        item.chapterIndex === this.props.chapterDocIndex &&
         item.bookKey === this.props.currentBook.key
       );
     });
@@ -364,7 +363,7 @@ class PopupMenu extends React.Component<PopupMenuProps, PopupMenuStates> {
     const PopupProps = {
       pageWidth: this.props.pageWidth,
       pageHeight: this.props.pageHeight,
-      chapterIndex: this.props.chapterIndex,
+      chapterDocIndex: this.props.chapterDocIndex,
       chapter: this.props.chapter,
     };
     return (

@@ -5,7 +5,7 @@ import Note from "../../../model/Note";
 import { PopupOptionProps } from "./interface";
 import ColorOption from "../../colorOption";
 import RecordLocation from "../../../utils/readUtils/recordLocation";
-import { Tooltip } from "react-tippy";
+
 import { popupList } from "../../../constants/popupList";
 import StorageUtil from "../../../utils/serviceUtils/storageUtil";
 import toast from "react-hot-toast";
@@ -108,7 +108,7 @@ class PopupOption extends React.Component<PopupOptionProps> {
     let digest = new Note(
       bookKey,
       this.props.chapter,
-      this.props.chapterIndex,
+      this.props.chapterDocIndex,
       text,
       cfi,
       range,
@@ -243,15 +243,9 @@ class PopupOption extends React.Component<PopupOptionProps> {
                     }
                   }}
                 >
-                  <Tooltip
-                    title={this.props.t(item.title)}
-                    position="top"
-                    trigger="mouseenter"
-                  >
-                    <span
-                      className={`icon-${item.icon} ${item.name}-icon`}
-                    ></span>
-                  </Tooltip>
+                  <span
+                    className={`icon-${item.icon} ${item.name}-icon`}
+                  ></span>
                 </div>
               );
             })}

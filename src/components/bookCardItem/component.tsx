@@ -42,11 +42,16 @@ class BookCardItem extends React.Component<BookCardProps, BookCardState> {
       !filePath
     ) {
       this.props.handleReadingBook(this.props.book);
-      if (StorageUtil.getReaderConfig("isOpenInMain") === "yes") {
-        this.props.history.push(BookUtil.getBookUrl(this.props.book));
-      } else {
-        BookUtil.RedirectBook(this.props.book);
-      }
+
+      BookUtil.RedirectBook(this.props.book, this.props.t, this.props.history);
+    }
+  }
+  UNSAFE_componentWillReceiveProps(nextProps: BookCardProps) {
+    if (nextProps.book.key !== this.props.book.key) {
+      this.setState({
+        isFavorite:
+          AddFavorite.getAllFavorite().indexOf(nextProps.book.key) > -1,
+      });
     }
   }
 
@@ -107,11 +112,7 @@ class BookCardItem extends React.Component<BookCardProps, BookCardState> {
     }
     RecentBooks.setRecent(this.props.book.key);
     this.props.handleReadingBook(this.props.book);
-    if (StorageUtil.getReaderConfig("isOpenInMain") === "yes") {
-      this.props.history.push(BookUtil.getBookUrl(this.props.book));
-    } else {
-      BookUtil.RedirectBook(this.props.book);
-    }
+    BookUtil.RedirectBook(this.props.book, this.props.t, this.props.history);
   };
   render() {
     let percentage = RecordLocation.getHtmlLocation(this.props.book.key)
@@ -221,12 +222,14 @@ class BookCardItem extends React.Component<BookCardProps, BookCardState> {
                   this.handleMoreAction(event);
                 }}
               ></span>
-              <span
-                className="icon-love book-love-icon"
-                onClick={() => {
-                  this.handleLoveBook();
-                }}
-              ></span>
+              {!this.state.isFavorite && (
+                <span
+                  className="icon-love book-love-icon"
+                  onClick={() => {
+                    this.handleLoveBook();
+                  }}
+                ></span>
+              )}
             </>
           ) : null}
         </div>

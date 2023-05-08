@@ -8,7 +8,7 @@ import StorageUtil from "../../../utils/serviceUtils/storageUtil";
 import { changePath } from "../../../utils/syncUtils/common";
 import { isElectron } from "react-device-detect";
 import { dropdownList } from "../../../constants/dropdownList";
-import { Tooltip } from "react-tippy";
+
 import { restore } from "../../../utils/syncUtils/restoreUtil";
 import {
   settingList,
@@ -17,7 +17,6 @@ import {
   skinList,
 } from "../../../constants/settingList";
 import { themeList } from "../../../constants/themeList";
-import _ from "underscore";
 import toast from "react-hot-toast";
 import { openExternalUrl } from "../../../utils/serviceUtils/urlUtil";
 class SettingDialog extends React.Component<
@@ -37,15 +36,28 @@ class SettingDialog extends React.Component<
       isPreventAdd: StorageUtil.getReaderConfig("isPreventAdd") === "yes",
       isOpenBook: StorageUtil.getReaderConfig("isOpenBook") === "yes",
       isExpandContent: StorageUtil.getReaderConfig("isExpandContent") === "yes",
+      isDisablePopup: StorageUtil.getReaderConfig("isDisablePopup") === "yes",
+      isDisableTrashBin:
+        StorageUtil.getReaderConfig("isDisableTrashBin") === "yes",
+      isDeleteShelfBook:
+        StorageUtil.getReaderConfig("isDeleteShelfBook") === "yes",
+      isHideShelfBook: StorageUtil.getReaderConfig("isHideShelfBook") === "yes",
       isPreventSleep: StorageUtil.getReaderConfig("isPreventSleep") === "yes",
       isOpenInMain: StorageUtil.getReaderConfig("isOpenInMain") === "yes",
       isDisableUpdate: StorageUtil.getReaderConfig("isDisableUpdate") === "yes",
       appSkin: StorageUtil.getReaderConfig("appSkin"),
       isUseBuiltIn: StorageUtil.getReaderConfig("isUseBuiltIn") === "yes",
       isPDFCover: StorageUtil.getReaderConfig("isPDFCover") === "yes",
-      currentThemeIndex: _.findLastIndex(themeList, {
+      currentThemeIndex: window._.findLastIndex(themeList, {
         name: StorageUtil.getReaderConfig("themeColor"),
       }),
+      storageLocation: isElectron
+        ? localStorage.getItem("storageLocation")
+          ? localStorage.getItem("storageLocation")
+          : window
+              .require("electron")
+              .ipcRenderer.sendSync("storage-location", "ping")
+        : "",
     };
   }
   componentDidMount() {
@@ -68,14 +80,14 @@ class SettingDialog extends React.Component<
           )
       ]?.setAttribute("selected", "selected");
     document.getElementsByClassName("lang-setting-dropdown")[2]?.children[
-      _.findLastIndex(searchList, {
+      window._.findLastIndex(searchList, {
         value:
           StorageUtil.getReaderConfig("searchEngine") ||
           (navigator.language === "zh-CN" ? "baidu" : "google"),
       })
     ]?.setAttribute("selected", "selected");
     document.getElementsByClassName("lang-setting-dropdown")[3]?.children[
-      _.findLastIndex(skinList, {
+      window._.findLastIndex(skinList, {
         value: StorageUtil.getReaderConfig("appSkin") || "system",
       })
     ]?.setAttribute("selected", "selected");
@@ -180,6 +192,7 @@ class SettingDialog extends React.Component<
       toast.error(this.props.t("Change Failed"));
     }
     localStorage.setItem("storageLocation", path.filePaths[0]);
+    this.setState({ storageLocation: path.filePaths[0] });
     document.getElementsByClassName(
       "setting-dialog-location-title"
     )[0].innerHTML =
@@ -303,24 +316,17 @@ class SettingDialog extends React.Component<
             <Trans>Theme Color</Trans>
             <ul className="theme-setting-container">
               {themeList.map((item, index) => (
-                <Tooltip
-                  key={item.id}
-                  title={this.props.t(item.title)}
-                  position="top"
-                  trigger="mouseenter"
-                >
-                  <li
-                    className={
-                      index === this.state.currentThemeIndex
-                        ? "active-color theme-setting-item"
-                        : "theme-setting-item"
-                    }
-                    onClick={() => {
-                      this.handleTheme(item.name, index);
-                    }}
-                    style={{ backgroundColor: item.color }}
-                  ></li>
-                </Tooltip>
+                <li
+                  className={
+                    index === this.state.currentThemeIndex
+                      ? "active-color theme-setting-item"
+                      : "theme-setting-item"
+                  }
+                  onClick={() => {
+                    this.handleTheme(item.name, index);
+                  }}
+                  style={{ backgroundColor: item.color }}
+                ></li>
               ))}
             </ul>
           </div>
@@ -340,11 +346,7 @@ class SettingDialog extends React.Component<
                 </span>
               </div>
               <div className="setting-dialog-location-title">
-                {localStorage.getItem("storageLocation")
-                  ? localStorage.getItem("storageLocation")
-                  : window
-                      .require("electron")
-                      .ipcRenderer.sendSync("storage-location", "ping")}
+                {this.state.storageLocation}
               </div>
             </>
           )}

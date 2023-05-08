@@ -4,6 +4,8 @@ import { Trans } from "react-i18next";
 import { NavListProps, NavListState } from "./interface";
 import DeleteIcon from "../../../components/deleteIcon";
 import toast from "react-hot-toast";
+import CFI from "epub-cfi-resolver";
+import StorageUtil from "../../../utils/serviceUtils/storageUtil";
 class NavList extends React.Component<NavListProps, NavListState> {
   constructor(props: NavListProps) {
     super(props);
@@ -25,16 +27,43 @@ class NavList extends React.Component<NavListProps, NavListState> {
         cfi: cfi,
       };
     }
-
-    await this.props.htmlBook.rendition.goToPosition(
-      JSON.stringify({
-        text: bookLocation.text,
-        chapterTitle: bookLocation.chapterTitle,
-        count: bookLocation.count,
-        percentage: bookLocation.percentage,
-        cfi: bookLocation.cfi,
-      })
-    );
+    //compatile wiht lower version(1.5.1)
+    if (bookLocation.cfi) {
+      await this.props.htmlBook.rendition.goToChapter(
+        bookLocation.chapterDocIndex,
+        bookLocation.chapterHref,
+        bookLocation.chapterTitle
+      );
+      let cfiObj = new CFI(bookLocation.cfi);
+      let pageArea = document.getElementById("page-area");
+      if (!pageArea) return;
+      let iframe = pageArea.getElementsByTagName("iframe")[0];
+      if (!iframe) return;
+      let doc: any = iframe.contentDocument;
+      if (!doc) {
+        return;
+      }
+      var bookmark = cfiObj.resolveLast(doc, {
+        ignoreIDs: true,
+      });
+      await this.props.htmlBook.rendition.goToNode(bookmark.node.parentElement);
+    } else {
+      await this.props.htmlBook.rendition.goToPosition(
+        JSON.stringify({
+          text: bookLocation.text,
+          chapterTitle: bookLocation.chapterTitle,
+          chapterDocIndex: bookLocation.chapterDocIndex,
+          chapterHref: bookLocation.chapterHref,
+          count: bookLocation.count,
+          percentage: bookLocation.percentage,
+          cfi: bookLocation.cfi,
+        })
+      );
+      let style =
+        "background: " +
+        (StorageUtil.getReaderConfig("backgroundColor") || "#f3a6a68c");
+      this.props.htmlBook.rendition.highlightNode(bookLocation.text, style);
+    }
   }
   handleShowDelete = (index: number) => {
     this.setState({ deleteIndex: index });
@@ -84,8 +113,8 @@ class NavList extends React.Component<NavListProps, NavListState> {
             ) : null}
             <div
               className="book-bookmark-link"
-              onClick={() => {
-                this.handleJump(item.cfi);
+              onClick={async () => {
+                await this.handleJump(item.cfi);
               }}
               style={{ cursor: "pointer" }}
             >

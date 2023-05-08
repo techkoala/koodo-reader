@@ -33,12 +33,12 @@
 - Formatos suportados:
   - EPUB (**.epub**)
   - Documento scaneados (**.pdf**, **.djvu**)
-  - Formato sem DRM (**.mobi**) e Kindle (**.azw3**)
+  - Formato sem DRM (**.mobi**) e Kindle (**.azw3**, **.azw**)
   - Texto puro (**.txt**)
   - FictionBook (**.fb2**)
-  - Arquivo de quadrinhos (**.cbr**, **.cbz**, **.cbt**)
+  - Arquivo de quadrinhos (**.cbr**, **.cbz**, **.cbt**, **.cb7**)
   - Texto rico (**.md**, **.docx**, **.rtf**)
-  - Hiper texto (**.html**, **.xml**, **.xhtml**, **.htm**)
+  - Hiper texto (**.html**, **.xml**, **.xhtml**, **.mhtml**, **.htm**, **.htm**)
 - Plataformas suportadas : **Windows**, **macOS**, **Linux** e **Web**
 - Guarde seus dados no **Dropbox** ou **Webdav**
 - Personalize a pasta de origem e sincronize entre varios dispositivos usando OneDrive, iCloud, Dropbox, etc..
@@ -79,6 +79,15 @@ brew install --cask koodo-reader
 ```bash
 docker-compose up -d
 ```
+
+- Instalar Flathub:
+
+```shell
+flatpak install flathub io.github.troyeguo.koodo-reader
+flatpak run io.github.troyeguo.koodo-reader
+```
+
+<a href="https://flathub.org/apps/details/io.github.troyeguo.koodo-reader"><img height="50" alt="Download on Flathub" src="https://flathub.org/assets/badges/flathub-badge-en.png"/></a>
 
 ## Capturas de tela
 

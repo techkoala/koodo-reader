@@ -2,8 +2,7 @@ import React from "react";
 import "./progressPanel.css";
 import { Trans } from "react-i18next";
 import { ProgressPanelProps, ProgressPanelState } from "./interface";
-import { Tooltip } from "react-tippy";
-import _ from "underscore";
+
 import StorageUtil from "../../../utils/serviceUtils/storageUtil";
 
 class ProgressPanel extends React.Component<
@@ -15,105 +14,77 @@ class ProgressPanel extends React.Component<
     this.state = {
       currentPage: 0,
       totalPage: 0,
-      targetChapter: 0,
+      targetChapterIndex: 0,
       targetPage: 0,
       isSingle:
         StorageUtil.getReaderConfig("readerMode") &&
         StorageUtil.getReaderConfig("readerMode") !== "double",
     };
   }
-
   async UNSAFE_componentWillReceiveProps(nextProps: ProgressPanelProps) {
     if (nextProps.htmlBook !== this.props.htmlBook && nextProps.htmlBook) {
       await this.handlePageNum(nextProps.htmlBook.rendition);
       nextProps.htmlBook.rendition.on("page-changed", async () => {
         await this.handlePageNum(nextProps.htmlBook.rendition);
+        this.handleCurrentChapterIndex(nextProps.htmlBook.rendition);
       });
+      nextProps.htmlBook.rendition.on("rendered", async () => {
+        await this.handlePageNum(nextProps.htmlBook.rendition);
+        this.handleCurrentChapterIndex(nextProps.htmlBook.rendition);
+      });
+      this.handleCurrentChapterIndex(nextProps.htmlBook.rendition);
     }
   }
+  handleCurrentChapterIndex = (rendition) => {
+    let position = rendition.getPosition();
+    let href = position.chapterHref;
+    let chapterIndex = window._.findIndex(this.props.htmlBook.flattenChapters, {
+      href,
+    });
+    this.setState({ targetChapterIndex: chapterIndex + 1 });
+  };
   async handlePageNum(rendition) {
     let pageInfo = await rendition.getProgress();
     this.setState({
       currentPage: this.state.isSingle
         ? pageInfo.currentPage
         : pageInfo.currentPage * 2 - 1,
-      totalPage: pageInfo.totalPage,
+      totalPage: this.state.isSingle
+        ? pageInfo.totalPage
+        : (pageInfo.totalPage - 1) * 2,
     });
   }
-  onProgressChange = (event: any) => {
+  onProgressChange = async (event: any) => {
     const percentage = event.target.value / 100;
     if (this.props.htmlBook.flattenChapters.length > 0) {
-      this.props.htmlBook.rendition.goToChapter(
-        this.props.htmlBook.flattenChapters[
-          percentage === 1
-            ? this.props.htmlBook.flattenChapters.length - 1
-            : Math.floor(
-                this.props.htmlBook.flattenChapters.length * percentage
-              )
-        ].label
+      let chapterIndex =
+        percentage === 1
+          ? this.props.htmlBook.flattenChapters.length - 1
+          : Math.floor(this.props.htmlBook.flattenChapters.length * percentage);
+      await this.props.htmlBook.rendition.goToChapter(
+        this.props.htmlBook.flattenChapters[chapterIndex].index.toString(),
+        this.props.htmlBook.flattenChapters[chapterIndex].href,
+        this.props.htmlBook.flattenChapters[chapterIndex].title
       );
     }
   };
-  nextChapter = () => {
+  nextChapter = async () => {
     if (this.props.htmlBook.flattenChapters.length > 0) {
-      this.props.htmlBook.rendition.goToChapter(
-        this.props.htmlBook.flattenChapters[
-          _.findIndex(
-            this.props.htmlBook.flattenChapters.map((item) => {
-              item.label = item.label.trim();
-              return item;
-            }),
-            {
-              label: this.props.currentChapter.trim(),
-            }
-          ) <
-          this.props.htmlBook.flattenChapters.length - 1
-            ? _.findIndex(
-                this.props.htmlBook.flattenChapters.map((item) => {
-                  item.label = item.label.trim();
-                  return item;
-                }),
-                {
-                  label: this.props.currentChapter.trim(),
-                }
-              ) + 1
-            : this.props.htmlBook.flattenChapters.length - 1
-        ].label
-      );
+      await this.props.htmlBook.rendition.nextChapter();
     }
   };
-  prevChapter = () => {
+  prevChapter = async () => {
     if (this.props.htmlBook.flattenChapters.length > 0) {
-      this.props.htmlBook.rendition.goToChapter(
-        this.props.htmlBook.flattenChapters[
-          _.findIndex(
-            this.props.htmlBook.flattenChapters.map((item) => {
-              item.label = item.label.trim();
-              return item;
-            }),
-            {
-              label: this.props.currentChapter.trim(),
-            }
-          ) > 0
-            ? _.findIndex(
-                this.props.htmlBook.flattenChapters.map((item) => {
-                  item.label = item.label.trim();
-                  return item;
-                }),
-                {
-                  label: this.props.currentChapter.trim(),
-                }
-              ) - 1
-            : 0
-        ].label
-      );
+      await this.props.htmlBook.rendition.prevChapter();
     }
   };
-  handleJumpChapter = (event: any) => {
-    let targetChapter = parseInt(event.target.value.trim()) - 1;
+  handleJumpChapter = async (event: any) => {
+    let targetChapterIndex = parseInt(event.target.value.trim()) - 1;
     if (this.props.htmlBook.flattenChapters.length > 0) {
-      this.props.htmlBook.rendition.goToChapter(
-        this.props.htmlBook.flattenChapters[targetChapter].label
+      await this.props.htmlBook.rendition.goToChapter(
+        this.props.htmlBook.flattenChapters[targetChapterIndex].index,
+        this.props.htmlBook.flattenChapters[targetChapterIndex].href,
+        ""
       );
     }
   };
@@ -167,26 +138,20 @@ class ProgressPanel extends React.Component<
             type="text"
             name="jumpChapter"
             id="jumpChapter"
-            value={
-              this.state.targetChapter
-                ? this.state.targetChapter
-                : this.props.currentChapterIndex === -1
-                ? this.props.htmlBook.flattenChapters.length
-                : this.props.currentChapterIndex + 1
-            }
+            value={this.state.targetChapterIndex}
             onFocus={() => {
-              this.setState({ targetChapter: " " });
+              this.setState({ targetChapterIndex: " " });
             }}
             onChange={(event) => {
               let fieldVal = event.target.value;
-              this.setState({ targetChapter: fieldVal });
+              this.setState({ targetChapterIndex: fieldVal });
             }}
             onBlur={(event) => {
               if (event.target.value.trim()) {
                 this.handleJumpChapter(event);
-                this.setState({ targetChapter: "" });
+                this.setState({ targetChapterIndex: "" });
               } else {
-                this.setState({ targetChapter: "" });
+                this.setState({ targetChapterIndex: "" });
               }
             }}
           />
@@ -216,13 +181,7 @@ class ProgressPanel extends React.Component<
             this.prevChapter();
           }}
         >
-          <Tooltip
-            title={this.props.t("Prev Chapter")}
-            position="top"
-            trigger="mouseenter"
-          >
-            <span className="icon-dropdown previous-chapter-icon"> </span>
-          </Tooltip>
+          <span className="icon-dropdown previous-chapter-icon"> </span>
         </div>
 
         <div
@@ -231,13 +190,7 @@ class ProgressPanel extends React.Component<
             this.nextChapter();
           }}
         >
-          <Tooltip
-            title={this.props.t("Next Chapter")}
-            position="top"
-            trigger="mouseenter"
-          >
-            <span className="icon-dropdown next-chapter-icon"></span>
-          </Tooltip>
+          <span className="icon-dropdown next-chapter-icon"></span>
         </div>
       </div>
     );
