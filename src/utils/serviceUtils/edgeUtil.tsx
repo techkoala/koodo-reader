@@ -2,20 +2,33 @@ import { voiceList } from "../../constants/voiceList";
 
 class EdgeUtil {
   static player: AudioBufferSourceNode;
-  //`<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-US">          <voice name="zh-CN-XiaoxiaoNeural"> <prosody rate="0%" pitch="0%">如果喜欢这个项目的话请点个 Star 吧。</prosody ></voice > </speak >`
-  static async readAloud(text: string, voiceName: string) {
-    let audioBuffer = await window
-      .require("electron")
-      .ipcRenderer.invoke("edge-tts", {
-        text: this.createSSML(text, voiceName),
+  static currentAudioBuffer: any;
+  static nextAudioBuffer: any;
+  static async readAloud(
+    currentText: string,
+    nextText: string,
+    voiceName: string,
+    speed: number = 0
+  ) {
+    let audioBuffer =
+      this.nextAudioBuffer ||
+      (await window.require("electron").ipcRenderer.invoke("edge-tts", {
+        text: this.createSSML(currentText, voiceName, speed),
         format: "",
-      });
+      }));
+
     let ctx = new AudioContext();
     let audio = await ctx.decodeAudioData(this.toArrayBuffer(audioBuffer));
     this.player = ctx.createBufferSource();
     this.player.buffer = audio;
     this.player.connect(ctx.destination);
     this.player.start(ctx.currentTime);
+    this.nextAudioBuffer =
+      nextText &&
+      (await window.require("electron").ipcRenderer.invoke("edge-tts", {
+        text: this.createSSML(nextText, voiceName, speed),
+        format: "",
+      }));
   }
   static pauseAudio() {
     if (this.player && this.player.stop) {
@@ -26,7 +39,7 @@ class EdgeUtil {
   static getPlayer() {
     return this.player;
   }
-  static createSSML(text: string, voiceName: string) {
+  static createSSML(text: string, voiceName: string, speed: number) {
     let ssml =
       // eslint-disable-next-line
       '\
@@ -35,7 +48,10 @@ class EdgeUtil {
       voiceName +
       // eslint-disable-next-line
       '">\
-              <prosody rate="0%" pitch="0%">\
+              <prosody rate="' +
+      speed +
+      // eslint-disable-next-line
+      '%" pitch="0%">\
                   ' +
       text +
       // eslint-disable-next-line

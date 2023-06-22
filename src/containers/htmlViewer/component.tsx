@@ -9,7 +9,6 @@ import RecordLocation from "../../utils/readUtils/recordLocation";
 import { mimetype } from "../../constants/mimetype";
 import Background from "../../components/background";
 import toast from "react-hot-toast";
-import * as jschardet from "jschardet";
 import StyleUtil from "../../utils/readUtils/styleUtil";
 import "./index.css";
 import { HtmlMouseEvent } from "../../utils/serviceUtils/mouseEvent";
@@ -21,6 +20,7 @@ import { removeExtraQuestionMark } from "../../utils/commonUtil";
 import CFI from "epub-cfi-resolver";
 import mhtml2html from "mhtml2html";
 import rtfToHTML from "@iarna/rtf-to-html";
+import { binicReadingProcess } from "../../utils/serviceUtils/bionicUtil";
 
 declare var window: any;
 let lock = false; //prevent from clicking too fasts
@@ -184,6 +184,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
     });
     StyleUtil.addDefaultCss();
     tsTransform();
+    binicReadingProcess();
     rendition.setStyle(
       StyleUtil.getCustomCss(
         true,
@@ -277,6 +278,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
       this.handleContentScroll(chapter, bookLocation.chapterHref);
       StyleUtil.addDefaultCss();
       tsTransform();
+      binicReadingProcess();
       this.handleBindGesture();
       lock = true;
       setTimeout(function () {
@@ -294,7 +296,9 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
     let contentList = contentBody.getElementsByTagName("a");
     let targetContent = Array.from(contentList).filter((item, index) => {
       item.setAttribute("style", "");
-      return item.textContent === chapter && index === chapterIndex;
+      return (
+        item.textContent === chapter && Math.abs(index - chapterIndex) <= 1
+      );
     });
     if (targetContent.length > 0) {
       contentBody.scrollTo(0, targetContent[0].offsetTop);
@@ -343,7 +347,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
       let charset = "";
       books.forEach((item) => {
         if (item.key === this.props.currentBook.key) {
-          charset = jschardet.detect(bufferStr).encoding || "utf-8";
+          charset = window.jschardet.detect(bufferStr).encoding || "utf-8";
           item.charset = charset;
           this.props.handleReadingBook(item);
         }
@@ -398,9 +402,9 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
       bufferStr += String.fromCharCode(array[i]);
     }
     let charset = "";
-    if (!this.props.currentBook.charset) {
-      charset = await this.handleCharset(bufferStr);
-    }
+    // if (!this.props.currentBook.charset) {
+    charset = await this.handleCharset(bufferStr);
+    // }
     let rendition = new window.Kookit.TxtRender(
       result,
       this.state.readerMode,

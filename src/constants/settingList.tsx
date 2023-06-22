@@ -93,6 +93,11 @@ export const settingList = [
     title: "Use first page as PDF cover",
     propName: "isPDFCover",
   },
+    {
+    isElectron: false,
+    title: "Hide home button in PDF reader",
+    propName: "isHideHome",
+  },
   {
     isElectron: true,
     title: "Open url with built-in browser",
@@ -167,6 +172,10 @@ export const readerSettingList = [
   {
     title: "Invert color",
     propName: "isInvert",
+  },
+  {
+    title: "Turn on Bionic Reading",
+    propName: "isBionic",
   },
   {
     title: "Hide footer",
