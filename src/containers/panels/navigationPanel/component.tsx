@@ -103,6 +103,7 @@ class NavigationPanel extends React.Component<
                     count: bookLocation.count,
                     percentage: bookLocation.percentage,
                     cfi: bookLocation.cfi,
+                    page: bookLocation.page,
                   })
                 );
                 let style = "background: #f3a6a68c";
@@ -279,7 +280,7 @@ class NavigationPanel extends React.Component<
 
               <div className="navigation-navigation">
                 <span
-                  className="book-content-title"
+                  className="book-bookmark-title"
                   onClick={() => {
                     this.handleChangeTab("contents");
                   }}

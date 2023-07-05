@@ -1,40 +1,61 @@
 import { voiceList } from "../../constants/voiceList";
-
+import { Howl } from "howler";
 class EdgeUtil {
-  static player: AudioBufferSourceNode;
-  static currentAudioBuffer: any;
-  static nextAudioBuffer: any;
-  static async readAloud(
-    currentText: string,
-    nextText: string,
+  static player: any;
+  static currentAudioPath: string = "";
+  static audioPaths: string[] = [];
+  static async readAloud(currentIndex: number) {
+    return new Promise<string>(async (resolve, reject) => {
+      let audioPath = this.audioPaths[currentIndex];
+      var sound = new Howl({
+        src: [audioPath],
+        onloaderror: () => {
+          resolve("loaderror");
+        },
+        onload: async () => {
+          this.player.play();
+          resolve("load");
+        },
+      });
+      this.player = sound;
+    });
+  }
+  static async cacheAudio(
+    nodeList: string[],
     voiceName: string,
     speed: number = 0
   ) {
-    let audioBuffer =
-      this.nextAudioBuffer ||
-      (await window.require("electron").ipcRenderer.invoke("edge-tts", {
-        text: this.createSSML(currentText, voiceName, speed),
-        format: "",
-      }));
-
-    let ctx = new AudioContext();
-    let audio = await ctx.decodeAudioData(this.toArrayBuffer(audioBuffer));
-    this.player = ctx.createBufferSource();
-    this.player.buffer = audio;
-    this.player.connect(ctx.destination);
-    this.player.start(ctx.currentTime);
-    this.nextAudioBuffer =
-      nextText &&
-      (await window.require("electron").ipcRenderer.invoke("edge-tts", {
-        text: this.createSSML(nextText, voiceName, speed),
-        format: "",
-      }));
+    for (let index = 0; index < nodeList.length; index++) {
+      const nodeText = nodeList[index];
+      let audioPath = await window
+        .require("electron")
+        .ipcRenderer.invoke("edge-tts", {
+          text: this.createSSML(
+            nodeText
+              .replace(/\s\s/g, "")
+              .replace(/\r/g, "")
+              .replace(/\n/g, "")
+              .replace(/\t/g, "")
+              .replace(/\f/g, ""),
+            voiceName,
+            speed
+          ),
+          format: "",
+        });
+      this.audioPaths.push(audioPath);
+    }
   }
-  static pauseAudio() {
+  static async pauseAudio() {
     if (this.player && this.player.stop) {
       this.player.stop();
-      this.player.disconnect();
+      window.require("electron").ipcRenderer.invoke("clear-tts");
     }
+  }
+  static getAudioPaths() {
+    return this.audioPaths;
+  }
+  static setAudioPaths() {
+    this.audioPaths = [];
   }
   static getPlayer() {
     return this.player;
@@ -82,14 +103,6 @@ class EdgeUtil {
       //     resolve([]);
       //   });
     });
-  }
-  static toArrayBuffer(buffer) {
-    const arrayBuffer = new ArrayBuffer(buffer.length);
-    const view = new Uint8Array(arrayBuffer);
-    for (let i = 0; i < buffer.length; ++i) {
-      view[i] = buffer[i];
-    }
-    return arrayBuffer;
   }
 }
 export default EdgeUtil;

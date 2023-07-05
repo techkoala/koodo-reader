@@ -22,6 +22,7 @@ class ActionDialog extends React.Component<
     super(props);
     this.state = {
       isShowExport: false,
+      isExceed: false,
     };
   }
   handleDeleteBook = () => {
@@ -72,7 +73,6 @@ class ActionDialog extends React.Component<
               <span className="action-name">
                 <Trans>Restore</Trans>
               </span>
-              <p className="action-name"></p>
             </div>
           </div>
         </div>
@@ -101,7 +101,6 @@ class ActionDialog extends React.Component<
               <p className="action-name">
                 <Trans>Add to Shelf</Trans>
               </p>
-              <p className="action-name"></p>
             </div>
             <div
               className="action-dialog-delete"
@@ -113,7 +112,6 @@ class ActionDialog extends React.Component<
               <p className="action-name">
                 <Trans>Delete</Trans>
               </p>
-              <p className="action-name"></p>
             </div>
             <div
               className="action-dialog-edit"
@@ -125,27 +123,37 @@ class ActionDialog extends React.Component<
               <p className="action-name">
                 <Trans>Edit</Trans>
               </p>
-              <p className="action-name"></p>
             </div>
             <div
               className="action-dialog-edit"
-              onMouseEnter={() => {
+              onMouseEnter={(event) => {
                 this.setState({ isShowExport: true });
+                const e = event || window.event;
+                let x = e.clientX;
+                if (x > document.body.clientWidth - 300) {
+                  this.setState({ isExceed: true });
+                } else {
+                  this.setState({ isExceed: false });
+                }
               }}
               onMouseLeave={(event) => {
-                // this.setState({ isShowExport: false });
+                this.setState({ isShowExport: false });
                 event.stopPropagation();
               }}
+              style={{ display: "flex", justifyContent: "space-between" }}
             >
-              <span className="icon-export view-icon"></span>
-              <p className="action-name">
-                <Trans>Export</Trans>
+              <p className="action-name" style={{ marginLeft: "0px" }}>
                 <span
-                  className="icon-dropdown icon-export-all"
-                  style={{ left: "95px" }}
+                  className="icon-export view-icon"
+                  style={{ marginRight: "15px" }}
                 ></span>
+                <Trans>Export</Trans>
               </p>
-              <p className="action-name"></p>
+
+              <span
+                className="icon-dropdown icon-export-all"
+                style={{ left: "95px" }}
+              ></span>
             </div>
 
             <div className="sort-dialog-seperator"></div>
@@ -232,11 +240,16 @@ class ActionDialog extends React.Component<
             this.setState({ isShowExport: false });
             this.props.handleActionDialog(false);
           }}
+          onMouseEnter={(event) => {
+            this.setState({ isShowExport: true });
+            this.props.handleActionDialog(true);
+            event?.stopPropagation();
+          }}
           style={
             this.state.isShowExport
               ? {
                   position: "absolute",
-                  left: this.props.left + 5,
+                  left: this.props.left + (this.state.isExceed ? -400 : 0),
                   top: this.props.top + 70,
                 }
               : { display: "none" }
@@ -263,7 +276,6 @@ class ActionDialog extends React.Component<
             <p className="action-name">
               <Trans>Export Books</Trans>
             </p>
-            <p className="action-name"></p>
           </div>
           <div
             className="action-dialog-edit"
@@ -291,7 +303,6 @@ class ActionDialog extends React.Component<
             <p className="action-name">
               <Trans>Export Notes</Trans>
             </p>
-            <p className="action-name"></p>
           </div>
           <div
             className="action-dialog-edit"
@@ -319,7 +330,6 @@ class ActionDialog extends React.Component<
             <p className="action-name">
               <Trans>Export Highlights</Trans>
             </p>
-            <p className="action-name"></p>
           </div>
         </div>
       </>
