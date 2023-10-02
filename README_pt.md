@@ -58,8 +58,8 @@
 - Instalar com o Scoop:
 
 ```shell
-scoop bucket add dorado https://github.com/chawyehsu/dorado
-scoop install dorado/koodo-reader
+scoop bucket add extras
+scoop install extras/koodo-reader
 ```
 
 - Instalar com o Winget:
@@ -111,7 +111,7 @@ flatpak run io.github.troyeguo.koodo-reader
 
 ## Desenvolver
 
-Certifique-se de ter instalado yarn e git, a versão, a versão do node deverá ser superior ou igual a 14.0.0.
+Certifique-se de ter instalado yarn e git, a versão.
 
 1. Baixe o repositório
 

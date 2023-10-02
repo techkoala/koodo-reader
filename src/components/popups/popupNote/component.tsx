@@ -9,8 +9,12 @@ import NoteTag from "../../noteTag";
 import NoteModel from "../../../model/Note";
 import { Trans } from "react-i18next";
 import toast from "react-hot-toast";
-import { getHightlightCoords } from "../../../utils/fileUtils/pdfUtil";
-import { getPDFIframeDoc } from "../../../utils/serviceUtils/docUtil";
+import {
+  getHightlightCoords,
+  removePDFHighlight,
+} from "../../../utils/fileUtils/pdfUtil";
+import { getIframeDoc } from "../../../utils/serviceUtils/docUtil";
+import { renderHighlighters } from "../../../utils/serviceUtils/noteUtil";
 declare var window: any;
 let classes = [
   "color-0",
@@ -25,32 +29,70 @@ let classes = [
 class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
   constructor(props: PopupNoteProps) {
     super(props);
-    this.state = { tag: [] };
+    this.state = { tag: [], text: "" };
   }
   componentDidMount() {
     let textArea: any = document.querySelector(".editor-box");
     textArea && textArea.focus();
+    if (this.props.noteKey) {
+      let noteIndex = window._.findLastIndex(this.props.notes, {
+        key: this.props.noteKey,
+      });
+      this.setState({
+        text: this.props.notes[noteIndex].text,
+      });
+      textArea.value = this.props.notes[noteIndex].notes;
+    } else {
+      let doc = getIframeDoc();
+      if (!doc) {
+        return;
+      }
+      let text = doc.getSelection()?.toString();
+      if (!text) {
+        return;
+      }
+      text = text.replace(/\s\s/g, "");
+      text = text.replace(/\r/g, "");
+      text = text.replace(/\n/g, "");
+      text = text.replace(/\t/g, "");
+      text = text.replace(/\f/g, "");
+      this.setState({ text });
+    }
   }
   handleTag = (tag: string[]) => {
     this.setState({ tag });
   };
-  removePDFHighlight = (selected: any, colorCode: string, noteKey: string) => {
-    let iWin = getPDFIframeDoc();
-    if (!iWin) return;
-    var pageIndex = selected.page;
-    if (!iWin.PDFViewerApplication.pdfViewer) return;
-    var page = iWin.PDFViewerApplication.pdfViewer.getPageView(pageIndex);
-    if (page && page.div && page.textLayer && page.textLayer.textLayerDiv) {
-      var pageElement =
-        colorCode.indexOf("color") > -1
-          ? page.textLayer.textLayerDiv
-          : page.div;
-      let noteElements = pageElement.querySelectorAll(".pdf-note");
-      noteElements.forEach((item: Element) => {
-        if (item.getAttribute("key") === noteKey) {
-          item.parentNode?.removeChild(item);
-        }
-      });
+  handleHighlight = () => {
+    let highlighters: any = this.props.notes;
+    if (!highlighters) return;
+    let highlightersByChapter = highlighters.filter((item: Note) => {
+      if (this.props.currentBook.format !== "PDF") {
+        return (
+          (item.chapter ===
+            this.props.htmlBook.rendition.getChapterDoc()[
+              this.props.chapterDocIndex
+            ].label ||
+            item.chapterIndex === this.props.chapterDocIndex) &&
+          item.bookKey === this.props.currentBook.key
+        );
+      } else {
+        return (
+          item.chapterIndex === this.props.chapterDocIndex &&
+          item.bookKey === this.props.currentBook.key
+        );
+      }
+    });
+    renderHighlighters(
+      highlightersByChapter,
+      this.props.currentBook.format,
+      this.handleNoteClick
+    );
+  };
+  handleNoteClick = (event: Event) => {
+    if (event && event.target) {
+      this.props.handleNoteKey((event.target as any).dataset.key);
+      this.props.handleMenuMode("note");
+      this.props.handleOpenMenu(true);
     }
   };
   createNote() {
@@ -79,8 +121,9 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
         this.props.handleOpenMenu(false);
         toast.success(this.props.t("Add Successfully"));
         this.props.handleFetchNotes();
-        this.props.handleMenuMode("highlight");
+        this.props.handleMenuMode("");
         this.props.handleNoteKey("");
+        this.handleHighlight();
       });
     } else {
       //创建笔记
@@ -105,15 +148,7 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
         this.props.currentBook.format === "PDF"
           ? JSON.stringify(getHightlightCoords())
           : JSON.stringify(charRange);
-      let text = doc.getSelection()?.toString();
-      if (!text) {
-        return;
-      }
-      text = text.replace(/\s\s/g, "");
-      text = text.replace(/\r/g, "");
-      text = text.replace(/\n/g, "");
-      text = text.replace(/\t/g, "");
-      text = text.replace(/\f/g, "");
+
       let percentage = 0;
 
       let color = this.props.color || 0;
@@ -123,7 +158,7 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
         bookKey,
         this.props.chapter,
         this.props.chapterDocIndex,
-        text,
+        this.state.text,
         cfi,
         range,
         notes,
@@ -138,7 +173,8 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
         this.props.handleOpenMenu(false);
         toast.success(this.props.t("Add Successfully"));
         this.props.handleFetchNotes();
-        this.props.handleMenuMode("highlight");
+        this.props.handleMenuMode("");
+        this.handleHighlight();
       });
     }
   }
@@ -155,10 +191,8 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
       if (noteIndex > -1) {
         this.props.notes.splice(noteIndex, 1);
         window.localforage.setItem("notes", this.props.notes).then(() => {
-          this.props.handleOpenMenu(false);
-          this.props.handleMenuMode("menu");
           if (this.props.currentBook.format === "PDF") {
-            this.removePDFHighlight(
+            removePDFHighlight(
               JSON.parse(note.range),
               classes[note.color],
               note.key
@@ -166,15 +200,18 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
           }
 
           toast.success(this.props.t("Delete Successfully"));
-          this.props.handleMenuMode("highlight");
+          this.props.handleMenuMode("");
           this.props.handleFetchNotes();
           this.props.handleNoteKey("");
+          this.handleHighlight();
+          this.props.handleOpenMenu(false);
         });
       }
     } else {
       this.props.handleOpenMenu(false);
-      this.props.handleMenuMode("menu");
+      this.props.handleMenuMode("");
       this.props.handleNoteKey("");
+      this.handleHighlight();
     }
   };
 
@@ -191,12 +228,13 @@ class PopupNote extends React.Component<PopupNoteProps, PopupNoteState> {
     const renderNoteEditor = () => {
       return (
         <div className="note-editor">
+          <div className="note-original-text">{this.state.text}</div>
           <div className="editor-box-parent">
             <textarea className="editor-box" />
           </div>
           <div
             className="note-tags"
-            style={{ position: "absolute", bottom: "0px", height: "70px" }}
+            style={{ position: "absolute", bottom: "0px", height: "40px" }}
           >
             <NoteTag
               {...{

@@ -1,14 +1,14 @@
 {
   "name": "koodo-reader",
   "main": "main.js",
-  "version": "1.5.7",
+  "version": "1.5.9",
   "description": "A cross-platform ebook reader",
   "author": {
     "name": "App by Troye",
     "email": "support@960960.xyz"
   },
   "engines": {
-    "node": "<15.0.0",
+    "node": "18.x",
     "npm": ">=6.0.0"
   },
   "repository": "https://github.com/troyeguo/koodo-reader",
@@ -27,6 +27,7 @@
     "electron-is-dev": "^1.1.0",
     "electron-store": "^8.0.1",
     "epub-cfi-resolver": "^1.0.2",
+    "fast-average-color": "^9.4.0",
     "font-list": "^1.4.5",
     "fs-extra": "^9.1.0",
     "howler": "^2.2.3",
@@ -34,14 +35,12 @@
     "request": "^2.88.2",
     "webdav": "^3.6.2",
     "webdav-fs": "^3.0.0",
+    "wink-lemmatizer": "^3.0.4",
     "ws": "^8.13.0",
     "zip-a-folder": "^0.0.12"
   },
   "devDependencies": {
-    "@types/chardet": "^0.8.1",
-    "@types/express": "^4.17.15",
     "@types/i18next": "^13.0.0",
-    "@types/marked": "^2.0.2",
     "@types/md5": "^2.2.0",
     "@types/node": "^13.13.2",
     "@types/react": "17.0.2",
@@ -51,8 +50,7 @@
     "@types/react-redux": "^7.1.7",
     "@types/react-router-dom": "^5.1.6",
     "@types/spark-md5": "^3.0.2",
-    "@types/underscore": "^1.10.24",
-    "@types/ws": "^8.5.4",
+    "@types/ws": "^8.5.5",
     "classnames": "^2.2.6",
     "concurrently": "^5.0.1",
     "cross-env": "^6.0.3",
@@ -62,7 +60,7 @@
     "html-react-parser": "^0.13.0",
     "i18next": "^20.2.4",
     "md5": "^2.3.0",
-    "node-sass": "^4.13.0",
+    "node-sass": "^9.0.0",
     "nodemon": "^2.0.6",
     "rc-color-picker": "^1.2.6",
     "react": "^17.0.2",
@@ -73,14 +71,14 @@
     "react-lottie": "^1.2.3",
     "react-redux": "^7.2.0",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "4.0.3",
+    "react-scripts": "^5.0.1",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
-    "sass-loader": "^8.0.0",
+    "sass-loader": "^13.3.2",
     "source-map-explorer": "^2.5.2",
     "spark-md5": "^3.0.1",
     "typescript": "3.8.3",
-    "wait-on": "^3.3.0"
+    "wait-on": "^7.0.1"
   },
   "scripts": {
     "analyze": "source-map-explorer 'build/static/js/*.js'",
@@ -89,7 +87,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "ele": "electron .",
-    "dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000/ && nodemon --watch main.js --exec electron .\"",
+    "dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://127.0.0.1:3000/ && nodemon --watch main.js --exec electron .\"",
     "release": "electron-builder",
     "prerelease": "react-scripts build"
   },
@@ -125,6 +123,12 @@
         "mimeType": "application/pdf"
       },
       {
+        "ext": "djvu",
+        "icon": "assets/icons/pdf",
+        "role": "Viewer",
+        "mimeType": "image/vnd.djvu"
+      },
+      {
         "ext": "mobi",
         "icon": "assets/icons/mobi",
         "role": "Viewer",
@@ -141,12 +145,6 @@
         "icon": "assets/icons/azw3",
         "role": "Viewer",
         "mimeType": "application/vnd.amazon.ebook"
-      },
-      {
-        "ext": "djvu",
-        "icon": "assets/icons/pdf",
-        "role": "Viewer",
-        "mimeType": "image/vnd.djvu"
       },
       {
         "ext": "cbz",

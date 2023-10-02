@@ -5,7 +5,7 @@ import { ViewerProps, ViewerState } from "./interface";
 import { withRouter } from "react-router-dom";
 import BookUtil from "../../utils/fileUtils/bookUtil";
 import { toast } from "react-hot-toast";
-import BackToMain from "../../components/backToMain";
+import PDFWidget from "../../components/pdfWidget";
 import { djvuMouseEvent } from "../../utils/serviceUtils/mouseEvent";
 
 declare var window: any;
@@ -64,7 +64,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
         <div className="ebook-viewer" id="page-area">
           Loading
         </div>
-        <BackToMain />
+        <PDFWidget />
       </div>
     );
   }

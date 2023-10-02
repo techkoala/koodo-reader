@@ -5,6 +5,7 @@ import {
   handleFetchNoteSortCode,
   handleFetchList,
   handleTipDialog,
+  handleDetailDialog,
   handleLoadingDialog,
   handleNewDialog,
   handleSetting,
@@ -33,6 +34,7 @@ const mapStateToProps = (state: stateType) => {
     dragItem: state.book.dragItem,
     shelfIndex: state.sidebar.shelfIndex,
     isOpenEditDialog: state.book.isOpenEditDialog,
+    isDetailDialog: state.manager.isDetailDialog,
     isOpenDeleteDialog: state.book.isOpenDeleteDialog,
     isOpenAddDialog: state.book.isOpenAddDialog,
     isSettingOpen: state.manager.isSettingOpen,
@@ -42,6 +44,7 @@ const mapStateToProps = (state: stateType) => {
     isShowLoading: state.manager.isShowLoading,
     isShowNew: state.manager.isShowNew,
     isTipDialog: state.manager.isTipDialog,
+    DetailDialog: state.manager.isDetailDialog,
     isBackup: state.backupPage.isBackup,
   };
 };
@@ -57,6 +60,7 @@ const actionCreator = {
   handleDeleteDialog,
   handleAddDialog,
   handleTipDialog,
+  handleDetailDialog,
   handleLoadingDialog,
   handleNewDialog,
   handleBackupDialog,

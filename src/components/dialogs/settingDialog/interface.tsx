@@ -28,10 +28,11 @@ export interface SettingInfoState {
   isDisableUpdate: boolean;
   isPrecacheBook: boolean;
   isUseBuiltIn: boolean;
-  isPDFCover: boolean;
-  isHideFloating: boolean;
+  isDisableCrop: boolean;
+  isDisablePDFCover: boolean;
   isAutoFullscreen: boolean;
   isHideShelfBook: boolean;
   isPreventAdd: boolean;
+  isLemmatizeWord: boolean;
   currentThemeIndex: number;
 }

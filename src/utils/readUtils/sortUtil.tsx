@@ -3,6 +3,7 @@ import NoteModel from "../../model/Note";
 import ReadingTime from "./readingTime";
 import RecordLocation from "./recordLocation";
 import RecordRecent from "./recordRecent";
+declare var window: any;
 const getBookName = (books: BookModel[]) => {
   return books.map((item) => item.name);
 };
@@ -27,7 +28,12 @@ const getBookIndex = (nameArr: string[], oldNameArr: string[]) => {
   if (indexArr.length < oldNameArr.length) {
     oldNameArr.forEach((item) => {
       if (nameArr.indexOf(item) === -1) {
-        indexArr.push(indexArr.length);
+        for (let index = 0; index < oldNameArr.length; index++) {
+          if (indexArr.indexOf(index) === -1) {
+            indexArr.push(index);
+            break;
+          }
+        }
       }
     });
   }

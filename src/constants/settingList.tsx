@@ -78,6 +78,12 @@ export const settingList = [
     propName: "isPreventAdd",
   },
   {
+    isElectron: true,
+    title: "Lemmatize words when looking up in a dictionary",
+    desc: "To reduce the different forms of a word to one single form, for example, reducing builds, building or built to build, reducing cats to cat, reducing fastest to fast",
+    propName: "isLemmatizeWord",
+  },
+  {
     isElectron: false,
     title: "Open books in the main window",
     desc: "Book won't be opened in a seperate window but directly opened in the main window",
@@ -96,13 +102,13 @@ export const settingList = [
   },
   {
     isElectron: false,
-    title: "Use first page as PDF cover",
-    propName: "isPDFCover",
+    title: "Don't use first page as PDF cover",
+    propName: "isDisablePDFCover",
   },
   {
     isElectron: false,
-    title: "Hide floating button in PDF reader",
-    propName: "isHideFloating",
+    title: "Don't crop book cover",
+    propName: "isDisableCrop",
   },
   {
     isElectron: true,
@@ -134,6 +140,7 @@ export const langList = [
   { label: "български", value: "bg" },
   { label: "bahasa Indonesia", value: "id" },
   { label: "հայերեն", value: "hy" },
+  { label: "བོད་སྐད།", value: "bo" },
 ];
 
 export const searchList = [

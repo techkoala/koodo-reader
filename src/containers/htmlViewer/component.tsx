@@ -16,6 +16,9 @@ import { getIframeDoc } from "../../utils/serviceUtils/docUtil";
 import { tsTransform } from "../../utils/serviceUtils/langUtil";
 import CFI from "epub-cfi-resolver";
 import { binicReadingProcess } from "../../utils/serviceUtils/bionicUtil";
+import PopupBox from "../../components/popups/popupBox";
+import { renderHighlighters } from "../../utils/serviceUtils/noteUtil";
+import Note from "../../model/Note";
 
 declare var window: any;
 let lock = false; //prevent from clicking too fasts
@@ -43,8 +46,6 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
           .chapterDocIndex || 0
       ),
       chapter: "",
-      pageWidth: 0,
-      pageHeight: 0,
       rendition: null,
     };
     this.lock = false;
@@ -55,36 +56,13 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
     this.props.handleFetchBooks();
   }
   componentDidMount() {
+    window.rangy.init();
     this.handleRenderBook();
 
     this.props.handleRenderBookFunc(this.handleRenderBook);
 
     window.addEventListener("resize", () => {
-      if (lock) return;
-      let reader = document.querySelector("#page-area");
-      //解决文字遮挡问题
-      if (
-        reader &&
-        reader.getAttribute("style") &&
-        reader.getAttribute("style")!.indexOf("width") > -1
-      ) {
-        reader.setAttribute(
-          "style",
-          reader
-            .getAttribute("style")!
-            .substring(0, reader.getAttribute("style")!.indexOf("width"))
-        );
-        StorageUtil.getReaderConfig("readerMode") !== "scroll" &&
-          this.handlePageWidth();
-      }
-
-      this.handleRenderBook();
-
-      lock = true;
-      setTimeout(function () {
-        lock = false;
-      }, 100);
-      return false;
+      BookUtil.reloadBooks();
     });
   }
   handlePageWidth = () => {
@@ -102,6 +80,38 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
       );
     }
   };
+  handleHighlight = (rendition: any) => {
+    let highlighters: any = this.props.notes;
+    if (!highlighters) return;
+    let highlightersByChapter = highlighters.filter((item: Note) => {
+      if (this.props.currentBook.format !== "PDF") {
+        return (
+          (item.chapter ===
+            rendition.getChapterDoc()[this.state.chapterDocIndex].label ||
+            item.chapterIndex === this.state.chapterDocIndex) &&
+          item.bookKey === this.props.currentBook.key
+        );
+      } else {
+        return (
+          item.chapterIndex === this.state.chapterDocIndex &&
+          item.bookKey === this.props.currentBook.key
+        );
+      }
+    });
+
+    renderHighlighters(
+      highlightersByChapter,
+      this.props.currentBook.format,
+      this.handleNoteClick
+    );
+  };
+  handleNoteClick = (event: Event) => {
+    if (event && event.target) {
+      this.props.handleNoteKey((event.target as any).dataset.key);
+      this.props.handleMenuMode("note");
+      this.props.handleOpenMenu(true);
+    }
+  };
   handleRenderBook = async () => {
     if (lock) return;
     let { key, path, format, name } = this.props.currentBook;
@@ -114,7 +124,6 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
     StorageUtil.getReaderConfig("readerMode") !== "scroll" &&
       this.handlePageWidth();
 
-    window.rangy.init();
     let isCacheExsit = await BookUtil.isBookExist("cache-" + key, path);
     BookUtil.fetchBook(isCacheExsit ? "cache-" + key : key, true, path).then(
       async (result: any) => {
@@ -157,14 +166,11 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
       rendition: rendition,
     });
     this.setState({ rendition });
-    this.setState({
-      pageWidth: rendition.getPageSize().width,
-      pageHeight: rendition.getPageSize().height,
-    });
+
     StyleUtil.addDefaultCss();
     tsTransform();
     binicReadingProcess();
-    rendition.setStyle(StyleUtil.getCustomCss());
+    // rendition.setStyle(StyleUtil.getCustomCss());
     let bookLocation: {
       text: string;
       count: string;
@@ -224,7 +230,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
 
       let chapter =
         bookLocation.chapterTitle ||
-        (this.props.htmlBook
+        (this.props.htmlBook && this.props.htmlBook.flattenChapters[0]
           ? this.props.htmlBook.flattenChapters[0].label
           : "Unknown Chapter");
       let chapterDocIndex = 0;
@@ -256,6 +262,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
       tsTransform();
       binicReadingProcess();
       this.handleBindGesture();
+      this.handleHighlight(rendition);
       lock = true;
       setTimeout(function () {
         lock = false;
@@ -278,7 +285,11 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
       );
     });
     if (targetContent.length > 0) {
-      contentBody.scrollTo(0, targetContent[0].offsetTop);
+      contentBody.scrollTo({
+        left: 0,
+        top: targetContent[0].offsetTop,
+        behavior: "smooth",
+      });
       targetContent[0].setAttribute("style", "color:red; font-weight: bold");
     }
   };
@@ -369,8 +380,20 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
             {...{
               rendition: this.props.htmlBook.rendition,
               rect: this.state.rect,
-              pageWidth: this.state.pageWidth,
-              pageHeight: this.state.pageHeight,
+              chapterDocIndex: this.state.chapterDocIndex,
+              chapter: this.state.chapter,
+            }}
+          />
+        ) : null}
+        {this.props.isOpenMenu &&
+        this.props.htmlBook &&
+        (this.props.menuMode === "dict" ||
+          this.props.menuMode === "trans" ||
+          this.props.menuMode === "note") ? (
+          <PopupBox
+            {...{
+              rendition: this.props.htmlBook.rendition,
+              rect: this.state.rect,
               chapterDocIndex: this.state.chapterDocIndex,
               chapter: this.state.chapter,
             }}

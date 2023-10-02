@@ -20,9 +20,9 @@ export interface BookCoverProps extends RouteComponentProps<any> {
   handleDeleteDialog: (isShow: boolean) => void;
 }
 export interface BookCoverState {
-  isOpenConfig: boolean;
   isFavorite: boolean;
   left: number;
   top: number;
   direction: string;
+  desc: string;
 }
