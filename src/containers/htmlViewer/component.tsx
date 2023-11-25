@@ -62,7 +62,11 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
     this.props.handleRenderBookFunc(this.handleRenderBook);
 
     window.addEventListener("resize", () => {
-      BookUtil.reloadBooks();
+      if (StorageUtil.getReaderConfig("isFullscreen") === "yes") {
+        this.handleRenderBook();
+      } else {
+        BookUtil.reloadBooks();
+      }
     });
   }
   handlePageWidth = () => {
@@ -353,15 +357,17 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
                   }px)`,
                   paddingLeft: "20px",
                   paddingRight: "15px",
+                  left: 0,
+                  right: 0,
                 }
               : this.state.readerMode === "single"
               ? {
                   left: `calc(50vw - ${
                     270 * parseFloat(this.state.scale)
-                  }px + 15px)`,
+                  }px + 30px)`,
                   right: `calc(50vw - ${
                     270 * parseFloat(this.state.scale)
-                  }px + 15px)`,
+                  }px + 30px)`,
                 }
               : this.state.readerMode === "double"
               ? {
@@ -371,8 +377,11 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
               : {}
           }
         ></div>
-        {StorageUtil.getReaderConfig("isHideBackground") === "yes" ? null : this
-            .props.currentBook.key ? (
+        {StorageUtil.getReaderConfig("isHideBackground") === "yes" ||
+        (StorageUtil.getReaderConfig("backgroundColor") &&
+          StorageUtil.getReaderConfig("backgroundColor").startsWith(
+            "#"
+          )) ? null : this.props.currentBook.key ? (
           <Background />
         ) : null}
         {this.props.htmlBook ? (
