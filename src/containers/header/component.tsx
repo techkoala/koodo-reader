@@ -10,6 +10,10 @@ import { backup } from "../../utils/syncUtils/backupUtil";
 import { isElectron } from "react-device-detect";
 import { syncData } from "../../utils/syncUtils/common";
 import toast from "react-hot-toast";
+import { Trans } from "react-i18next";
+import { checkStableUpdate } from "../../utils/commonUtil";
+import packageInfo from "../../../package.json";
+
 class Header extends React.Component<HeaderProps, HeaderState> {
   constructor(props: HeaderProps) {
     super(props);
@@ -20,9 +24,12 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       isNewVersion: false,
       width: document.body.clientWidth,
       isdataChange: false,
+      isDeveloperVer: false,
     };
   }
   async componentDidMount() {
+    // isElectron &&
+    //   (await window.require("electron").ipcRenderer.invoke("s3-download"));
     if (isElectron) {
       const fs = window.require("fs");
       const path = window.require("path");
@@ -46,7 +53,16 @@ class Header extends React.Component<HeaderProps, HeaderState> {
           StorageUtil.getReaderConfig("storageLocation")
         );
       }
-
+      try {
+        let stableLog = await checkStableUpdate();
+        if (packageInfo.version.localeCompare(stableLog.version) > 0) {
+          this.setState({ isDeveloperVer: true });
+          // this.props.handleFeedbackDialog(true);
+          // return;
+        }
+      } catch (error) {
+        console.log(error);
+      }
       //Check for data update
       let storageLocation = localStorage.getItem("storageLocation")
         ? localStorage.getItem("storageLocation")
@@ -133,7 +149,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
     if (!result) {
       toast.error(this.props.t("Sync Failed"));
     } else {
-      toast.success(this.props.t("Sync Successfully"));
+      toast.success(this.props.t("Synchronisation successful"));
     }
   };
   handleSync = () => {
@@ -187,7 +203,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
       toast.error(this.props.t("Sync Failed"));
     } else {
       syncData(result as Blob, this.props.books, true);
-      toast.success(this.props.t("Sync Successfully"));
+      toast.success(this.props.t("Synchronisation successful"));
     }
   };
 
@@ -267,12 +283,22 @@ class Header extends React.Component<HeaderProps, HeaderState> {
             </div>
           )}
         </div>
+        {this.state.isDeveloperVer && (
+          <div
+            className="header-report-container"
+            onClick={() => {
+              this.props.handleFeedbackDialog(true);
+            }}
+          >
+            <Trans>Report</Trans>
+          </div>
+        )}
         <ImportLocal
           {...{
             handleDrag: this.props.handleDrag,
           }}
         />
-        {isElectron && <UpdateInfo />}
+        <UpdateInfo />
       </div>
     );
   }
